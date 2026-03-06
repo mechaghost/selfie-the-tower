@@ -8,6 +8,7 @@ interface GameState {
     seed: string;
     rng: RNG | null;
     floor: number;
+    currentNodeId: string | null;
 
     // --- Combat State ---
     inCombat: boolean;
@@ -55,6 +56,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     seed: '',
     rng: null,
     floor: 0,
+    currentNodeId: null,
 
     inCombat: false,
     player: { ...initialPlayerState },
@@ -74,7 +76,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({
             seed,
             rng,
-            floor: 1,
+            floor: 0,
+            currentNodeId: null,
             player: { ...initialPlayerState },
             masterDeck: [], // TODO: Initialize with basic Strike/Defend deck
             inCombat: false
@@ -127,7 +130,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 get().startCombat([enemy]);
             }
 
-            return { floor: state.floor + 1 };
+            return { floor: state.floor + 1, currentNodeId: node.id };
         });
     },
 

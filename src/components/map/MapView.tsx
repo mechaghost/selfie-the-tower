@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { MapNode, MapData } from '../../core/mapModels';
 import { generateMap } from '../../core/mapGenerator';
@@ -6,7 +6,7 @@ import { Skull, Tent, Store, Swords } from 'lucide-react';
 import './MapView.css';
 
 export function MapView() {
-    const { seed, floor } = useGameStore();
+    const { seed, floor, currentNodeId } = useGameStore();
     const [mapData, setMapData] = useState<MapData | null>(null);
 
     useEffect(() => {
@@ -15,8 +15,20 @@ export function MapView() {
         }
     }, [seed]);
 
+    const availableNodes = useMemo(() => {
+        if (!mapData) return [];
+        if (currentNodeId === null) {
+            // First floor choices
+            return mapData.nodes.filter(n => n.y === floor);
+        }
+        const currentNode = mapData.nodes.find(n => n.id === currentNodeId);
+        if (!currentNode) return [];
+        // Available choices are connected nodes on the current floor
+        return mapData.nodes.filter(n => n.y === floor && currentNode.connections.includes(n.id));
+    }, [mapData, floor, currentNodeId]);
+
     const handleNodeClick = (node: MapNode) => {
-        if (node.y !== floor) return; // Can only click next floor
+        if (!availableNodes.some(an => an.id === node.id)) return; // Can only click valid connected paths
 
         console.log("Traveling to node:", node.type);
         useGameStore.getState().advanceFloor(node);
@@ -82,7 +94,7 @@ export function MapView() {
                         {floorsMap[y].map(node => (
                             <div
                                 key={node.id}
-                                className={`map-node ${node.y === floor ? 'available' : ''} ${node.y < floor ? 'completed' : ''}`}
+                                className={`map-node ${availableNodes.some(an => an.id === node.id) ? 'available' : ''} ${node.y < floor || node.id === currentNodeId ? 'completed' : ''}`}
                                 style={{ left: `${node.x * 100}%` }}
                                 onClick={() => handleNodeClick(node)}
                             >
