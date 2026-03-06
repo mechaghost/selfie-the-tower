@@ -106,10 +106,10 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         let dropSuccessful = false;
 
         if (card.target === 'Enemy') {
-            const enemyPanel = elementUnder?.closest('.entity-panel.enemy') as HTMLElement | null;
-            if (enemyPanel) {
-                const enemyId = enemyPanel.getAttribute('data-entity-id');
-                if (enemyId) {
+            const enemyAvatar = elementUnder?.closest('.entity-avatar') as HTMLElement | null;
+            if (enemyAvatar) {
+                const enemyId = enemyAvatar.getAttribute('data-entity-id');
+                if (enemyId && enemyId !== 'player') {
                     playCard(card.instanceId, enemyId);
                     dropSuccessful = true;
                 }

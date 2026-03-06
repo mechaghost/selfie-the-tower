@@ -49,14 +49,15 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     };
 
     return (
-        <div
-            className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}
-            data-entity-id={entity.id}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-        >
+        <div className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}>
             <div className="entity-avatar-container">
-                <div ref={avatarRef} className="entity-avatar">
+                <div
+                    ref={avatarRef}
+                    className="entity-avatar"
+                    data-entity-id={entity.id}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                >
                     {isPlayer ? '🛡️' : '👹'}
                 </div>
                 {floatingTexts.map(ft => (

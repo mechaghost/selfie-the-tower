@@ -27,7 +27,6 @@ export function TargetingArrow() {
     const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
 
     // --- Hover Target Detection ---
-    const HOVER_RADIUS = 150; // pixels
     let isValidTarget = false;
 
     Object.entries(entityBounds).forEach(([_id, rect]) => {
@@ -38,7 +37,10 @@ export function TargetingArrow() {
         // Calculate distance from cursor to center
         const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
 
-        if (dist < HOVER_RADIUS) {
+        // Exact radius of the avatar circle plus 20px padding
+        const hoverRadius = (rect.width / 2) + 20;
+
+        if (dist < hoverRadius) {
             isValidTarget = true;
         }
     });
