@@ -26,7 +26,8 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
     const grid: (MapNode | null)[][] = Array(MAP_HEIGHT).fill(null).map(() => Array(MAP_WIDTH).fill(null));
 
     // Floor 0: Start nodes
-    const startXs = rng.shuffle(Array.from({ length: MAP_WIDTH }, (_, i) => i)).slice(0, config.paths);
+    const numPaths = rng.nextInt(2, 5); // Random integer between 2 and 4 (inclusive)
+    const startXs = rng.shuffle(Array.from({ length: MAP_WIDTH }, (_, i) => i)).slice(0, numPaths);
 
     startXs.forEach(x => {
         const node = createNode(rng, x, 0, 'Start');
