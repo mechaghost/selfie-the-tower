@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
+import { Sparkles } from 'lucide-react';
 import './TargetingArrow.css';
 
 export function TargetingArrow() {
@@ -49,14 +50,20 @@ export function TargetingArrow() {
                 className="targeting-path"
             />
             {/* Arrow Head */}
-            <polygon
-                points="-24,-12 0,0 -24,12"
-                fill="var(--color-accent-red)"
+            <g
                 style={{
                     transform: `translate(${endX}px, ${endY}px) rotate(${angleDeg}deg)`,
                     transformOrigin: '0 0'
                 }}
-            />
+            >
+                <Sparkles
+                    color="var(--color-accent-red)"
+                    fill="var(--color-accent-red)"
+                    size={32}
+                    x={-16}
+                    y={-16}
+                />
+            </g>
         </svg>
     );
 }
