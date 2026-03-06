@@ -35,23 +35,39 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         nodes.push(node);
     });
 
-    // Generate middle floors
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
+    // Generate middle floors (1 through 7)
+    for (let y = 1; y < MAP_HEIGHT - 2; y++) {
         const isEliteFloor = y >= 4; // Elites only appear after floor 4
 
-        grid[y - 1].forEach((parent, x) => {
-            if (!parent) return;
+        // Shuffle parents so left side doesn't always dominate the crossing logic
+        const parentXs = rng.shuffle(
+            grid[y - 1]
+                .map((parent, x) => (parent ? x : -1))
+                .filter(x => x !== -1)
+        );
 
-            // Determine number of children (1-3)
+        parentXs.forEach(x => {
+            const parent = grid[y - 1][x]!;
+
+            // Determine desired number of children (1-3)
             const numChildren = rng.randomElement([1, 1, 1, 2, 2, 3]);
             const possibleMoves = [-1, 0, 1].filter(dx => {
                 const nx = x + dx;
                 return nx >= 0 && nx < MAP_WIDTH;
             });
-            const validMoves = rng.shuffle(possibleMoves).slice(0, numChildren);
+            // Try all valid moves in random order
+            const prioritizedMoves = rng.shuffle(possibleMoves);
 
-            validMoves.forEach(dx => {
+            let connectionsMade = 0;
+
+            for (const dx of prioritizedMoves) {
+                if (connectionsMade >= numChildren) break; // Reached desired fan-out
+
                 const childX = x + dx;
+
+                // Check path crossing BEFORE creating the node
+                const crossObstruction = checkForCrossing(grid, x, childX, y - 1);
+                if (crossObstruction) continue; // If crossed, just abandon this dx and try the next one!
 
                 let childNode = grid[y][childX];
                 if (!childNode) {
@@ -62,35 +78,38 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
                 }
 
                 if (!parent.connections.includes(childNode.id)) {
-                    // Check path crossing
-                    const crossObstruction = checkForCrossing(grid, x, childX, y - 1);
-                    if (!crossObstruction) {
-                        parent.connections.push(childNode.id);
-                    }
+                    parent.connections.push(childNode.id);
                 }
-            });
+                connectionsMade++;
+            }
         });
     }
 
-    // Floor 14: Rest Site before Boss
-    grid[MAP_HEIGHT - 2].forEach((parent, x) => {
+    // Floor 8: Rest Site before Boss
+    grid[MAP_HEIGHT - 3].forEach((parent, x) => {
         if (!parent) return;
         const type = 'Rest';
-        let childNode = grid[MAP_HEIGHT - 1][x];
+        let childNode = grid[MAP_HEIGHT - 2][x];
         if (!childNode) {
-            childNode = createNode(rng, x, MAP_HEIGHT - 1, type);
-            grid[MAP_HEIGHT - 1][x] = childNode;
+            childNode = createNode(rng, x, MAP_HEIGHT - 2, type);
+            grid[MAP_HEIGHT - 2][x] = childNode;
             nodes.push(childNode);
         }
         parent.connections.push(childNode.id);
     });
 
-    // Floor 15: The Boss
-    const bossNode = createNode(rng, Math.floor(MAP_WIDTH / 2), MAP_HEIGHT - 1, 'Boss');
+    // Floor 9: The Boss
+    const bossNode: MapNode = {
+        id: 'node_boss',
+        type: 'Boss',
+        x: 0.5,
+        y: MAP_HEIGHT - 1,
+        connections: []
+    };
     nodes.push(bossNode);
-    grid[MAP_HEIGHT - 2].forEach((parent) => {
-        if (!parent) return;
-        parent.connections.push(bossNode.id);
+    grid[MAP_HEIGHT - 2].forEach((restNode) => {
+        if (!restNode) return;
+        restNode.connections.push(bossNode.id);
     });
 
     // Cleanup orphaned nodes (nodes with no parents, except starts)
@@ -189,7 +208,7 @@ function pruneOrphansAndDeadEnds(nodes: MapNode[]): MapNode[] {
     });
 
     const canReachBoss = new Set<string>();
-    const bossNodes = nodes.filter(n => n.y === MAP_HEIGHT - 1);
+    const bossNodes = nodes.filter(n => n.type === 'Boss');
     const backwardQueue = bossNodes.map(n => n.id);
 
     while (backwardQueue.length > 0) {
