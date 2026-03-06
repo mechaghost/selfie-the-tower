@@ -72,8 +72,8 @@
 
 @media (max-width: 768px) {
     .entities-container {
-        flex-direction: column-reverse;
-        /* Player bottom, Enemies top */
+        flex-direction: column;
+        /* Player top, Enemies bottom */
         justify-content: space-evenly;
         align-items: center;
         padding: 5vh 5vw;
