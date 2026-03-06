@@ -35,9 +35,10 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         nodes.push(node);
     });
 
-    // Generate middle floors (1 through 7)
-    for (let y = 1; y < MAP_HEIGHT - 2; y++) {
+    // Generate middle floors (1 through 8)
+    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
         const isEliteFloor = y >= 4; // Elites only appear after floor 4
+        const isRestFloor = y === MAP_HEIGHT - 2; // Floor 8 is Rest Sites
 
         // Shuffle parents so left side doesn't always dominate the crossing logic
         const parentXs = rng.shuffle(
@@ -65,14 +66,24 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
 
                 const childX = x + dx;
 
+                let childNode = grid[y][childX];
+                let isNew = false;
+                if (!childNode) {
+                    const type = isRestFloor ? 'Rest' : determineNodeType(rng, config, isEliteFloor, y);
+                    childNode = createNode(rng, childX, y, type);
+                    isNew = true;
+                }
+
+                // Enforce maximum visual distance to prevent excessively long diagonal sweeping paths
+                if (Math.abs(parent.x - childNode.x) > 0.32) {
+                    continue;
+                }
+
                 // Check path crossing BEFORE creating the node
                 const crossObstruction = checkForCrossing(grid, x, childX, y - 1);
                 if (crossObstruction) continue; // If crossed, just abandon this dx and try the next one!
 
-                let childNode = grid[y][childX];
-                if (!childNode) {
-                    const type = determineNodeType(rng, config, isEliteFloor, y);
-                    childNode = createNode(rng, childX, y, type);
+                if (isNew) {
                     grid[y][childX] = childNode;
                     nodes.push(childNode);
                 }
@@ -85,19 +96,6 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         });
     }
 
-    // Floor 8: Rest Site before Boss
-    grid[MAP_HEIGHT - 3].forEach((parent, x) => {
-        if (!parent) return;
-        const type = 'Rest';
-        let childNode = grid[MAP_HEIGHT - 2][x];
-        if (!childNode) {
-            childNode = createNode(rng, x, MAP_HEIGHT - 2, type);
-            grid[MAP_HEIGHT - 2][x] = childNode;
-            nodes.push(childNode);
-        }
-        parent.connections.push(childNode.id);
-    });
-
     // Floor 9: The Boss
     const bossNode: MapNode = {
         id: 'node_boss',
@@ -109,7 +107,10 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
     nodes.push(bossNode);
     grid[MAP_HEIGHT - 2].forEach((restNode) => {
         if (!restNode) return;
-        restNode.connections.push(bossNode.id);
+        // Boss connection must also obey the physical limits!
+        if (Math.abs(restNode.x - bossNode.x) <= 0.32) {
+            restNode.connections.push(bossNode.id);
+        }
     });
 
     // Cleanup orphaned nodes (nodes with no parents, except starts)
@@ -120,9 +121,9 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
 }
 
 function createNode(rng: RNG, gridX: number, gridY: number, type: NodeType): MapNode {
-    // Add slight visual jitter to x position
-    const jitter = rng.nextInt(-15, 15) / 100;
-    const basePct = gridX / (MAP_WIDTH - 1);
+    // Add slight visual jitter to x position (+/- 3%)
+    const jitter = rng.nextInt(-3, 3) / 100;
+    const basePct = 0.125 + (gridX * 0.25); // Space columns strictly at 25% physical distance
 
     return {
         id: `node_${gridY}_${gridX}`,
