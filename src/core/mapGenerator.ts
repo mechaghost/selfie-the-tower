@@ -1,5 +1,6 @@
 import { MapNode, NodeType, MapData } from './mapModels';
 import { RNG } from './rng';
+import { ENCOUNTER_POOLS } from '../data/encounters';
 
 const MAP_WIDTH = 4;
 const MAP_HEIGHT = 10;
@@ -102,6 +103,7 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         type: 'Boss',
         x: 0.5,
         y: MAP_HEIGHT - 1,
+        encounterId: rng.randomElement(ENCOUNTER_POOLS.act1_elite).id,
         connections: []
     };
     nodes.push(bossNode);
@@ -125,11 +127,19 @@ function createNode(rng: RNG, gridX: number, gridY: number, type: NodeType): Map
     const jitter = rng.nextInt(-3, 3) / 100;
     const basePct = 0.125 + (gridX * 0.25); // Space columns strictly at 25% physical distance
 
+    let encounterId;
+    if (type === 'Combat') {
+        encounterId = rng.randomElement(ENCOUNTER_POOLS.act1_easy).id;
+    } else if (type === 'Elite') {
+        encounterId = rng.randomElement(ENCOUNTER_POOLS.act1_elite).id;
+    }
+
     return {
         id: `node_${gridY}_${gridX}`,
         type,
         x: Math.max(0.05, Math.min(0.95, basePct + jitter)),
         y: gridY,
+        encounterId,
         connections: []
     };
 }

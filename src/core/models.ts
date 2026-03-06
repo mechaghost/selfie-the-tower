@@ -9,10 +9,23 @@ export interface Card {
     cost: number;
     description: string;
     target: TargetType;
+    effects: Effect[];
     imageId?: string;
     exhausts?: boolean;
     ethereal?: boolean;
     upgraded?: boolean;
+}
+
+export interface StatusDefinition {
+    id: string;
+    name: string;
+    icon: string;
+    type: 'Buff' | 'Debuff';
+    decreasesPerTurn: boolean;
+    damageTakenMultiplier?: number;
+    damageGivenMultiplier?: number;
+    flatDamageGivenPerStack?: number;
+    flatBlockGivenPerStack?: number;
 }
 
 export interface StatusEffect {
@@ -22,12 +35,38 @@ export interface StatusEffect {
     justApplied?: boolean; // Sometimes statuses lose stacks at turn end, this helps prevent immediate decay
 }
 
+export type EffectType = 'Damage' | 'Block' | 'ApplyStatus' | 'Heal' | 'Draw' | 'Discard' | 'Exhaust';
+
+export interface Effect {
+    type: EffectType;
+    amount?: number;
+    statusId?: string; // e.g., 'vulnerable', 'weak', 'strength'
+    target: 'Self' | 'Target' | 'AllEnemies' | 'RandomEnemy' | 'None';
+}
+
 export type IntentType = 'Attack' | 'Defend' | 'Buff' | 'Debuff' | 'AttackDefend' | 'AttackDebuff' | 'Unknown';
 
 export interface EnemyIntent {
     type: IntentType;
-    damage?: number;
-    hits?: number; // For multi-attacks
+    damage?: number;     // Rendered in UI (e.g. "11")
+    hits?: number;       // Rendered in UI (e.g. "11x2")
+    block?: number;      // Rendered in UI (e.g. "5")
+    effects: Effect[];   // The strictly evaluated JSON payloads executed upon turn resolution
+}
+
+export type PatternCondition = 'Turn1' | 'BelowHalfHP' | 'Always';
+
+export interface AIPattern {
+    chance: number; // Probability weight. E.g. 25, 30, 45
+    condition?: PatternCondition; // Defaults to Always
+    intent: EnemyIntent;
+}
+
+export interface EnemyDefinition {
+    id: string; // Internal template ID, e.g. 'jaw_worm'
+    name: string;
+    maxHpRange: [number, number]; // e.g. [40, 44]
+    aiPatterns: AIPattern[];
 }
 
 export interface Entity {
@@ -58,7 +97,8 @@ export type GameActionType =
     | 'GAIN_BLOCK'
     | 'APPLY_STATUS'
     | 'END_TURN'
-    | 'START_TURN';
+    | 'START_TURN'
+    | 'CALCULATE_INTENTS';
 
 export interface GameAction {
     type: GameActionType;
@@ -70,4 +110,13 @@ export interface FloatingText {
     targetId: string; // The entity ID to attach to
     value: number | string;
     type: 'damage' | 'block' | 'heal' | 'status';
+}
+
+export interface Character {
+    id: string;
+    name: string;
+    maxHp: number;
+    maxEnergy: number;
+    startingGold: number;
+    startingDeck: string[]; // Card IDs to populate the masterDeck
 }

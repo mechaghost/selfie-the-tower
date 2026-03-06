@@ -1,0 +1,86 @@
+import { EnemyDefinition, Enemy } from '../core/models';
+
+export const enemies: Record<string, EnemyDefinition> = {
+    'jaw_worm': {
+        id: 'jaw_worm',
+        name: 'Jaw Worm',
+        maxHpRange: [40, 44],
+        aiPatterns: [
+            {
+                condition: 'Turn1',
+                chance: 100,
+                intent: {
+                    type: 'Attack',
+                    damage: 11,
+                    effects: [{ type: 'Damage', amount: 11, target: 'Target' }]
+                }
+            },
+            {
+                chance: 25,
+                intent: {
+                    type: 'Attack',
+                    damage: 11,
+                    effects: [{ type: 'Damage', amount: 11, target: 'Target' }]
+                }
+            },
+            {
+                chance: 30,
+                intent: {
+                    type: 'AttackDefend',
+                    damage: 7,
+                    block: 5,
+                    effects: [
+                        { type: 'Damage', amount: 7, target: 'Target' },
+                        { type: 'Block', amount: 5, target: 'Self' }
+                    ]
+                }
+            },
+            {
+                chance: 45,
+                intent: {
+                    type: 'Buff',
+                    block: 6,
+                    effects: [
+                        { type: 'Block', amount: 6, target: 'Self' },
+                        { type: 'ApplyStatus', amount: 3, statusId: 'strength', target: 'Self' }
+                    ]
+                }
+            }
+        ]
+    },
+    'gremlin_nob': {
+        id: 'gremlin_nob',
+        name: 'Gremlin Nob',
+        maxHpRange: [82, 86],
+        aiPatterns: [
+            {
+                chance: 100,
+                intent: {
+                    type: 'Attack',
+                    damage: 14,
+                    effects: [{ type: 'Damage', amount: 14, target: 'Target' }]
+                }
+            }
+        ]
+    }
+};
+
+export function createEnemyInstance(templateId: string, id: string, rng: any): Enemy {
+    const template = enemies[templateId];
+    if (!template) throw new Error(`Enemy template ${templateId} not found`);
+
+    // Calculate max hp dynamically from range
+    const [minHp, maxHp] = template.maxHpRange;
+    // Primitive random if no seed RNG context given
+    const finalMaxHp = rng ? Math.floor(rng.next() * (maxHp - minHp + 1)) + minHp : Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp;
+
+    return {
+        id,
+        name: template.name,
+        hp: finalMaxHp,
+        maxHp: finalMaxHp,
+        block: 0,
+        statuses: [],
+        intent: null // Intent gets calculated dynamically by the engine
+    };
+}

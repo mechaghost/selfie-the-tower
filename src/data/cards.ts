@@ -1,4 +1,4 @@
-import { Card, GameAction } from '../core/models';
+import { Card } from '../core/models';
 
 export const CARD_DATABASE: Record<string, Card> = {
     strike_red: {
@@ -9,6 +9,9 @@ export const CARD_DATABASE: Record<string, Card> = {
         cost: 1,
         description: 'Deal 6 damage.',
         target: 'Enemy',
+        effects: [
+            { type: 'Damage', amount: 6, target: 'Target' }
+        ],
         imageId: 'strike_red'
     },
     defend_red: {
@@ -19,6 +22,9 @@ export const CARD_DATABASE: Record<string, Card> = {
         cost: 1,
         description: 'Gain 5 Block.',
         target: 'Self',
+        effects: [
+            { type: 'Block', amount: 5, target: 'Self' }
+        ],
         imageId: 'defend_red'
     },
     bash: {
@@ -29,6 +35,10 @@ export const CARD_DATABASE: Record<string, Card> = {
         cost: 2,
         description: 'Deal 8 damage. Apply 2 Vulnerable.',
         target: 'Enemy',
+        effects: [
+            { type: 'Damage', amount: 8, target: 'Target' },
+            { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }
+        ],
         imageId: 'bash'
     }
 };
@@ -42,17 +52,4 @@ export const createCardInstance = (cardId: string): Card => {
     };
 };
 
-export const resolveCardPlay = (card: Card, targetId?: string): GameAction[] => {
-    const actions: GameAction[] = [];
 
-    if (card.id === 'strike_red') {
-        actions.push({ type: 'DAMAGE_ENTITY', payload: { targetId, amount: 6 } });
-    } else if (card.id === 'defend_red') {
-        actions.push({ type: 'GAIN_BLOCK', payload: { targetId: 'player', amount: 5 } });
-    } else if (card.id === 'bash') {
-        actions.push({ type: 'DAMAGE_ENTITY', payload: { targetId, amount: 8 } });
-        actions.push({ type: 'APPLY_STATUS', payload: { targetId, status: { id: 'vulnerable', name: 'Vulnerable', amount: 2, justApplied: true } } });
-    }
-
-    return actions;
-};

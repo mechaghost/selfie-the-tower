@@ -1,7 +1,8 @@
 import React, { useRef, useLayoutEffect } from 'react';
 import { Entity } from '../../core/models';
-import { Shield } from 'lucide-react';
+import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { STATUS_REGISTRY } from '../../data/statusEffects';
 import './EntityPanel.css';
 
 interface EntityPanelProps {
@@ -65,9 +66,45 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         }
     }
 
+    const renderIntent = () => {
+        if (isPlayer) return null;
+        const enemy = entity as import('../../core/models').Enemy;
+        if (!enemy.intent) return null;
+
+        const { type, damage, block } = enemy.intent;
+
+        return (
+            <div className="intent-badge">
+                {type.includes('Attack') && (
+                    <div className="intent-item attack">
+                        <Swords size={20} className="intent-icon" />
+                        <span className="intent-value">{damage}</span>
+                    </div>
+                )}
+                {type.includes('Defend') && type !== 'AttackDefend' && (
+                    <div className="intent-item defend">
+                        <ShieldPlus size={20} className="intent-icon" />
+                        {block && <span className="intent-value">{block}</span>}
+                    </div>
+                )}
+                {type === 'AttackDefend' && (
+                    <div className="intent-item defend">
+                        <ShieldPlus size={16} className="intent-icon secondary" />
+                    </div>
+                )}
+                {type.includes('Buff') && (
+                    <div className="intent-item buff">
+                        <Zap size={20} className="intent-icon" />
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}>
             <div className="entity-avatar-container">
+                {renderIntent()}
                 <div
                     ref={avatarRef}
                     className={`entity-avatar ${isTargeted ? 'targeted' : ''}`}
@@ -104,11 +141,14 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                 </div>
 
                 <div className="status-container">
-                    {entity.statuses.map(status => (
-                        <div key={status.id} className={`status-icon ${status.id}`} title={status.name}>
-                            {status.id === 'vulnerable' ? '💔' : '🛡️'} {status.amount}
-                        </div>
-                    ))}
+                    {entity.statuses.map(status => {
+                        const def = STATUS_REGISTRY[status.id];
+                        return (
+                            <div key={status.id} className={`status-icon ${status.id}`} title={def?.name || status.id}>
+                                {def?.icon || '❓'} {status.amount}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
