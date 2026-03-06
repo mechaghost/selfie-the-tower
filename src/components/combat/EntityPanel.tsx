@@ -9,7 +9,10 @@ interface EntityPanelProps {
 }
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
-    const playCard = useGameStore(state => state.playCard);
+    const { playCard, floatingTexts } = useGameStore(state => ({
+        playCard: state.playCard,
+        floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id)
+    }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -41,8 +44,15 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <div className="entity-avatar">
-                {isPlayer ? '🛡️' : '👹'}
+            <div className="entity-avatar-container">
+                <div className="entity-avatar">
+                    {isPlayer ? '🛡️' : '👹'}
+                </div>
+                {floatingTexts.map(ft => (
+                    <div key={ft.id} className={`floating-text ${ft.type}`}>
+                        {ft.type === 'damage' ? `-${ft.value}` : `+${ft.value}`}
+                    </div>
+                ))}
             </div>
 
             <div className="entity-info">

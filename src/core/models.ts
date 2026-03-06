@@ -63,3 +63,10 @@ export interface GameAction {
     type: GameActionType;
     payload?: any;
 }
+
+export interface FloatingText {
+    id: string; // Unique for React key
+    targetId: string; // The entity ID to attach to
+    value: number | string;
+    type: 'damage' | 'block' | 'heal' | 'status';
+}

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Card, Enemy, Player, GameAction } from '../core/models';
+import { Card, Enemy, Player, GameAction, FloatingText } from '../core/models';
 import { RNG } from '../core/rng';
 import { resolveCardPlay, createCardInstance } from '../data/cards';
 
@@ -25,6 +25,7 @@ interface GameState {
     // --- Action Queue ---
     actionQueue: GameAction[];
     isResolving: boolean;
+    floatingTexts: FloatingText[];
 
     // --- Store Methods ---
     initializeRun: (seed: string) => void;
@@ -39,6 +40,9 @@ interface GameState {
     drawCards: (amount: number) => void;
     playCard: (cardInstanceId: string, targetId?: string) => void;
     endTurn: () => void;
+
+    // UI Visuals
+    addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
 }
 
 const initialPlayerState: Player = {
@@ -72,6 +76,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     actionQueue: [],
     isResolving: false,
+    floatingTexts: [],
 
     initializeRun: (seed: string) => {
         const rng = new RNG(seed);
@@ -147,6 +152,18 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
     },
 
+    addFloatingText: (text) => {
+        const id = Math.random().toString(36).substr(2, 9);
+        set(state => ({
+            floatingTexts: [...state.floatingTexts, { ...text, id }]
+        }));
+        setTimeout(() => {
+            set(state => ({
+                floatingTexts: state.floatingTexts.filter(ft => ft.id !== id)
+            }));
+        }, 800); // 800ms animation duration
+    },
+
     queueAction: (action: GameAction) => {
         set((state) => ({
             actionQueue: [...state.actionQueue, action],
@@ -179,6 +196,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                             newHp = Math.max(0, target.hp + newBlock);
                             newBlock = 0;
                         }
+
+                        // Dispatch visual
+                        get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
 
                         if (isPlayer) {
                             set({ player: { ...state.player, hp: newHp, block: newBlock } });
@@ -213,6 +233,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
                 case 'GAIN_BLOCK': {
                     const { targetId, amount } = action.payload;
+                    get().addFloatingText({ targetId, value: amount, type: 'block' });
                     if (targetId === 'player') {
                         set({ player: { ...state.player, block: state.player.block + amount } });
                     } else {
