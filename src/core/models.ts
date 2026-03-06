@@ -9,6 +9,7 @@ export interface Card {
     cost: number;
     description: string;
     target: TargetType;
+    imageId?: string;
     exhausts?: boolean;
     ethereal?: boolean;
     upgraded?: boolean;

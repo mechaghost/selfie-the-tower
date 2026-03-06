@@ -100,6 +100,9 @@ export function HandHUD() {
                         )}
                         <div className="card-name">{card.name}</div>
                         <div className="card-type">{card.type}</div>
+                        {card.imageId && (
+                            <img src={`/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+                        )}
                         <div className="card-desc">{card.description}</div>
                     </div>
                 );

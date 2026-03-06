@@ -8,7 +8,8 @@ export const CARD_DATABASE: Record<string, Card> = {
         type: 'Attack',
         cost: 1,
         description: 'Deal 6 damage.',
-        target: 'Enemy'
+        target: 'Enemy',
+        imageId: 'strike_red'
     },
     defend_red: {
         id: 'defend_red',
@@ -17,7 +18,8 @@ export const CARD_DATABASE: Record<string, Card> = {
         type: 'Skill',
         cost: 1,
         description: 'Gain 5 Block.',
-        target: 'Self'
+        target: 'Self',
+        imageId: 'defend_red'
     },
     bash: {
         id: 'bash',
@@ -26,7 +28,8 @@ export const CARD_DATABASE: Record<string, Card> = {
         type: 'Attack',
         cost: 2,
         description: 'Deal 8 damage. Apply 2 Vulnerable.',
-        target: 'Enemy'
+        target: 'Enemy',
+        imageId: 'bash'
     }
 };
 
