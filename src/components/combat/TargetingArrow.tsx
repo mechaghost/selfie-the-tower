@@ -3,7 +3,10 @@ import { Sparkles } from 'lucide-react';
 import './TargetingArrow.css';
 
 export function TargetingArrow() {
-    const dragState = useGameStore(state => state.dragState);
+    const { dragState, entityBounds } = useGameStore(state => ({
+        dragState: state.dragState,
+        entityBounds: state.entityBounds
+    }));
 
     if (!dragState.isActive) return null;
 
@@ -22,6 +25,25 @@ export function TargetingArrow() {
     const cp2y = startY - 200;
 
     const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+
+    // --- Hover Target Detection ---
+    const HOVER_RADIUS = 150; // pixels
+    let isValidTarget = false;
+
+    Object.entries(entityBounds).forEach(([_id, rect]) => {
+        // Calculate center of the entity panel
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        // Calculate distance from cursor to center
+        const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
+
+        if (dist < HOVER_RADIUS) {
+            isValidTarget = true;
+        }
+    });
+
+    const arrowColor = isValidTarget ? 'var(--color-accent-red)' : 'rgba(255, 255, 255, 0.4)';
 
     // Calculate arrow head rotation
     // We estimate the tangent at the end of the bezier curve (t=1). 
@@ -44,7 +66,7 @@ export function TargetingArrow() {
             <path
                 d={pathD}
                 fill="none"
-                stroke="var(--color-accent-red)"
+                stroke={arrowColor}
                 strokeWidth="6"
                 filter="url(#glow)"
                 className="targeting-path"
@@ -57,8 +79,8 @@ export function TargetingArrow() {
                 }}
             >
                 <Sparkles
-                    color="var(--color-accent-red)"
-                    fill="var(--color-accent-red)"
+                    color={arrowColor}
+                    fill={arrowColor}
                     size={32}
                     x={-16}
                     y={-16}
