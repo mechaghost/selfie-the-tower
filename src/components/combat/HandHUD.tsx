@@ -3,9 +3,10 @@ import { CardItem } from '../ui/CardItem';
 import '../ui/CardItem.css';
 
 export function HandHUD() {
-    const { hand, player } = useGameStore(state => ({
+    const { hand, player, playingCards } = useGameStore(state => ({
         hand: state.hand,
-        player: state.player
+        player: state.player,
+        playingCards: state.playingCards
     }));
 
     return (
@@ -33,6 +34,16 @@ export function HandHUD() {
                     />
                 );
             })}
+
+            {playingCards.map((pc) => (
+                <div key={pc.id} className="card-playing-wrapper">
+                    <CardItem
+                        card={pc.card}
+                        canPlay={false}
+                        isDraggable={false}
+                    />
+                </div>
+            ))}
         </div>
     );
 }

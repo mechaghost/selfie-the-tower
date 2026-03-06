@@ -16,6 +16,13 @@ export interface DragState {
     prevY: number;
 }
 
+export interface PlayingCard {
+    card: Card;
+    id: string; // Unique animation instance ID
+    targetId?: string;
+    isExhausting: boolean;
+}
+
 interface GameState {
     // --- Metagame / Run State ---
     seed: string;
@@ -34,6 +41,7 @@ interface GameState {
     hand: Card[];
     discardPile: Card[];
     exhaustPile: Card[];
+    playingCards: PlayingCard[];
 
     // --- Action Queue ---
     actionQueue: GameAction[];
@@ -56,6 +64,7 @@ interface GameState {
     // Atomic State Mutators (called by the action resolver)
     drawCards: (amount: number) => void;
     playCard: (cardInstanceId: string, targetId?: string) => void;
+    cleanupPlayingCard: (animId: string) => void;
     endTurn: () => void;
 
     addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
@@ -92,6 +101,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     hand: [],
     discardPile: [],
     exhaustPile: [],
+    playingCards: [],
 
     actionQueue: [],
     isResolving: false,
@@ -154,6 +164,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 drawPile: shuffledDraw,
                 discardPile: [],
                 exhaustPile: [],
+                playingCards: [],
                 hand: [],
                 player: freshPlayer,
                 actionQueue: [{ type: 'START_TURN' }] // Kickoff player turn automatically
@@ -372,29 +383,53 @@ export const useGameStore = create<GameState>((set, get) => ({
             let newHand = [...state.hand];
             newHand.splice(cardIndex, 1);
 
-            let newDiscard = [...state.discardPile];
-            let newExhaust = [...state.exhaustPile];
-
-            if (card.exhausts) {
-                newExhaust.push(card);
-            } else {
-                newDiscard.push(card);
-            }
+            const animId = Math.random().toString(36).substr(2, 9);
+            const playingCard: PlayingCard = {
+                card,
+                id: animId,
+                targetId,
+                isExhausting: !!card.exhausts
+            };
 
             // Push card effect to action queue
             const playAction: GameAction = { type: 'PLAY_CARD', payload: { card, targetId } };
 
+            // Schedule the cleanup of the visual card after the animation completes (600ms)
+            setTimeout(() => {
+                get().cleanupPlayingCard(animId);
+            }, 600);
+
             return {
                 player: { ...state.player, energy: state.player.energy - card.cost },
                 hand: newHand,
-                discardPile: newDiscard,
-                exhaustPile: newExhaust,
+                playingCards: [...state.playingCards, playingCard],
                 actionQueue: [...state.actionQueue, playAction]
             };
         });
 
         get().resetDragState();
         get().resolveQueue();
+    },
+
+    cleanupPlayingCard: (animId: string) => {
+        set((state) => {
+            const playingCard = state.playingCards.find(pc => pc.id === animId);
+            if (!playingCard) return state;
+
+            const newPlayingCards = state.playingCards.filter(pc => pc.id !== animId);
+
+            if (playingCard.isExhausting) {
+                return {
+                    playingCards: newPlayingCards,
+                    exhaustPile: [...state.exhaustPile, playingCard.card]
+                };
+            } else {
+                return {
+                    playingCards: newPlayingCards,
+                    discardPile: [...state.discardPile, playingCard.card]
+                };
+            }
+        });
     },
 
     endTurn: () => {
