@@ -6,13 +6,15 @@ import { TargetingArrow } from './TargetingArrow';
 import './CombatView.css';
 
 export function CombatView() {
-    const { player, enemies, endTurn, energy, maxEnergy, playCard } = useGameStore((state) => ({
+    const { player, enemies, endTurn, energy, maxEnergy, playCard, drawPile, discardPile } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
         maxEnergy: state.player.maxEnergy,
-        playCard: state.playCard
+        playCard: state.playCard,
+        drawPile: state.drawPile,
+        discardPile: state.discardPile
     }));
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -52,18 +54,35 @@ export function CombatView() {
                 </div>
             </div>
 
-            <div className="energy-hud">
-                <div className="energy-orb">
-                    {energy} / {maxEnergy}
+            <div className="table-controls">
+                <div className="energy-hud">
+                    <div className="energy-orb">
+                        {energy} / {maxEnergy}
+                    </div>
+                </div>
+
+                <button className="end-turn-button" onClick={endTurn}>
+                    End Turn
+                </button>
+            </div>
+
+            <div className="deck-table">
+                <div className="pile draw-pile">
+                    <div className="pile-icon" />
+                    <div className="pile-count">{drawPile.length}</div>
+                    <div className="pile-label">Draw</div>
+                </div>
+
+                <HandHUD />
+
+                <div className="pile discard-pile">
+                    <div className="pile-icon" />
+                    <div className="pile-count">{discardPile.length}</div>
+                    <div className="pile-label">Discard</div>
                 </div>
             </div>
 
-            <HandHUD />
             <TargetingArrow />
-
-            <button className="end-turn-button" onClick={endTurn}>
-                End Turn
-            </button>
         </div>
     );
 }
