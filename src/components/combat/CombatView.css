@@ -23,7 +23,7 @@
 
 .table-controls {
     position: absolute;
-    bottom: 280px;
+    bottom: 320px;
     left: 0;
     right: 0;
     display: flex;
@@ -119,11 +119,11 @@
 
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    /* Center vertically raises the piles from the absolute floor */
-    padding: 2rem 4rem;
-    /* Thick padding to give the table depth */
-    min-height: 220px;
+    align-items: flex-end;
+    /* Hand sits at the bottom */
+    padding: 0 4rem 1.5rem;
+    /* left/right 4rem, bottom 1.5rem */
+    height: 320px;
     pointer-events: none;
     z-index: 100;
 }
@@ -143,6 +143,8 @@
     position: relative;
     cursor: pointer;
     transition: transform 0.2s, border-color 0.2s;
+    align-self: flex-start;
+    margin-top: 30px;
 }
 
 .pile:hover {
@@ -199,7 +201,7 @@
     }
 
     .table-controls {
-        bottom: 180px;
+        bottom: 210px;
         /* Raise above the new table height */
         padding: 0 1rem;
     }
@@ -216,13 +218,14 @@
 
     .deck-table {
         padding: 1rem 1rem;
-        min-height: 120px;
+        height: 200px;
     }
 
     .pile {
         width: 60px;
         height: 80px;
         border-width: 2px;
+        margin-top: 10px;
     }
 
     .pile-icon {
