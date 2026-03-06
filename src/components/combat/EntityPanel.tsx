@@ -12,9 +12,10 @@ interface EntityPanelProps {
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
-    const { playCard, floatingTexts, setEntityBounds, dragState, entityBounds } = useGameStore(state => ({
+    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds } = useGameStore(state => ({
         playCard: state.playCard,
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
+        activeAnimations: state.activeAnimations.filter(a => a.targetId === entity.id),
         setEntityBounds: state.setEntityBounds,
         dragState: state.dragState,
         entityBounds: state.entityBounds
@@ -66,6 +67,27 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         }
     }
 
+    const animClasses = activeAnimations.map(a => `anim-${a.type}`).join(' ');
+
+    let lungeStyle = {} as React.CSSProperties;
+    const lungeAnim = activeAnimations.find(a => a.type === 'lunge');
+    if (lungeAnim && lungeAnim.destinationId) {
+        const sourceRect = entityBounds[entity.id];
+        const destRect = entityBounds[lungeAnim.destinationId];
+        if (sourceRect && destRect) {
+            const sourceCX = sourceRect.left + sourceRect.width / 2;
+            const sourceCY = sourceRect.top + sourceRect.height / 2;
+            const destCX = destRect.left + destRect.width / 2;
+            const destCY = destRect.top + destRect.height / 2;
+
+            // Lunge ~30% of the distance towards the target
+            lungeStyle = {
+                '--lunge-x': `${(destCX - sourceCX) * 0.3}px`,
+                '--lunge-y': `${(destCY - sourceCY) * 0.3}px`
+            } as React.CSSProperties;
+        }
+    }
+
     const renderIntent = () => {
         if (isPlayer) return null;
         const enemy = entity as import('../../core/models').Enemy;
@@ -107,7 +129,8 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                 {renderIntent()}
                 <div
                     ref={avatarRef}
-                    className={`entity-avatar ${isTargeted ? 'targeted' : ''}`}
+                    className={`entity-avatar ${isTargeted ? 'targeted' : ''} ${animClasses}`}
+                    style={lungeStyle}
                     data-entity-id={entity.id}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}

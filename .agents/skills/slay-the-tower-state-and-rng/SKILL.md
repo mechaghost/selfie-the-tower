@@ -14,6 +14,7 @@ The Zustand store is distinctly segmented:
 2. **Combat State:** The active transient board state. Houses HP arrays for `Player` and `Enemies`, active status effects, and temporary max block values.
 3. **Deck State:** Contains arrays of Cards: `masterDeck`, `drawPile`, `hand`, `discardPile`, `exhaustPile`.
 4. **Action Queue State:** The running sequencer track managing cascading game actions.
+5. **Visual State:** Coordinates active ephemeral CSS animations (like combat numbers, card highlights, and target cursors) via the `activeAnimations` array. This slice manages the `playAnimation` cycle which automatically garbage collects entries after a `setTimeout` ticks down.
 
 ## Deterministic RNG
 Roguelike games require the ability to perfectly recreate a run's seed. JavaScript's native `Math.random()` cannot be seeded natively in the browser.

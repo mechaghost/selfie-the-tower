@@ -21,17 +21,32 @@ export function HandHUD() {
 
                 const canPlay = player.energy >= card.cost;
 
+                // Convert pure Flexbox to bounded Absolute positioning to enable transition easing
+                const cardWidth = window.innerWidth <= 768 ? 70 : 120; // smaller spacing on mobile
+                const cardLeftOffset = `calc(50% + ${offset * cardWidth}px - ${cardWidth / 2}px)`;
+
                 return (
-                    <CardItem
+                    <div
                         key={card.instanceId}
-                        card={card}
-                        canPlay={canPlay}
-                        isDraggable={true}
+                        className="card-draw-anim"
                         style={{
-                            transform: `translateY(${translateY}px) rotate(${rotation}deg)`,
-                            zIndex: 10 + index
+                            position: 'absolute',
+                            left: cardLeftOffset,
+                            bottom: 0,
+                            transition: 'left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), z-index 0s',
+                            zIndex: 10 + index,
+                            animationDelay: `${index * 0.1}s`
                         }}
-                    />
+                    >
+                        <CardItem
+                            card={card}
+                            canPlay={canPlay}
+                            isDraggable={true}
+                            style={{
+                                transform: `translateY(${translateY}px) rotate(${rotation}deg)`
+                            }}
+                        />
+                    </div>
                 );
             })}
 

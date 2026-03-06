@@ -33,26 +33,35 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         }));
         e.dataTransfer.effectAllowed = 'move';
 
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top;
+
+        // Recalculate all bounding boxes precisely at drag start
         if (card.target === 'Enemy') {
-            const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-            const startX = rect.left + rect.width / 2;
-            const startY = rect.top;
-
-            setDragState({
-                isActive: true,
-                cardId: card.instanceId,
-                targetType: card.target,
-                isTouch: false,
-                startX,
-                startY,
-                currentX: e.clientX,
-                currentY: e.clientY
+            const state = useGameStore.getState();
+            document.querySelectorAll('.entity-avatar').forEach(el => {
+                const id = el.getAttribute('data-entity-id');
+                if (id) {
+                    state.setEntityBounds(id, el.getBoundingClientRect());
+                }
             });
-
-            const img = new Image();
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-            e.dataTransfer.setDragImage(img, 0, 0);
         }
+
+        setDragState({
+            isActive: true,
+            cardId: card.instanceId,
+            targetType: card.target,
+            isTouch: false,
+            startX,
+            startY,
+            currentX: e.clientX,
+            currentY: e.clientY
+        });
+
+        const img = new Image();
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+        e.dataTransfer.setDragImage(img, 0, 0);
     };
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -73,6 +82,18 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
 
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
         if (!canPlay) return;
+
+        // Recalculate bounds for touch targets before drag starts
+        if (card.target === 'Enemy') {
+            const state = useGameStore.getState();
+            document.querySelectorAll('.entity-avatar').forEach(el => {
+                const id = el.getAttribute('data-entity-id');
+                if (id) {
+                    state.setEntityBounds(id, el.getBoundingClientRect());
+                }
+            });
+        }
+
         const touch = e.touches[0];
         setDragState({
             isActive: true,
@@ -136,19 +157,11 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         }
     };
 
-    const combinedStyle: React.CSSProperties = (isBeingTouched && card.target !== 'Enemy') ? {
-        ...style,
-        position: 'fixed' as const,
-        left: dragState.currentX - 60, // approx half width of mobile card
-        top: dragState.currentY - 90,
-        transform: 'none',
-        zIndex: 9999,
-        pointerEvents: 'none' as const
-    } : { ...style };
+    const combinedStyle: React.CSSProperties = { ...style };
 
     return (
         <div
-            className={`card ${canPlay ? 'playable' : 'unplayable'} type-${card.type.toLowerCase()}`}
+            className={`card ${canPlay ? 'playable' : 'unplayable'} type-${card.type.toLowerCase()} ${isBeingTouched ? 'is-dragging' : ''}`}
             draggable={isDraggable && canPlay}
             onDragStart={handleDragStart}
             onDrag={handleDrag}

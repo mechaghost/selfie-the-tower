@@ -22,6 +22,7 @@ export interface Effect {
     amount?: number;
     statusId?: string; // 'vulnerable', 'weak', 'strength'
     target: 'Self' | 'Target' | 'AllEnemies' | 'RandomEnemy' | 'None';
+    vfx?: string; // e.g. 'slash', 'fireball', 'heal_sparkle'
 }
 ```
 
@@ -71,4 +72,7 @@ If a new LLM-generated custom card requires a mechanic that doesn't exist (e.g. 
 Instead:
 1. Add `'StealGold'` to `EffectType` in `models.ts`.
 2. Add a `case 'StealGold':` parsing block inside the universal `resolveEffects` utility in `gameStore.ts`.
-3. The LLM can now confidently attach `{ "type": "StealGold", "amount": 10 }` to thousands of dynamically generated UGC cards forever.
+3. The LLM can now confidently attach `{ "type": "StealGold", "amount": 10, "vfx": "gold_shower" }` to thousands of dynamically generated UGC cards forever.
+
+### 3. Generating Visual Effects (VFX)
+Visual animations are also inherently data-driven. When an LLM generates a custom attack, it does not need to write CSS or Javascript animation hooks. It simply passes a `vfx: 'laser_beam'` string on the Effect, and the Action Queue automatically translates this into visual `PLAY_ANIMATION` state nodes that the UI consumes.

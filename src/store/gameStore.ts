@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Card, Enemy, Player, GameAction, GameActionType, FloatingText, Effect, StatusEffect } from '../core/models';
+import { Card, Enemy, Player, GameAction, GameActionType, FloatingText, ActiveAnimation, Effect, StatusEffect } from '../core/models';
 import { RNG } from '../core/rng';
 import { createCardInstance } from '../data/cards';
 import { STATUS_REGISTRY } from '../data/statusEffects';
@@ -51,6 +51,7 @@ interface GameState {
     actionQueue: GameAction[];
     isResolving: boolean;
     floatingTexts: FloatingText[];
+    activeAnimations: ActiveAnimation[];
 
     // --- Drag & Drop UI ---
     dragState: DragState;
@@ -72,6 +73,7 @@ interface GameState {
     endTurn: () => void;
 
     addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
+    playAnimation: (targetId: string, type: 'lunge' | 'stagger') => void;
     setDragState: (state: Partial<DragState>) => void;
     resetDragState: () => void;
     setEntityBounds: (id: string, bounds: DOMRect) => void;
@@ -110,7 +112,13 @@ export function resolveEffects(
 
         targets.forEach(targetId => {
             if (effect.type === 'Damage' && effect.amount) {
+                if (sourceId) {
+                    actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
+                    actions.push({ type: 'DELAY', payload: { ms: 300 } });
+                }
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount } });
+                actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
+                actions.push({ type: 'DELAY', payload: { ms: 400 } });
             } else if (effect.type === 'Block' && effect.amount) {
                 actions.push({ type: 'GAIN_BLOCK', payload: { sourceId, targetId, amount: effect.amount } });
             } else if (effect.type === 'ApplyStatus' && effect.amount && effect.statusId) {
@@ -157,6 +165,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     actionQueue: [],
     isResolving: false,
     floatingTexts: [],
+    activeAnimations: [],
 
     dragState: {
         isActive: false,
@@ -277,6 +286,18 @@ export const useGameStore = create<GameState>((set, get) => ({
         }, 1200); // 1200ms animation duration
     },
 
+    playAnimation: (targetId, type) => {
+        const id = Math.random().toString(36).substr(2, 9);
+        set(state => ({
+            activeAnimations: [...state.activeAnimations, { id, targetId, type }]
+        }));
+        setTimeout(() => {
+            set(state => ({
+                activeAnimations: state.activeAnimations.filter(a => a.id !== id)
+            }));
+        }, 500);
+    },
+
     queueAction: (action: GameAction) => {
         set((state) => ({
             actionQueue: [...state.actionQueue, action],
@@ -287,257 +308,282 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     resolveQueue: () => {
-        let state = get();
-        while (state.actionQueue.length > 0 && !state.isResolving) {
-            set({ isResolving: true });
+        const state = get();
+        if (state.actionQueue.length === 0 || state.isResolving) return;
 
-            const action = state.actionQueue[0];
+        set({ isResolving: true });
+        const action = state.actionQueue[0];
+        let delay = 0;
 
-            switch (action.type) {
-                case 'DAMAGE_ENTITY': {
-                    const { sourceId, targetId, amount } = action.payload;
-                    const isPlayer = targetId === 'player';
-                    let target = isPlayer ? state.player : state.enemies.find(e => e.id === targetId);
-                    let source = sourceId === 'player' ? state.player : state.enemies.find(e => e.id === sourceId);
+        switch (action.type) {
+            case 'DAMAGE_ENTITY': {
+                const { sourceId, targetId, amount } = action.payload;
+                const isPlayer = targetId === 'player';
+                let target = isPlayer ? state.player : state.enemies.find(e => e.id === targetId);
+                let source = sourceId === 'player' ? state.player : state.enemies.find(e => e.id === sourceId);
 
-                    if (target) {
-                        let finalDamage = amount;
+                if (target) {
+                    let finalDamage = amount;
 
-                        // Modifier 1: Source flat damage (Strength)
-                        if (source) {
-                            let flatMod = 0;
-                            source.statuses.forEach(s => {
-                                const def = STATUS_REGISTRY[s.id];
-                                if (def?.flatDamageGivenPerStack && s.amount > 0) flatMod += def.flatDamageGivenPerStack * s.amount;
-                            });
-                            finalDamage += flatMod;
-                        }
-
-                        // Modifier 2: Source multiplicative (Weak)
-                        if (source) {
-                            source.statuses.forEach(s => {
-                                const def = STATUS_REGISTRY[s.id];
-                                if (def?.damageGivenMultiplier && s.amount > 0) finalDamage = Math.floor(finalDamage * def.damageGivenMultiplier);
-                            });
-                        }
-
-                        // Modifier 3: Target multiplicative (Vulnerable)
-                        target.statuses.forEach(s => {
-                            const def = STATUS_REGISTRY[s.id];
-                            if (def?.damageTakenMultiplier && s.amount > 0) finalDamage = Math.floor(finalDamage * def.damageTakenMultiplier);
-                        });
-
-                        finalDamage = Math.max(0, finalDamage);
-
-                        let newBlock = target.block - finalDamage;
-                        let newHp = target.hp;
-                        if (newBlock < 0) {
-                            newHp = Math.max(0, target.hp + newBlock);
-                            newBlock = 0;
-                        }
-
-                        // Dispatch visual
-                        get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
-
-                        if (isPlayer) {
-                            set({ player: { ...state.player, hp: newHp, block: newBlock } });
-
-                            // Check for Game Over
-                            if (newHp <= 0) {
-                                set({
-                                    isGameOver: true,
-                                    inCombat: false,
-                                    actionQueue: [],
-                                    isResolving: false
-                                });
-                                return; // Stop resolving this queue
-                            }
-                        } else {
-                            const updatedEnemies = state.enemies.map(e => e.id === targetId ? { ...e, hp: newHp, block: newBlock } : e);
-                            set({ enemies: updatedEnemies });
-
-                            // Check for combat victory
-                            if (updatedEnemies.every(e => e.hp <= 0)) {
-                                set({
-                                    inCombat: false,
-                                    enemies: [],
-                                    actionQueue: [],
-                                    isResolving: false
-                                });
-                                return; // Stop resolving this queue
-                            }
-                        }
-                    }
-                    break;
-                }
-                case 'GAIN_BLOCK': {
-                    const { sourceId, targetId, amount } = action.payload;
-                    let source = sourceId === 'player' ? state.player : state.enemies.find(e => e.id === sourceId);
-
-                    let finalBlock = amount;
+                    // Modifier 1: Source flat damage (Strength)
                     if (source) {
                         let flatMod = 0;
                         source.statuses.forEach(s => {
                             const def = STATUS_REGISTRY[s.id];
-                            if (def?.flatBlockGivenPerStack && s.amount > 0) flatMod += def.flatBlockGivenPerStack * s.amount;
+                            if (def?.flatDamageGivenPerStack && s.amount > 0) flatMod += def.flatDamageGivenPerStack * s.amount;
                         });
-                        finalBlock += flatMod;
+                        finalDamage += flatMod;
                     }
-                    finalBlock = Math.max(0, finalBlock);
 
-                    get().addFloatingText({ targetId, value: finalBlock, type: 'block' });
-                    if (targetId === 'player') {
-                        set({ player: { ...state.player, block: state.player.block + finalBlock } });
-                    } else {
-                        set({ enemies: state.enemies.map(e => e.id === targetId ? { ...e, block: e.block + finalBlock } : e) });
+                    // Modifier 2: Source multiplicative (Weak)
+                    if (source) {
+                        source.statuses.forEach(s => {
+                            const def = STATUS_REGISTRY[s.id];
+                            if (def?.damageGivenMultiplier && s.amount > 0) finalDamage = Math.floor(finalDamage * def.damageGivenMultiplier);
+                        });
                     }
-                    break;
-                }
-                case 'PLAY_CARD': {
-                    const { card, targetId } = action.payload;
-                    const allEnemyIds = state.enemies.map(e => e.id);
-                    const cardActions = resolveEffects(card.effects || [], 'player', targetId, allEnemyIds);
-                    set((current) => ({
-                        actionQueue: [...cardActions, ...current.actionQueue.slice(1)],
-                        isResolving: false
-                    }));
-                    state = get();
-                    continue; // Skip the default remove-processed-action at the end of loop
-                }
-                case 'APPLY_STATUS': {
-                    const { targetId, status } = action.payload;
-                    const isPlayer = targetId === 'player';
-                    let target = isPlayer ? state.player : state.enemies.find(e => e.id === targetId);
-                    if (target) {
-                        const existingStatus = target.statuses.find(s => s.id === status.id);
-                        let newStatuses = [...target.statuses];
-                        if (existingStatus) {
-                            newStatuses = newStatuses.map(s => s.id === status.id ? { ...s, amount: s.amount + status.amount } : s);
-                        } else {
-                            newStatuses.push(status);
-                        }
-                        if (isPlayer) {
-                            set({ player: { ...state.player, statuses: newStatuses } });
-                        } else {
-                            set({ enemies: state.enemies.map(e => e.id === targetId ? { ...e, statuses: newStatuses } : e) });
-                        }
-                    }
-                    break;
-                }
-                case 'END_TURN': {
-                    let enemyActions: GameAction[] = [];
-                    const allEnemyIds = state.enemies.map(e => e.id);
 
-                    // Execute Enemy intents
-                    state.enemies.forEach(enemy => {
-                        if (enemy.intent && enemy.intent.effects) {
-                            const intentActions = resolveEffects(enemy.intent.effects, enemy.id, 'player', allEnemyIds);
-                            enemyActions = enemyActions.concat(intentActions);
-                        }
+                    // Modifier 3: Target multiplicative (Vulnerable)
+                    target.statuses.forEach(s => {
+                        const def = STATUS_REGISTRY[s.id];
+                        if (def?.damageTakenMultiplier && s.amount > 0) finalDamage = Math.floor(finalDamage * def.damageTakenMultiplier);
                     });
 
-                    // Utility to process decay
-                    const decayStatuses = (statuses: StatusEffect[]) => {
-                        return statuses.map(s => {
-                            const def = STATUS_REGISTRY[s.id];
-                            if (def?.decreasesPerTurn && s.amount > 0 && !s.justApplied) {
-                                return { ...s, amount: s.amount - 1 };
-                            }
-                            if (s.justApplied) {
-                                return { ...s, justApplied: false };
-                            }
-                            return s;
-                        }).filter(s => s.amount > 0);
-                    };
+                    finalDamage = Math.max(0, finalDamage);
 
-                    const newPlayerStatuses = decayStatuses(state.player.statuses);
-                    const newEnemies = state.enemies.map(enemy => ({
-                        ...enemy,
-                        statuses: decayStatuses(enemy.statuses)
-                    }));
+                    let newBlock = target.block - finalDamage;
+                    let newHp = target.hp;
+                    if (newBlock < 0) {
+                        newHp = Math.max(0, target.hp + newBlock);
+                        newBlock = 0;
+                    }
 
-                    set((current) => ({
-                        player: { ...current.player, statuses: newPlayerStatuses },
-                        enemies: newEnemies
-                    }));
+                    // Dispatch visual
+                    get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
 
-                    enemyActions.push({ type: 'CALCULATE_INTENTS' as GameActionType });
+                    if (isPlayer) {
+                        set({ player: { ...state.player, hp: newHp, block: newBlock } });
 
-                    set((current) => ({
-                        actionQueue: [...enemyActions, ...current.actionQueue.slice(1)],
-                        isResolving: false
-                    }));
-                    state = get();
-                    continue;
-                }
-                case 'CALCULATE_INTENTS' as GameActionType: {
-                    const updatedEnemies = state.enemies.map(enemy => {
-                        // In MVP we used ID patterns like `enemy_jaw_worm_node1` or passed templateId.
-                        // We will look up the template directly:
-                        let templateId = 'jaw_worm';
-                        if (enemy.name === 'Gremlin Nob') templateId = 'gremlin_nob';
-
-                        const aiDef = enemies[templateId];
-                        let newIntent = null;
-
-                        if (aiDef && aiDef.aiPatterns) {
-                            // Filter patterns whose conditions are met
-                            let validPatterns = aiDef.aiPatterns.filter(p => {
-                                if (p.condition === 'Turn1') return !enemy.intent;
-                                if (p.condition === 'BelowHalfHP') return enemy.hp <= enemy.maxHp / 2;
-                                return p.condition === 'Always' || !p.condition;
+                        // Check for Game Over
+                        if (newHp <= 0) {
+                            set({
+                                isGameOver: true,
+                                inCombat: false,
+                                actionQueue: [],
+                                isResolving: false
                             });
+                            return; // Stop resolving this queue
+                        }
+                    } else {
+                        const updatedEnemies = state.enemies.map(e => e.id === targetId ? { ...e, hp: newHp, block: newBlock } : e);
+                        set({ enemies: updatedEnemies });
 
-                            // Priority override: Specific conditions take precedence over general 'Always' behaviors
-                            if (validPatterns.some(p => p.condition === 'Turn1')) {
-                                validPatterns = validPatterns.filter(p => p.condition === 'Turn1');
-                            } else if (validPatterns.some(p => p.condition === 'BelowHalfHP')) {
-                                validPatterns = validPatterns.filter(p => p.condition === 'BelowHalfHP');
-                            }
+                        // Check for combat victory
+                        if (updatedEnemies.every(e => e.hp <= 0)) {
+                            set({
+                                inCombat: false,
+                                enemies: [],
+                                actionQueue: [],
+                                isResolving: false
+                            });
+                            return; // Stop resolving this queue
+                        }
+                    }
+                }
+                break;
+            }
+            case 'GAIN_BLOCK': {
+                const { sourceId, targetId, amount } = action.payload;
+                let source = sourceId === 'player' ? state.player : state.enemies.find(e => e.id === sourceId);
 
-                            if (validPatterns.length > 0) {
-                                // RNG Weighted Selection
-                                const totalWeight = validPatterns.reduce((sum, p) => sum + p.chance, 0);
-                                const roll = state.rng ? state.rng.next() * totalWeight : Math.random() * totalWeight;
-                                let runningSum = 0;
+                let finalBlock = amount;
+                if (source) {
+                    let flatMod = 0;
+                    source.statuses.forEach(s => {
+                        const def = STATUS_REGISTRY[s.id];
+                        if (def?.flatBlockGivenPerStack && s.amount > 0) flatMod += def.flatBlockGivenPerStack * s.amount;
+                    });
+                    finalBlock += flatMod;
+                }
+                finalBlock = Math.max(0, finalBlock);
 
-                                for (const p of validPatterns) {
-                                    runningSum += p.chance;
-                                    if (roll <= runningSum) {
-                                        newIntent = p.intent;
-                                        break;
-                                    }
+                get().addFloatingText({ targetId, value: finalBlock, type: 'block' });
+                if (targetId === 'player') {
+                    set({ player: { ...state.player, block: state.player.block + finalBlock } });
+                } else {
+                    set({ enemies: state.enemies.map(e => e.id === targetId ? { ...e, block: e.block + finalBlock } : e) });
+                }
+                break;
+            }
+            case 'PLAY_CARD': {
+                const { card, targetId } = action.payload;
+                const allEnemyIds = state.enemies.map(e => e.id);
+                const cardActions = resolveEffects(card.effects || [], 'player', targetId, allEnemyIds);
+                set((current) => ({
+                    actionQueue: [...cardActions, ...current.actionQueue.slice(1)],
+                    isResolving: false
+                }));
+                setTimeout(() => get().resolveQueue(), 0);
+                return;
+            }
+            case 'APPLY_STATUS': {
+                const { targetId, status } = action.payload;
+                const isPlayer = targetId === 'player';
+                let target = isPlayer ? state.player : state.enemies.find(e => e.id === targetId);
+                if (target) {
+                    const existingStatus = target.statuses.find(s => s.id === status.id);
+                    let newStatuses = [...target.statuses];
+                    if (existingStatus) {
+                        newStatuses = newStatuses.map(s => s.id === status.id ? { ...s, amount: s.amount + status.amount } : s);
+                    } else {
+                        newStatuses.push(status);
+                    }
+                    if (isPlayer) {
+                        set({ player: { ...state.player, statuses: newStatuses } });
+                    } else {
+                        set({ enemies: state.enemies.map(e => e.id === targetId ? { ...e, statuses: newStatuses } : e) });
+                    }
+                }
+                break;
+            }
+            case 'END_TURN': {
+                let enemyActions: GameAction[] = [];
+                const allEnemyIds = state.enemies.map(e => e.id);
+
+                // Execute Enemy intents with announcements and pacing
+                state.enemies.forEach(enemy => {
+                    if (enemy.intent && enemy.intent.effects) {
+                        // Determine a conversational name for the intent
+                        let attackName = 'Attacks!';
+                        if (enemy.intent.type.includes('Defend')) attackName = 'Defends!';
+                        if (enemy.intent.type.includes('Buff')) attackName = 'Buffs!';
+                        if (enemy.intent.type === 'AttackDefend') attackName = 'Attacks & Defends!';
+
+                        enemyActions.push({ type: 'ANNOUNCE_INTENT' as GameActionType, payload: { targetId: enemy.id, text: attackName } });
+
+                        const intentActions = resolveEffects(enemy.intent.effects, enemy.id, 'player', allEnemyIds);
+                        enemyActions = enemyActions.concat(intentActions);
+
+                        enemyActions.push({ type: 'DELAY' as GameActionType, payload: { ms: 600 } });
+                    }
+                });
+
+                // Utility to process decay
+                const decayStatuses = (statuses: StatusEffect[]) => {
+                    return statuses.map(s => {
+                        const def = STATUS_REGISTRY[s.id];
+                        if (def?.decreasesPerTurn && s.amount > 0 && !s.justApplied) {
+                            return { ...s, amount: s.amount - 1 };
+                        }
+                        if (s.justApplied) {
+                            return { ...s, justApplied: false };
+                        }
+                        return s;
+                    }).filter(s => s.amount > 0);
+                };
+
+                const newPlayerStatuses = decayStatuses(state.player.statuses);
+                const newEnemies = state.enemies.map(enemy => ({
+                    ...enemy,
+                    statuses: decayStatuses(enemy.statuses)
+                }));
+
+                set((current) => ({
+                    player: { ...current.player, statuses: newPlayerStatuses },
+                    enemies: newEnemies
+                }));
+
+                enemyActions.push({ type: 'CALCULATE_INTENTS' as GameActionType });
+
+                set((current) => ({
+                    actionQueue: [...enemyActions, ...current.actionQueue.slice(1)],
+                    isResolving: false
+                }));
+                setTimeout(() => get().resolveQueue(), 0);
+                return;
+            }
+            case 'CALCULATE_INTENTS' as GameActionType: {
+                const updatedEnemies = state.enemies.map(enemy => {
+                    // In MVP we used ID patterns like `enemy_jaw_worm_node1` or passed templateId.
+                    // We will look up the template directly:
+                    let templateId = 'jaw_worm';
+                    if (enemy.name === 'Gremlin Nob') templateId = 'gremlin_nob';
+
+                    const aiDef = enemies[templateId];
+                    let newIntent = null;
+
+                    if (aiDef && aiDef.aiPatterns) {
+                        // Filter patterns whose conditions are met
+                        let validPatterns = aiDef.aiPatterns.filter(p => {
+                            if (p.condition === 'Turn1') return !enemy.intent;
+                            if (p.condition === 'BelowHalfHP') return enemy.hp <= enemy.maxHp / 2;
+                            return p.condition === 'Always' || !p.condition;
+                        });
+
+                        // Priority override: Specific conditions take precedence over general 'Always' behaviors
+                        if (validPatterns.some(p => p.condition === 'Turn1')) {
+                            validPatterns = validPatterns.filter(p => p.condition === 'Turn1');
+                        } else if (validPatterns.some(p => p.condition === 'BelowHalfHP')) {
+                            validPatterns = validPatterns.filter(p => p.condition === 'BelowHalfHP');
+                        }
+
+                        if (validPatterns.length > 0) {
+                            // RNG Weighted Selection
+                            const totalWeight = validPatterns.reduce((sum, p) => sum + p.chance, 0);
+                            const roll = state.rng ? state.rng.next() * totalWeight : Math.random() * totalWeight;
+                            let runningSum = 0;
+
+                            for (const p of validPatterns) {
+                                runningSum += p.chance;
+                                if (roll <= runningSum) {
+                                    newIntent = p.intent;
+                                    break;
                                 }
                             }
                         }
-                        return { ...enemy, intent: newIntent };
-                    });
+                    }
+                    return { ...enemy, intent: newIntent };
+                });
 
-                    set((current) => ({
-                        enemies: updatedEnemies,
-                        actionQueue: [{ type: 'START_TURN' }, ...current.actionQueue.slice(1)],
-                        isResolving: false
-                    }));
-                    state = get();
-                    continue;
-                }
-                case 'START_TURN': {
-                    set((current) => ({
-                        player: { ...current.player, energy: current.player.maxEnergy, block: 0 }
-                    }));
-                    get().drawCards(5);
-                    break;
-                }
+                set((current) => ({
+                    enemies: updatedEnemies,
+                    actionQueue: [{ type: 'START_TURN' }, ...current.actionQueue.slice(1)],
+                    isResolving: false
+                }));
+                setTimeout(() => get().resolveQueue(), 0);
+                return;
             }
+            case 'START_TURN': {
+                set((current) => ({
+                    player: { ...current.player, energy: current.player.maxEnergy, block: 0 }
+                }));
+                get().drawCards(5);
+                break;
+            }
+            case 'PLAY_ANIMATION': {
+                get().playAnimation(action.payload.targetId, action.payload.animation);
+                break;
+            }
+            case 'ANNOUNCE_INTENT' as GameActionType: {
+                const { targetId, text } = action.payload;
+                get().addFloatingText({ targetId, value: text as unknown as number, type: 'block' });
+                delay = 1200; // Wait for the floating text to read
+                break;
+            }
+            case 'DELAY' as GameActionType: {
+                delay = action.payload.ms;
+                break;
+            }
+        } // End of switch statement
 
-            // Remove processed action
+        // Remove processed action and trigger next after delay
+        setTimeout(() => {
             set((current) => ({
                 actionQueue: current.actionQueue.slice(1),
                 isResolving: false
             }));
-
-            state = get();
-        }
+            get().resolveQueue();
+        }, delay);
     },
 
     drawCards: (amount: number) => {

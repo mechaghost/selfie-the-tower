@@ -8,23 +8,45 @@
 
 .entities-container {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    height: 60vh;
-    padding: 0 10vw;
-    padding-bottom: 5vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2rem;
+    position: absolute;
+    top: 140px;
+    bottom: 360px;
+    left: 0;
+    right: 0;
+    padding: 0 2rem;
 }
 
-.player-side,
-.enemy-side {
+.player-side {
     display: flex;
     gap: 2rem;
+    justify-content: center;
+}
+
+.battleground-divider {
+    width: 80%;
+    max-width: 600px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    margin: 1rem 0;
+}
+
+.enemy-side {
+    display: flex;
+    gap: 5rem 2rem;
+    flex-wrap: wrap-reverse;
+    justify-content: center;
+    align-items: center;
+    max-width: 400px;
 }
 
 .table-controls {
     position: absolute;
-    bottom: 340px;
-    /* 320px table height + 20px gap */
+    bottom: 260px;
+    /* Inside 320px table height */
     left: 0;
     right: 0;
     display: flex;
@@ -120,7 +142,7 @@
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
 
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: flex-end;
     /* Hand sits at the bottom */
     padding: 0 4rem 1.5rem;
@@ -131,80 +153,56 @@
 }
 
 .pile {
-    width: 100px;
-    height: 140px;
-    background: var(--color-bg-elevated);
-    border: 3px solid var(--color-border);
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    position: absolute;
+    top: 40px;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     pointer-events: auto;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    align-self: flex-start;
-    margin-top: 30px;
 }
 
-.pile:hover {
-    transform: translateY(-5px);
-    border-color: #fff;
+.draw-pile {
+    left: 4rem;
 }
 
-.pile-icon {
-    width: 60px;
-    height: 80px;
-    background: repeating-linear-gradient(45deg, #1a1a24, #1a1a24 10px, #2a2a35 10px, #2a2a35 20px);
-    border: 2px solid #555;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    box-shadow: 2px 2px 0px #111, 4px 4px 0px #222, 6px 6px 0px #111;
+.discard-pile {
+    right: 4rem;
 }
 
 .pile-count {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background: var(--color-accent-red);
+    position: relative;
+    z-index: 10;
     color: white;
     font-weight: bold;
     font-family: var(--font-family-display);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    z-index: 5;
-}
-
-.pile-label {
-    font-weight: bold;
-    font-family: var(--font-family-display);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: var(--color-text-secondary);
+    font-size: 0.6rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 5px rgba(255, 255, 255, 1);
 }
 
 @media (max-width: 768px) {
     .entities-container {
         flex-direction: column;
-        /* Player top, Enemies bottom */
-        justify-content: space-evenly;
+        justify-content: flex-start;
         align-items: center;
-        padding: 5vh 2vw;
-        height: 55vh;
+        position: absolute;
+        top: 100px;
+        bottom: 300px;
+        left: 0;
+        right: 0;
+        padding: 0 2vw;
         gap: 1rem;
     }
 
+    .enemy-side {
+        gap: 2rem 1rem;
+    }
+
     .table-controls {
-        bottom: 220px;
-        /* 200px table height + 20px gap */
+        bottom: 150px;
+        /* Inside 200px table */
         padding: 0 1rem;
     }
 
@@ -224,29 +222,16 @@
     }
 
     .pile {
-        width: 60px;
-        height: 80px;
-        border-width: 2px;
-        margin-top: 10px;
+        width: 30px;
+        height: 30px;
+        top: 50px;
     }
 
-    .pile-icon {
-        width: 35px;
-        height: 45px;
-        box-shadow: 1px 1px 0px #111, 2px 2px 0px #222, 3px 3px 0px #111;
-        margin-bottom: 0.2rem;
+    .draw-pile {
+        left: 1rem;
     }
 
-    .pile-label {
-        font-size: 0.6rem;
-    }
-
-    .pile-count {
-        width: 20px;
-        height: 20px;
-        font-size: 0.7rem;
-        top: -5px;
-        right: -5px;
-        border-width: 1px;
+    .discard-pile {
+        right: 1rem;
     }
 }

@@ -47,6 +47,8 @@ export function CombatView() {
                     <EntityPanel entity={player} isPlayer={true} />
                 </div>
 
+                <div className="battleground-divider" />
+
                 <div className="enemy-side">
                     {enemies.map((enemy) => (
                         <EntityPanel key={enemy.id} entity={enemy} isPlayer={false} />
@@ -68,17 +70,13 @@ export function CombatView() {
 
             <div className="deck-table">
                 <div className="pile draw-pile">
-                    <div className="pile-icon" />
                     <div className="pile-count">{drawPile.length}</div>
-                    <div className="pile-label">Draw</div>
                 </div>
 
                 <HandHUD />
 
                 <div className="pile discard-pile">
-                    <div className="pile-icon" />
                     <div className="pile-count">{discardPile.length}</div>
-                    <div className="pile-label">Discard</div>
                 </div>
             </div>
 

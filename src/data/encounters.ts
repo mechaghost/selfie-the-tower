@@ -6,6 +6,11 @@ export const ENCOUNTER_POOLS: Record<string, Encounter[]> = {
             id: 'jaw_worm_easy',
             name: 'Jaw Worm',
             enemyIds: ['jaw_worm']
+        },
+        {
+            id: '4_jaw_worms',
+            name: 'Worm Horde',
+            enemyIds: ['jaw_worm', 'jaw_worm', 'jaw_worm', 'jaw_worm']
         }
     ],
     act1_elite: [

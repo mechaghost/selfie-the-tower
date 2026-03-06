@@ -98,7 +98,10 @@ export type GameActionType =
     | 'APPLY_STATUS'
     | 'END_TURN'
     | 'START_TURN'
-    | 'CALCULATE_INTENTS';
+    | 'CALCULATE_INTENTS'
+    | 'ANNOUNCE_INTENT'
+    | 'DELAY'
+    | 'PLAY_ANIMATION';
 
 export interface GameAction {
     type: GameActionType;
@@ -110,6 +113,13 @@ export interface FloatingText {
     targetId: string; // The entity ID to attach to
     value: number | string;
     type: 'damage' | 'block' | 'heal' | 'status';
+}
+
+export interface ActiveAnimation {
+    id: string;
+    targetId: string;
+    type: 'lunge' | 'stagger';
+    destinationId?: string;
 }
 
 export interface Character {

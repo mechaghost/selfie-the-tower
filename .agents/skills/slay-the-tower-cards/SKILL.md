@@ -61,3 +61,7 @@ interface CardItemProps {
 ### Drag and Drop Architecture
 When `isDraggable` is true, HTML5 Drag Events are attached directly to the `CardItem`. 
 If a card targets a specific `Enemy`, the native ghost drag image is suppressed, and coordinates are continuously pushed to the global Zustand `GameStore`, which drives a Bezier curve targeting arrow in `CombatView.tsx`.
+
+### Animation Trajectories
+Cards entering or leaving the Hand HUD mathematically transition from the invisible Draw/Discard bounds defined by `CombatView`. 
+The CSS keyframes (`flyFromDrawPile` and `flyToDiscard`) explicitly map to the absolute rim coordinates of the Deck Table using `calc(50vw - 84px)` for X, and sink the card's `scale` down to `0` to visually pull them into the voids.

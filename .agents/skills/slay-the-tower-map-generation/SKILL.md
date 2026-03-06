@@ -25,3 +25,7 @@ After generation, the algorithm does a dual-pass graph traversal:
 1. **Forward Pass:** Identifies all nodes reachable from the starting row.
 2. **Backward Pass:** Identifies all nodes that ultimately connect to the Boss.
 Only valid nodes that satisfy both conditions are preserved, meaning the player can never hit a dead end.
+
+## Encounters Integration
+The Map Generator **does not** instantiate physical Enemy arrays. When a `Monster` or `Elite` node is generated, the algorithm randomly pulls a string `encounterId` from the registry pools defined in `src/data/encounters.ts` and saves it to the node. 
+Only when the player actually clicks the node does the Game Engine's `advanceFloor` logic lookup the Encounter ID and instantiate the distinct enemies.
