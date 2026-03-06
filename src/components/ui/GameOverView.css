@@ -1,0 +1,101 @@
+.game-over-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--color-background);
+    background-image: radial-gradient(circle at center, rgba(160, 40, 40, 0.1) 0%, transparent 60%);
+    color: var(--color-text);
+}
+
+.game-over-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(30, 25, 25, 0.9);
+    padding: 3rem;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--color-enemy-health);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(160, 40, 40, 0.2);
+    animation: fade-in-up 0.5s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-over-icon {
+    color: var(--color-enemy-health);
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(160, 40, 40, 0.5));
+}
+
+.game-over-title {
+    font-family: var(--font-family-display);
+    font-size: 4rem;
+    color: var(--color-enemy-health);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+}
+
+.game-over-stats {
+    font-size: 1.5rem;
+    color: var(--color-text-muted);
+    margin: 1.5rem 0 2.5rem 0;
+}
+
+.game-over-stats strong {
+    color: white;
+}
+
+.game-over-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.restart-button,
+.retry-seed-button {
+    font-family: var(--font-family-display);
+    padding: 0.8rem 1.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.restart-button {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+}
+
+.restart-button:hover {
+    background-color: var(--color-accent);
+    transform: scale(1.05);
+}
+
+.retry-seed-button {
+    background-color: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-text-muted);
+}
+
+.retry-seed-button:hover {
+    color: white;
+    border-color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}

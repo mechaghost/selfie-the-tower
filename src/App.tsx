@@ -1,33 +1,25 @@
 import { useGameStore } from './store/gameStore';
 import { CombatView } from './components/combat/CombatView';
 import { MapView } from './components/map/MapView';
-import { createCardInstance } from './data/cards';
+import { GameOverView } from './components/ui/GameOverView';
 import './App.css';
 
 function App() {
-    const { inCombat, initializeRun, seed } = useGameStore();
+    const { inCombat, initializeRun, seed, isGameOver } = useGameStore();
+
+    // @ts-ignore
+    window.__gameStore = useGameStore;
 
     const handleStartRun = () => {
         initializeRun('alpha_test_seed');
-
-        // Pre-populate mastering deck for MVP
-        useGameStore.setState({
-            masterDeck: [
-                createCardInstance('strike_red'),
-                createCardInstance('strike_red'),
-                createCardInstance('strike_red'),
-                createCardInstance('strike_red'),
-                createCardInstance('defend_red'),
-                createCardInstance('defend_red'),
-                createCardInstance('defend_red'),
-                createCardInstance('defend_red'),
-                createCardInstance('bash')
-            ]
-        });
     };
 
     if (inCombat) {
         return <CombatView />;
+    }
+
+    if (isGameOver) {
+        return <GameOverView />;
     }
 
     if (seed) {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Card, Enemy, Player, GameAction } from '../core/models';
 import { RNG } from '../core/rng';
-import { resolveCardPlay } from '../data/cards';
+import { resolveCardPlay, createCardInstance } from '../data/cards';
 
 interface GameState {
     // --- Metagame / Run State ---
@@ -12,6 +12,7 @@ interface GameState {
 
     // --- Combat State ---
     inCombat: boolean;
+    isGameOver: boolean;
     player: Player;
     enemies: Enemy[];
 
@@ -58,6 +59,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     floor: 0,
     currentNodeId: null,
 
+    isGameOver: false,
     inCombat: false,
     player: { ...initialPlayerState },
     enemies: [],
@@ -79,8 +81,19 @@ export const useGameStore = create<GameState>((set, get) => ({
             floor: 0,
             currentNodeId: null,
             player: { ...initialPlayerState },
-            masterDeck: [], // TODO: Initialize with basic Strike/Defend deck
-            inCombat: false
+            masterDeck: [
+                createCardInstance('strike_red'),
+                createCardInstance('strike_red'),
+                createCardInstance('strike_red'),
+                createCardInstance('strike_red'),
+                createCardInstance('defend_red'),
+                createCardInstance('defend_red'),
+                createCardInstance('defend_red'),
+                createCardInstance('defend_red'),
+                createCardInstance('bash')
+            ],
+            inCombat: false,
+            isGameOver: false
         });
     },
 
@@ -169,6 +182,17 @@ export const useGameStore = create<GameState>((set, get) => ({
 
                         if (isPlayer) {
                             set({ player: { ...state.player, hp: newHp, block: newBlock } });
+
+                            // Check for Game Over
+                            if (newHp <= 0) {
+                                set({
+                                    isGameOver: true,
+                                    inCombat: false,
+                                    actionQueue: [],
+                                    isResolving: false
+                                });
+                                return; // Stop resolving this queue
+                            }
                         } else {
                             const updatedEnemies = state.enemies.map(e => e.id === targetId ? { ...e, hp: newHp, block: newBlock } : e);
                             set({ enemies: updatedEnemies });
