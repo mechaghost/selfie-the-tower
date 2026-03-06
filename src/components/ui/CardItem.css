@@ -126,3 +126,51 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     background-color: #2a2a2a;
 }
+
+@media (max-width: 768px) {
+    .hand-container {
+        bottom: -20px;
+        height: 200px;
+    }
+
+    .card {
+        width: 120px;
+        height: 180px;
+        margin: 0 -25px;
+        /* Tighter overlap to fit screen */
+        padding: 0.5rem;
+    }
+
+    .card-name {
+        font-size: 0.8rem;
+    }
+
+    .card-type {
+        font-size: 0.6rem;
+        margin-bottom: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .card-cost {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+        top: -5px;
+        left: -5px;
+    }
+
+    .card-desc {
+        font-size: 0.7rem;
+    }
+
+    .card:hover {
+        transform: translateY(-40px) rotate(0deg) scale(1.1) !important;
+    }
+
+    .card-target-badge {
+        width: 24px;
+        height: 24px;
+        top: -5px;
+        right: -5px;
+    }
+}
