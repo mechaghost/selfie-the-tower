@@ -205,7 +205,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             set(state => ({
                 floatingTexts: state.floatingTexts.filter(ft => ft.id !== id)
             }));
-        }, 800); // 800ms animation duration
+        }, 1200); // 1200ms animation duration
     },
 
     queueAction: (action: GameAction) => {
@@ -394,10 +394,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             // Push card effect to action queue
             const playAction: GameAction = { type: 'PLAY_CARD', payload: { card, targetId } };
 
-            // Schedule the cleanup of the visual card after the animation completes (600ms)
+            // Schedule the cleanup of the visual card after the animation completes (800ms)
             setTimeout(() => {
                 get().cleanupPlayingCard(animId);
-            }, 600);
+            }, 800);
 
             return {
                 player: { ...state.player, energy: state.player.energy - card.cost },

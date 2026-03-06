@@ -42,7 +42,7 @@
     z-index: 200;
     bottom: 0;
     /* Centers it over the hand roughly */
-    animation: flyToDiscard 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: flyToDiscard 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .card-playing-wrapper .card {
@@ -64,7 +64,7 @@
 
     100% {
         /* Approximate location of discard pile on desktop */
-        transform: translate(40vw, 50px) scale(0.3) rotate(15deg);
+        transform: translate(32vw, -20px) scale(0.3) rotate(35deg);
         opacity: 0;
     }
 }
@@ -231,7 +231,7 @@
 
         100% {
             /* Approximate location of discard pile on mobile */
-            transform: translate(35vw, 60px) scale(0.3) rotate(15deg);
+            transform: translate(32vw, -20px) scale(0.3) rotate(35deg);
             opacity: 0;
         }
     }
