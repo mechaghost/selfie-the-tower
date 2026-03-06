@@ -1,5 +1,6 @@
 import { Entity } from '../../core/models';
 import { Shield } from 'lucide-react';
+import { useGameStore } from '../../store/gameStore';
 import './EntityPanel.css';
 
 interface EntityPanelProps {
@@ -8,10 +9,38 @@ interface EntityPanelProps {
 }
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
+    const playCard = useGameStore(state => state.playCard);
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!isPlayer) {
+            e.preventDefault();
+            e.stopPropagation(); // Don't let the CombatView background catch this drop
+            e.dataTransfer.dropEffect = 'move';
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!isPlayer) {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.target === 'Enemy') {
+                    playCard(data.instanceId, entity.id);
+                }
+            } catch (err) {
+                // Ignore invalid
+            }
+        }
+    };
+
     return (
-        <div className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}>
+        <div
+            className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
             <div className="entity-avatar">
                 {isPlayer ? '🛡️' : '👹'}
             </div>

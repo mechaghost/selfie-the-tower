@@ -3,13 +3,18 @@ import { Card } from '../../core/models';
 import './HandHUD.css';
 
 export function HandHUD() {
-    const { hand, playCard, player } = useGameStore();
+    const { hand, player } = useGameStore();
 
-    const handleCardClick = (card: Card) => {
-        // Basic auto-target enemies[0] for MVP testing if it's an attack
-        const state = useGameStore.getState();
-        const targetId = card.target === 'Enemy' && state.enemies.length > 0 ? state.enemies[0].id : undefined;
-        playCard(card.instanceId, targetId);
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, card: Card) => {
+        if (player.energy < card.cost) {
+            e.preventDefault();
+            return;
+        }
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            instanceId: card.instanceId,
+            target: card.target
+        }));
+        e.dataTransfer.effectAllowed = 'move';
     };
 
     return (
@@ -28,11 +33,12 @@ export function HandHUD() {
                     <div
                         key={card.instanceId}
                         className={`card ${canPlay ? 'playable' : 'unplayable'} type-${card.type.toLowerCase()}`}
+                        draggable={canPlay}
+                        onDragStart={(e) => handleDragStart(e, card)}
                         style={{
                             transform: `translateY(${translateY}px) rotate(${rotation}deg)`,
                             zIndex: 10 + index
                         }}
-                        onClick={() => handleCardClick(card)}
                     >
                         <div className="card-cost">{card.cost}</div>
                         <div className="card-name">{card.name}</div>

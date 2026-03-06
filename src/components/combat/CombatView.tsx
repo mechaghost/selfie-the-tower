@@ -5,16 +5,38 @@ import { HandHUD } from './HandHUD';
 import './CombatView.css';
 
 export function CombatView() {
-    const { player, enemies, endTurn, energy, maxEnergy } = useGameStore((state) => ({
+    const { player, enemies, endTurn, energy, maxEnergy, playCard } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
-        maxEnergy: state.player.maxEnergy
+        maxEnergy: state.player.maxEnergy,
+        playCard: state.playCard
     }));
 
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            if (data.target !== 'Enemy') {
+                playCard(data.instanceId);
+            }
+        } catch (err) {
+            // Ignore invalid drops
+        }
+    };
+
     return (
-        <div className="combat-stage">
+        <div
+            className="combat-stage"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
             <TopBar />
 
             <div className="entities-container">
