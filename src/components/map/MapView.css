@@ -19,6 +19,8 @@
     /* Fixed logical width for map generation */
     height: 800px;
     /* Tall to necessitate scrolling up */
+    margin: 50vh 0;
+    /* Large margin allows top/bottom nodes to be centered */
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     border: 1px solid var(--color-border);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { MapNode, MapData } from '../../core/mapModels';
 import { generateMap } from '../../core/mapGenerator';
@@ -14,6 +14,21 @@ export function MapView() {
             setMapData(generateMap(seed));
         }
     }, [seed]);
+
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to the current floor using native DOM methods
+    useEffect(() => {
+        if (!mapData) return;
+
+        // Use a slight timeout to ensure DOM has painted the scroll area
+        setTimeout(() => {
+            const floorElement = document.querySelector(`.map-floor[data-floor="${floor}"]`);
+            if (floorElement) {
+                floorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 50);
+    }, [mapData, floor]);
 
     const availableNodes = useMemo(() => {
         if (!mapData) return [];
@@ -57,7 +72,7 @@ export function MapView() {
     const sortedFloors = Object.keys(floorsMap).map(Number).sort((a, b) => b - a); // Top to bottom
 
     return (
-        <div className="map-view-container">
+        <div className="map-view-container" ref={scrollContainerRef}>
             <div className="map-scroll-area">
 
                 {/* SVG for drawing connecting dots */}
@@ -90,7 +105,7 @@ export function MapView() {
                 </svg>
 
                 {sortedFloors.map(y => (
-                    <div key={y} className="map-floor" style={{ bottom: `${(y / 10) * 100}%` }}>
+                    <div key={y} data-floor={y} className="map-floor" style={{ bottom: `${(y / 10) * 100}%` }}>
                         {floorsMap[y].map(node => (
                             <div
                                 key={node.id}
