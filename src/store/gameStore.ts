@@ -10,6 +10,8 @@ export interface DragState {
     startY: number;
     currentX: number;
     currentY: number;
+    prevX: number;
+    prevY: number;
 }
 
 interface GameState {
@@ -99,7 +101,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         startX: 0,
         startY: 0,
         currentX: 0,
-        currentY: 0
+        currentY: 0,
+        prevX: 0,
+        prevY: 0
     },
     entityBounds: {},
 
@@ -401,9 +405,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     setDragState: (updates: Partial<DragState>) => {
-        set((state) => ({
-            dragState: { ...state.dragState, ...updates }
-        }));
+        set((state) => {
+            const currentDrag = state.dragState;
+            return {
+                dragState: {
+                    ...currentDrag,
+                    ...updates,
+                    // If we're updating currentX/Y, archive the old ones to prevX/Y for velocity tracking
+                    prevX: updates.currentX !== undefined ? currentDrag.currentX : currentDrag.prevX,
+                    prevY: updates.currentY !== undefined ? currentDrag.currentY : currentDrag.prevY
+                }
+            };
+        });
     },
 
     resetDragState: () => {
@@ -414,7 +427,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                 startX: 0,
                 startY: 0,
                 currentX: 0,
-                currentY: 0
+                currentY: 0,
+                prevX: 0,
+                prevY: 0
             }
         });
     },
