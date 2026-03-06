@@ -1,0 +1,21 @@
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+h1 {
+    font-family: var(--font-family-display);
+    font-size: 3rem;
+    color: var(--color-text-highlight);
+    text-shadow: 0 4px 12px rgba(240, 219, 79, 0.2);
+    margin-bottom: 0.5rem;
+}
+
+p {
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+}

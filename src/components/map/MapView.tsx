@@ -1,0 +1,102 @@
+import { useEffect, useState } from 'react';
+import { useGameStore } from '../../store/gameStore';
+import { MapNode, MapData } from '../../core/mapModels';
+import { generateMap } from '../../core/mapGenerator';
+import { Skull, Tent, Store, Swords } from 'lucide-react';
+import './MapView.css';
+
+export function MapView() {
+    const { seed, floor } = useGameStore();
+    const [mapData, setMapData] = useState<MapData | null>(null);
+
+    useEffect(() => {
+        if (seed) {
+            setMapData(generateMap(seed));
+        }
+    }, [seed]);
+
+    const handleNodeClick = (node: MapNode) => {
+        if (node.y !== floor) return; // Can only click next floor
+
+        console.log("Traveling to node:", node.type);
+        useGameStore.getState().advanceFloor(node);
+    };
+
+    if (!mapData) return <div className="map-loading">Generating Spire...</div>;
+
+    const renderIcon = (type: string) => {
+        switch (type) {
+            case 'Combat': return <Swords size={20} className="node-icon combat" />;
+            case 'Elite': return <Skull size={24} className="node-icon elite" />;
+            case 'Rest': return <Tent size={24} className="node-icon rest" />;
+            case 'Shop': return <Store size={22} className="node-icon shop" />;
+            case 'Boss': return <Skull size={32} className="node-icon boss" color="red" />;
+            default: return <span className="node-icon unknown">?</span>;
+        }
+    };
+
+    // Group nodes by Y coordinate (floor)
+    const floorsMap = mapData.nodes.reduce<{ [key: number]: MapNode[] }>((acc, node) => {
+        if (!acc[node.y]) acc[node.y] = [];
+        acc[node.y].push(node);
+        return acc;
+    }, {});
+
+    const sortedFloors = Object.keys(floorsMap).map(Number).sort((a, b) => b - a); // Top to bottom
+
+    return (
+        <div className="map-view-container">
+            <div className="map-scroll-area">
+
+                {/* SVG for drawing connecting dots */}
+                <svg className="map-connections">
+                    {mapData.nodes.map(node =>
+                        node.connections.map(targetId => {
+                            const target = mapData.nodes.find(n => n.id === targetId);
+                            if (!target) return null;
+
+                            // Calculate positions based on container percentages 
+                            // (In a real app with refs, you'd use exact pixel bounds. Here we approximate with CSS % math for the MVP)
+                            const startX = `${node.x * 100}%`;
+                            const startY = `${100 - (node.y / 10 * 100)}%`; // Invert Y for drawing
+
+                            const endX = `${target.x * 100}%`;
+                            const endY = `${100 - (target.y / 10 * 100)}%`;
+
+                            return (
+                                <line
+                                    key={`${node.id}-${targetId}`}
+                                    x1={startX}
+                                    y1={startY}
+                                    x2={endX}
+                                    y2={endY}
+                                    stroke="rgba(255, 255, 255, 0.2)"
+                                    strokeWidth="2"
+                                    strokeDasharray="4 4"
+                                />
+                            );
+                        })
+                    )}
+                </svg>
+
+                {sortedFloors.map(y => (
+                    <div key={y} className="map-floor" style={{ bottom: `${(y / 10) * 100}%` }}>
+                        {floorsMap[y].map(node => (
+                            <div
+                                key={node.id}
+                                className={`map-node ${node.y === floor ? 'available' : ''} ${node.y < floor ? 'completed' : ''}`}
+                                style={{ left: `${node.x * 100}%` }}
+                                onClick={() => handleNodeClick(node)}
+                            >
+                                <div className="node-circle">
+                                    {renderIcon(node.type)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+
+            </div>
+        </div>
+    );
+}

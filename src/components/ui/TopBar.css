@@ -1,0 +1,54 @@
+.topbar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--color-bg-elevated);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    border-bottom: 2px solid var(--color-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    color: var(--color-text-primary);
+    font-family: var(--font-family-base);
+}
+
+.topbar-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.topbar-section.center {
+    justify-content: center;
+}
+
+.topbar-section.right {
+    justify-content: flex-end;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.stat.hp {
+    color: var(--color-accent-red);
+}
+
+.stat.gold {
+    color: var(--color-text-highlight);
+}
+
+.floor-text {
+    font-family: var(--font-family-display);
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+}
