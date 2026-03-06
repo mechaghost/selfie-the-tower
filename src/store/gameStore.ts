@@ -3,6 +3,15 @@ import { Card, Enemy, Player, GameAction, FloatingText } from '../core/models';
 import { RNG } from '../core/rng';
 import { resolveCardPlay, createCardInstance } from '../data/cards';
 
+export interface DragState {
+    isActive: boolean;
+    cardId: string | null;
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+}
+
 interface GameState {
     // --- Metagame / Run State ---
     seed: string;
@@ -27,6 +36,9 @@ interface GameState {
     isResolving: boolean;
     floatingTexts: FloatingText[];
 
+    // --- Drag & Drop UI ---
+    dragState: DragState;
+
     // --- Store Methods ---
     initializeRun: (seed: string) => void;
     startCombat: (enemies: Enemy[]) => void;
@@ -43,6 +55,8 @@ interface GameState {
 
     // UI Visuals
     addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
+    setDragState: (state: Partial<DragState>) => void;
+    resetDragState: () => void;
 }
 
 const initialPlayerState: Player = {
@@ -77,6 +91,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     actionQueue: [],
     isResolving: false,
     floatingTexts: [],
+
+    dragState: {
+        isActive: false,
+        cardId: null,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0
+    },
 
     initializeRun: (seed: string) => {
         const rng = new RNG(seed);
@@ -373,5 +396,25 @@ export const useGameStore = create<GameState>((set, get) => ({
             };
         });
         get().resolveQueue();
+    },
+
+    setDragState: (updates: Partial<DragState>) => {
+        set((state) => ({
+            dragState: { ...state.dragState, ...updates }
+        }));
+    },
+
+    resetDragState: () => {
+        set({
+            dragState: {
+                isActive: false,
+                cardId: null,
+                startX: 0,
+                startY: 0,
+                currentX: 0,
+                currentY: 0
+            }
+        });
     }
 }));
+

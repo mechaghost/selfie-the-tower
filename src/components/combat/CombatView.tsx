@@ -2,6 +2,7 @@ import { useGameStore } from '../../store/gameStore';
 import { TopBar } from '../ui/TopBar';
 import { EntityPanel } from './EntityPanel';
 import { HandHUD } from './HandHUD';
+import { TargetingArrow } from './TargetingArrow';
 import './CombatView.css';
 
 export function CombatView() {
@@ -58,6 +59,7 @@ export function CombatView() {
             </div>
 
             <HandHUD />
+            <TargetingArrow />
 
             <button className="end-turn-button" onClick={endTurn}>
                 End Turn

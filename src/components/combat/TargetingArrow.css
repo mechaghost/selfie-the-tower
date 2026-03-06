@@ -1,0 +1,23 @@
+.targeting-arrow-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    /* Let clicks pass through to elements below */
+    z-index: 1000;
+    /* Ensure it stays above everything */
+    overflow: visible;
+}
+
+.targeting-path {
+    stroke-dasharray: 10, 10;
+    animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
