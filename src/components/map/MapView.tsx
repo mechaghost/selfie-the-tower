@@ -55,13 +55,11 @@ export function MapView() {
                             const target = mapData.nodes.find(n => n.id === targetId);
                             if (!target) return null;
 
-                            // Calculate positions based on container percentages 
-                            // (In a real app with refs, you'd use exact pixel bounds. Here we approximate with CSS % math for the MVP)
                             const startX = `${node.x * 100}%`;
-                            const startY = `${100 - (node.y / 10 * 100)}%`; // Invert Y for drawing
+                            const startY = `calc(${100 - (node.y / 10 * 100)}% - 30px)`; // Center of the 60px row
 
                             const endX = `${target.x * 100}%`;
-                            const endY = `${100 - (target.y / 10 * 100)}%`;
+                            const endY = `calc(${100 - (target.y / 10 * 100)}% - 30px)`;
 
                             return (
                                 <line
