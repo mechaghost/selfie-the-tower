@@ -56,7 +56,7 @@ export function CombatView() {
 
             <div className="table-controls">
                 <div className="energy-hud">
-                    <div className="energy-orb">
+                    <div className="energy-badge">
                         {energy} / {maxEnergy}
                     </div>
                 </div>
