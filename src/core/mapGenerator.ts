@@ -93,7 +93,8 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
     });
 
     // Cleanup orphaned nodes (nodes with no parents, except starts)
-    const validNodes = pruneOrphans(nodes);
+    // AND cleanup dead ends (nodes that cannot reach the boss)
+    const validNodes = pruneOrphansAndDeadEnds(nodes);
 
     return { seed, nodes: validNodes };
 }
@@ -160,24 +161,57 @@ function checkForCrossing(grid: (MapNode | null)[][], parentX: number, childX: n
     return false;
 }
 
-function pruneOrphans(nodes: MapNode[]): MapNode[] {
-    const reachable = new Set<string>();
-    const queue = nodes.filter(n => n.y === 0).map(n => n.id);
+function pruneOrphansAndDeadEnds(nodes: MapNode[]): MapNode[] {
+    // 1. Find all nodes reachable from the Start (Floor 0)
+    const reachableFromStart = new Set<string>();
+    const forwardQueue = nodes.filter(n => n.y === 0).map(n => n.id);
 
-    while (queue.length > 0) {
-        const id = queue.shift()!;
-        if (!reachable.has(id)) {
-            reachable.add(id);
+    while (forwardQueue.length > 0) {
+        const id = forwardQueue.shift()!;
+        if (!reachableFromStart.has(id)) {
+            reachableFromStart.add(id);
             const node = nodes.find(n => n.id === id);
             if (node) {
-                queue.push(...node.connections);
+                forwardQueue.push(...node.connections);
             }
         }
     }
 
-    // Also prune connections to unreachable nodes just in case
-    return nodes.filter(n => reachable.has(n.id)).map(n => ({
+    // 2. Find all nodes that can reach the Boss (Floor MAP_HEIGHT - 1)
+    // We do this by building a reverse adjacency list
+    const parentsOf: Record<string, string[]> = {};
+    nodes.forEach(n => {
+        n.connections.forEach(childId => {
+            if (!parentsOf[childId]) parentsOf[childId] = [];
+            parentsOf[childId].push(n.id);
+        });
+    });
+
+    const canReachBoss = new Set<string>();
+    const bossNodes = nodes.filter(n => n.y === MAP_HEIGHT - 1);
+    const backwardQueue = bossNodes.map(n => n.id);
+
+    while (backwardQueue.length > 0) {
+        const id = backwardQueue.shift()!;
+        if (!canReachBoss.has(id)) {
+            canReachBoss.add(id);
+            if (parentsOf[id]) {
+                backwardQueue.push(...parentsOf[id]);
+            }
+        }
+    }
+
+    // A valid node must be reachable from Start AND be able to reach the Boss.
+    const validSet = new Set<string>();
+    nodes.forEach(n => {
+        if (reachableFromStart.has(n.id) && canReachBoss.has(n.id)) {
+            validSet.add(n.id);
+        }
+    });
+
+    // 3. Rebuild the node list, filtering nodes and their connections
+    return nodes.filter(n => validSet.has(n.id)).map(n => ({
         ...n,
-        connections: n.connections.filter(cid => reachable.has(cid))
+        connections: n.connections.filter(cid => validSet.has(cid))
     }));
 }
