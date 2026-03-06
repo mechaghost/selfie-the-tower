@@ -25,6 +25,13 @@
     transform: translateY(-5px);
 }
 
+.entity-avatar.targeted {
+    border-color: var(--color-accent-red);
+    box-shadow: 0 0 24px var(--color-accent-red), inset 0 0 12px rgba(255, 0, 0, 0.4);
+    transform: scale(1.1);
+    z-index: 10;
+}
+
 .entity-avatar-container {
     position: relative;
     display: inline-block;

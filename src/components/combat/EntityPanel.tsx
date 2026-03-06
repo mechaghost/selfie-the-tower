@@ -11,10 +11,12 @@ interface EntityPanelProps {
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
-    const { playCard, floatingTexts, setEntityBounds } = useGameStore(state => ({
+    const { playCard, floatingTexts, setEntityBounds, dragState, entityBounds } = useGameStore(state => ({
         playCard: state.playCard,
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
-        setEntityBounds: state.setEntityBounds
+        setEntityBounds: state.setEntityBounds,
+        dragState: state.dragState,
+        entityBounds: state.entityBounds
     }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
@@ -48,12 +50,27 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         }
     };
 
+    let isTargeted = false;
+    if (!isPlayer && dragState.isActive && dragState.targetType === 'Enemy') {
+        const bounds = entityBounds[entity.id];
+        if (bounds) {
+            const centerX = bounds.left + bounds.width / 2;
+            const centerY = bounds.top + bounds.height / 2;
+            const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
+            const hoverRadius = (bounds.width / 2) + 20;
+
+            if (dist < hoverRadius) {
+                isTargeted = true;
+            }
+        }
+    }
+
     return (
         <div className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}>
             <div className="entity-avatar-container">
                 <div
                     ref={avatarRef}
-                    className="entity-avatar"
+                    className={`entity-avatar ${isTargeted ? 'targeted' : ''}`}
                     data-entity-id={entity.id}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
