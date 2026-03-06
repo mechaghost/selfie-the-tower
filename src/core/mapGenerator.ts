@@ -136,20 +136,27 @@ function determineNodeType(rng: RNG, config: MapGenerationConfig, allowElite: bo
 function checkForCrossing(grid: (MapNode | null)[][], parentX: number, childX: number, parentY: number): boolean {
     if (parentX === childX) return false;
 
-    const isMovingRight = childX > parentX;
-    if (isMovingRight) {
-        // Parent is Left, child is Right. Did the Right parent go Left?
-        const rightParent = grid[parentY][parentX + 1];
-        if (rightParent && rightParent.connections.includes(`node_${parentY + 1}_${parentX}`)) {
-            return true;
-        }
-    } else {
-        // Parent is Right, child is Left. Did the Left parent go Right?
-        const leftParent = grid[parentY][parentX - 1];
-        if (leftParent && leftParent.connections.includes(`node_${parentY + 1}_${parentX}`)) {
-            return true;
+    for (let x = 0; x < MAP_WIDTH; x++) {
+        if (x === parentX) continue;
+        const otherParent = grid[parentY][x];
+        if (!otherParent) continue;
+
+        for (const connId of otherParent.connections) {
+            const match = connId.match(/node_\d+_(\d+)/);
+            if (match) {
+                const otherChildX = parseInt(match[1], 10);
+
+                // Crossing Math:
+                // If Parent A is left of Parent B (parentX < x)
+                // And Child A is right of or equal to Child B (childX >= otherChildX)
+                // Then the lines cross.
+                // Equal coordinates count as a crossing if the parents weren't equal (which we checked above)
+                if (parentX < x && childX >= otherChildX) return true;
+                if (parentX > x && childX <= otherChildX) return true;
+            }
         }
     }
+
     return false;
 }
 
