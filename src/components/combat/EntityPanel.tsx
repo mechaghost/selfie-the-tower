@@ -1,3 +1,4 @@
+import React, { useRef, useLayoutEffect } from 'react';
 import { Entity } from '../../core/models';
 import { Shield } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
@@ -9,11 +10,20 @@ interface EntityPanelProps {
 }
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
-    const { playCard, floatingTexts } = useGameStore(state => ({
+    const avatarRef = useRef<HTMLDivElement>(null);
+    const { playCard, floatingTexts, setEntityBounds } = useGameStore(state => ({
         playCard: state.playCard,
-        floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id)
+        floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
+        setEntityBounds: state.setEntityBounds
     }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
+
+    useLayoutEffect(() => {
+        if (!isPlayer && avatarRef.current) {
+            const rect = avatarRef.current.getBoundingClientRect();
+            setEntityBounds(entity.id, rect);
+        }
+    }, [isPlayer, entity.id, setEntityBounds]);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         if (!isPlayer) {
@@ -45,7 +55,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             onDrop={handleDrop}
         >
             <div className="entity-avatar-container">
-                <div className="entity-avatar">
+                <div ref={avatarRef} className="entity-avatar">
                     {isPlayer ? '🛡️' : '👹'}
                 </div>
                 {floatingTexts.map(ft => (

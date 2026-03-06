@@ -2,15 +2,43 @@ import { useGameStore } from '../../store/gameStore';
 import './TargetingArrow.css';
 
 export function TargetingArrow() {
-    const dragState = useGameStore(state => state.dragState);
+    const { dragState, entityBounds } = useGameStore(state => ({
+        dragState: state.dragState,
+        entityBounds: state.entityBounds
+    }));
 
     if (!dragState.isActive) return null;
 
     // Calculate Bezier curve control points to make an arching arrow
     const startX = dragState.startX;
     const startY = dragState.startY;
-    const endX = dragState.currentX;
-    const endY = dragState.currentY;
+    let endX = dragState.currentX;
+    let endY = dragState.currentY;
+
+    // --- Magnetic Snapping Logic ---
+    const SNAP_RADIUS = 150; // pixels
+    let minDistance = Infinity;
+    let snappedTarget = null;
+
+    Object.entries(entityBounds).forEach(([id, rect]) => {
+        // Calculate center of the entity panel
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        // Calculate distance from cursor to center
+        const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
+
+        if (dist < SNAP_RADIUS && dist < minDistance) {
+            minDistance = dist;
+            snappedTarget = { x: centerX, y: centerY };
+        }
+    });
+
+    // If we're close enough to a target, snap the arrow head directly to its center
+    if (snappedTarget) {
+        endX = (snappedTarget as any).x;
+        endY = (snappedTarget as any).y;
+    }
 
     // Control point 1 (pulls curve up from the card)
     const cp1x = startX;

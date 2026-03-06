@@ -38,6 +38,7 @@ interface GameState {
 
     // --- Drag & Drop UI ---
     dragState: DragState;
+    entityBounds: Record<string, DOMRect>;
 
     // --- Store Methods ---
     initializeRun: (seed: string) => void;
@@ -53,10 +54,10 @@ interface GameState {
     playCard: (cardInstanceId: string, targetId?: string) => void;
     endTurn: () => void;
 
-    // UI Visuals
     addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
     setDragState: (state: Partial<DragState>) => void;
     resetDragState: () => void;
+    setEntityBounds: (id: string, bounds: DOMRect) => void;
 }
 
 const initialPlayerState: Player = {
@@ -100,6 +101,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentX: 0,
         currentY: 0
     },
+    entityBounds: {},
 
     initializeRun: (seed: string) => {
         const rng = new RNG(seed);
@@ -415,6 +417,15 @@ export const useGameStore = create<GameState>((set, get) => ({
                 currentY: 0
             }
         });
+    },
+
+    setEntityBounds: (id: string, bounds: DOMRect) => {
+        set((state) => ({
+            entityBounds: {
+                ...state.entityBounds,
+                [id]: bounds
+            }
+        }));
     }
 }));
 
