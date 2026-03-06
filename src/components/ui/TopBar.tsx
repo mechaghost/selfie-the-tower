@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
-import { Shield, Heart, Zap } from 'lucide-react';
+
 import './TopBar.css';
 
 export function TopBar() {
@@ -8,10 +8,7 @@ export function TopBar() {
     return (
         <div className="topbar-container">
             <div className="topbar-section player-stats">
-                <div className="stat hp">
-                    <Heart className="icon" size={20} />
-                    <span>{player.hp} / {player.maxHp}</span>
-                </div>
+
                 <div className="stat gold">
                     <span className="gold-icon">💰</span>
                     <span>{player.gold}</span>
