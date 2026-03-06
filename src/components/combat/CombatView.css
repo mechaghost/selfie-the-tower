@@ -23,8 +23,8 @@
 
 .table-controls {
     position: absolute;
-    bottom: 320px;
-    /* Snug to the exact height of the table */
+    bottom: 340px;
+    /* 320px table height + 20px gap */
     left: 0;
     right: 0;
     display: flex;
@@ -203,8 +203,8 @@
     }
 
     .table-controls {
-        bottom: 200px;
-        /* Tight to the new mobile table height */
+        bottom: 220px;
+        /* 200px table height + 20px gap */
         padding: 0 1rem;
     }
 
