@@ -85,9 +85,9 @@
 }
 
 .hp-bar-container {
-    width: 100%;
+    width: 90px;
     position: relative;
-    margin-bottom: 0.5rem;
+    margin: 0 auto 0.5rem;
 }
 
 .hp-text {
@@ -169,6 +169,10 @@
 
     .entity-name {
         font-size: 0.85rem;
+    }
+
+    .hp-bar-container {
+        width: 60px;
     }
 
     .hp-bar-bg {
