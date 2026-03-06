@@ -63,8 +63,8 @@
     }
 
     100% {
-        /* Approximate location of discard pile on desktop */
-        transform: translate(32vw, -20px) scale(0.3) rotate(35deg);
+        /* Mathematically targets the exact center of the Discard Pile */
+        transform: translate(calc(50vw - 120px), -180px) scale(0.3) rotate(25deg);
         opacity: 0;
     }
 }
@@ -230,8 +230,8 @@
         }
 
         100% {
-            /* Approximate location of discard pile on mobile */
-            transform: translate(32vw, -20px) scale(0.3) rotate(35deg);
+            /* Mathematically targets the exact center of the mobile Discard Pile */
+            transform: translate(calc(50vw - 50px), -140px) scale(0.3) rotate(25deg);
             opacity: 0;
         }
     }
