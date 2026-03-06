@@ -24,11 +24,13 @@
 .table-controls {
     position: absolute;
     bottom: 320px;
+    /* Snug to the exact height of the table */
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
+    /* Pin bottoms to the table rim */
     padding: 0 4rem;
     pointer-events: none;
     z-index: 150;
@@ -201,8 +203,8 @@
     }
 
     .table-controls {
-        bottom: 210px;
-        /* Raise above the new table height */
+        bottom: 200px;
+        /* Tight to the new mobile table height */
         padding: 0 1rem;
     }
 
