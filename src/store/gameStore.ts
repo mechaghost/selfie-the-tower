@@ -6,6 +6,8 @@ import { resolveCardPlay, createCardInstance } from '../data/cards';
 export interface DragState {
     isActive: boolean;
     cardId: string | null;
+    targetType: string | null;
+    isTouch: boolean;
     startX: number;
     startY: number;
     currentX: number;
@@ -98,6 +100,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     dragState: {
         isActive: false,
         cardId: null,
+        targetType: null,
+        isTouch: false,
         startX: 0,
         startY: 0,
         currentX: 0,
@@ -425,6 +429,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             dragState: {
                 isActive: false,
                 cardId: null,
+                targetType: null,
+                isTouch: false,
                 startX: 0,
                 startY: 0,
                 currentX: 0,

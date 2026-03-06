@@ -8,7 +8,7 @@ export function TargetingArrow() {
         entityBounds: state.entityBounds
     }));
 
-    if (!dragState.isActive) return null;
+    if (!dragState.isActive || dragState.targetType !== 'Enemy') return null;
 
     // Calculate Bezier curve control points to make an arching arrow
     const startX = dragState.startX;

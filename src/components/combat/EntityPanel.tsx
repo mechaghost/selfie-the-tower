@@ -51,6 +51,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     return (
         <div
             className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}
+            data-entity-id={entity.id}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
