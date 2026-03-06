@@ -22,13 +22,11 @@ export function TargetingArrow() {
 
     const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
 
-    // Calculate arrow head rotation based on exact mouse velocity (current vs previous frame)
-    const dx = dragState.currentX - dragState.prevX;
-    const dy = dragState.currentY - dragState.prevY;
-
-    // Only update rotation if the mouse actually moved, otherwise keep pointing the last known direction
-    // If it's the very first frame of dragging (dx/dy = 0), point straight up as default
-    const angleRad = (dx === 0 && dy === 0) ? -Math.PI / 2 : Math.atan2(dy, dx);
+    // Calculate arrow head rotation
+    // We estimate the tangent at the end of the bezier curve (t=1). 
+    // Deriv: 3*(1-t)^2*(P1-P0) + 6*(1-t)*t*(P2-P1) + 3*t^2*(P3-P2)
+    // at t=1, direction is vector (P3 - P2), which is (end - cp2)
+    const angleRad = Math.atan2(endY - cp2y, endX - cp2x);
     const angleDeg = (angleRad * 180) / Math.PI;
 
     return (

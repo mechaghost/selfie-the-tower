@@ -389,6 +389,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             };
         });
 
+        get().resetDragState();
         get().resolveQueue();
     },
 
