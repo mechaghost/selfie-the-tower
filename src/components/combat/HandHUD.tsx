@@ -1,18 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CardItem } from '../ui/CardItem';
 import '../ui/CardItem.css';
-
-function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-    useEffect(() => {
-        const mql = window.matchMedia('(max-width: 768px)');
-        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-        mql.addEventListener('change', handler);
-        return () => mql.removeEventListener('change', handler);
-    }, []);
-    return isMobile;
-}
 
 export function HandHUD() {
     const { hand, player, playingCards } = useGameStore(state => ({
@@ -20,7 +8,6 @@ export function HandHUD() {
         player: state.player,
         playingCards: state.playingCards
     }));
-    const isMobile = useIsMobile();
 
     return (
         <div className="hand-container">
@@ -33,22 +20,15 @@ export function HandHUD() {
 
                 const canPlay = player.energy >= card.cost;
 
-                // Fix #16: Use reactive isMobile instead of window.innerWidth in render path
-                const cardWidth = isMobile ? 70 : 100;
-                const cardLeftOffset = `calc(50% + ${offset * cardWidth}px - ${cardWidth / 2}px)`;
-
                 return (
                     <div
                         key={card.instanceId}
-                        className="card-draw-anim"
+                        className="card-slot card-draw-anim"
                         style={{
-                            position: 'absolute',
-                            left: cardLeftOffset,
-                            bottom: 0,
-                            transition: 'left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), z-index 0s',
+                            '--card-offset': offset,
                             zIndex: 10 + index,
                             animationDelay: `${index * 0.1}s`
-                        }}
+                        } as React.CSSProperties}
                     >
                         <CardItem
                             card={card}

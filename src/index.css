@@ -3,19 +3,55 @@
   --color-bg-base: #121212;
   --color-bg-surface: #1e1e1e;
   --color-bg-elevated: #2d2d2d;
-  
+
   --color-text-primary: #e0e0e0;
   --color-text-secondary: #a0a0a0;
   --color-text-highlight: #f0db4f;
-  
+
   --color-accent-red: #d32f2f;
   --color-accent-blue: #1976d2;
   --color-accent-green: #388e3c;
-  
+
   --color-border: #333333;
-  
+
   --font-family-base: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   --font-family-display: 'Outfit', 'Inter', system-ui, sans-serif;
+
+  /* Layout dimensions */
+  --topbar-height: 50px;
+  --hand-height: 180px;
+
+  /* Card dimensions & spacing */
+  --card-width: 70px;
+  --card-height: 100px;
+  --card-spacing: 70px;
+  --card-half-width: 35px;
+  --card-hover-lift: -30px;
+  --card-hover-scale: 1.4;
+
+  /* Z-index registry */
+  --z-hand: 10;
+  --z-entity-float: 50;
+  --z-topbar: 100;
+  --z-deck-table: 100;
+  --z-card-hover: 100;
+  --z-controls: 150;
+  --z-card-playing: 200;
+  --z-targeting: 1000;
+}
+
+@media (min-width: 769px) {
+  :root {
+    --topbar-height: 60px;
+    --hand-height: 240px;
+
+    --card-width: 150px;
+    --card-height: 210px;
+    --card-spacing: 100px;
+    --card-half-width: 75px;
+    --card-hover-lift: -50px;
+    --card-hover-scale: 1.08;
+  }
 }
 
 body {

@@ -6,7 +6,7 @@
     height: 100vh;
     pointer-events: none;
     /* Let clicks pass through to elements below */
-    z-index: 1000;
+    z-index: var(--z-targeting);
     /* Ensure it stays above everything */
     overflow: visible;
 }

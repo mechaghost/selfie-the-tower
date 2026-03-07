@@ -1,11 +1,7 @@
 /* === Mobile-first base styles === */
 
 .topbar-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
+    grid-area: topbar;
     background: var(--color-bg-elevated);
     display: flex;
     justify-content: space-between;
@@ -13,7 +9,7 @@
     padding: 0 1rem;
     border-bottom: 2px solid var(--color-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 100;
+    z-index: var(--z-topbar);
     color: var(--color-text-primary);
     font-family: var(--font-family-base);
 }
@@ -60,7 +56,6 @@
 @media (min-width: 769px) {
     .topbar-container {
         padding: 0 2rem;
-        height: 60px;
     }
 
     .topbar-section {

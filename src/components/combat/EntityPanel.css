@@ -101,7 +101,7 @@
     color: white;
     text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 4px 12px rgba(0, 0, 0, 0.8);
     pointer-events: none;
-    z-index: 50;
+    z-index: var(--z-entity-float);
     animation: floatUpAndFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
