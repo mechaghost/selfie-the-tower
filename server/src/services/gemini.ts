@@ -11,7 +11,7 @@ export interface GeminiAnalysis {
 }
 
 // ── Shared art style applied to ALL image generation ──
-const ART_STYLE = `Risograph print illustration in the style of 1980s city pop album covers and retro arcade art: bold halftone grain, limited ink palette with overprint effects, thick outlines, stylized proportions, dramatic neon lighting against urban nightscapes. Textured like layered screen prints on rough paper. Mix of Japanese manga influence and 80s American street art.`;
+const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism.`;
 
 // ── Selfie moderation ──
 const MODERATION_PROMPT = `Analyze this image. Respond with ONLY a JSON object (no markdown, no code fences):
@@ -237,11 +237,11 @@ export async function generateCardArt(
     const model = getImageModel();
     const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.neon;
 
-    const prompt = `Generate a square card art illustration for a neon-soaked 1980s urban magic card game.
+    const prompt = `Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
 Card: "${cardName}" - ${cardDescription}
 Card type: ${cardType}
 Color palette: ${palette}
-No text, no words, no letters. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
+No text, no words, no letters, no numbers. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
 
     return withRetry(async () => {
         const result = await model.generateContent([{ text: prompt }]);
