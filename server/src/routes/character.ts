@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { analyzeSelfie } from '../services/gemini.js';
+import { analyzeSelfie, generatePortrait, generateCardArt } from '../services/gemini.js';
 import { generateCharacterFromAnalysis, generateMockCharacter } from '../services/generator.js';
 
 export const characterRoute = new Hono();
@@ -16,7 +16,32 @@ characterRoute.post('/generate-character', async (c) => {
             console.log('Analyzing selfie with Gemini...');
             const analysis = await analyzeSelfie(body.image);
             console.log('Gemini analysis:', JSON.stringify(analysis));
+
+            // Build character first to get card list
             const result = generateCharacterFromAnalysis(analysis);
+
+            // Generate portrait + all card art in parallel
+            console.log(`Generating portrait + ${result.cards.length} card images...`);
+            const imagePromises = [
+                generatePortrait(body.image, analysis.archetype)
+                    .catch((err) => { console.warn('Portrait failed:', err.message); return ''; }),
+                ...result.cards.map((card) =>
+                    generateCardArt(card.name, card.description, card.type, analysis.archetype)
+                        .catch((err) => { console.warn(`Card art failed for ${card.name}:`, err.message); return ''; })
+                ),
+            ];
+
+            const [portraitUrl, ...cardImages] = await Promise.all(imagePromises);
+            console.log(`Generated: portrait=${portraitUrl ? 'yes' : 'no'}, cards=${cardImages.filter(Boolean).length}/${result.cards.length}`);
+
+            // Attach images to results
+            result.character.portraitUrl = portraitUrl;
+            result.cards.forEach((card, i) => {
+                if (cardImages[i]) {
+                    card.imageUrl = cardImages[i];
+                }
+            });
+
             return c.json(result);
         } else {
             console.log('No GEMINI_API_KEY set, using mock generation');

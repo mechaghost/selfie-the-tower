@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ARCHETYPES } from './archetypes.js';
 import { GeminiAnalysis } from './gemini.js';
 
-export function generateCharacterFromAnalysis(analysis: GeminiAnalysis) {
+export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portraitUrl: string = '') {
     const archetype = ARCHETYPES[analysis.archetype];
     const characterId = uuidv4();
 
@@ -11,7 +11,7 @@ export function generateCharacterFromAnalysis(analysis: GeminiAnalysis) {
         name: analysis.name,
         archetype: analysis.archetype,
         title: analysis.title,
-        portraitUrl: '',
+        portraitUrl,
         maxHp: 70 + Math.floor(Math.random() * 11),
         maxEnergy: 3,
         startingGold: 90 + Math.floor(Math.random() * 21),

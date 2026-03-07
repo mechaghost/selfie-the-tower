@@ -49,13 +49,15 @@ export function CharacterRevealScreen() {
             </div>
 
             {/* Portrait */}
-            <div className={`reveal-portrait ${revealStep >= 2 ? 'visible' : ''}`}>
-                <img
-                    src={generatedCharacter.portraitUrl}
-                    alt={generatedCharacter.name}
-                    className="reveal-portrait-img"
-                />
-            </div>
+            {generatedCharacter.portraitUrl && (
+                <div className={`reveal-portrait ${revealStep >= 2 ? 'visible' : ''}`}>
+                    <img
+                        src={generatedCharacter.portraitUrl}
+                        alt={generatedCharacter.name}
+                        className="reveal-portrait-img"
+                    />
+                </div>
+            )}
 
             {/* Traits */}
             <div className={`reveal-traits ${revealStep >= 2 ? 'visible' : ''}`}>
