@@ -134,10 +134,20 @@ export async function moderateSelfie(imageBase64: string): Promise<{ valid: bool
     const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const base64Data = stripBase64Prefix(imageBase64);
 
-    const result = await model.generateContent([
-        { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-        { text: MODERATION_PROMPT },
-    ]);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    let result;
+    try {
+        result = await model.generateContent({
+            contents: [{ role: 'user', parts: [
+                { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+                { text: MODERATION_PROMPT },
+            ]}],
+        }, { signal: controller.signal } as any);
+    } finally {
+        clearTimeout(timeout);
+    }
 
     const text = result.response.text().trim();
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
@@ -156,14 +166,34 @@ export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis
     const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const base64Data = stripBase64Prefix(imageBase64);
 
-    const result = await model.generateContent([
-        { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-        { text: ANALYSIS_PROMPT },
-    ]);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    let result;
+    try {
+        result = await model.generateContent({
+            contents: [{ role: 'user', parts: [
+                { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+                { text: ANALYSIS_PROMPT },
+            ]}],
+        }, { signal: controller.signal } as any);
+    } finally {
+        clearTimeout(timeout);
+    }
 
     const text = result.response.text().trim();
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
-    const parsed = JSON.parse(cleaned);
+
+    let parsed;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        throw new Error('Failed to parse character analysis response');
+    }
+
+    if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Invalid character analysis response');
+    }
 
     if (!ARCHETYPE_IDS.includes(parsed.archetype)) {
         parsed.archetype = ARCHETYPE_IDS[Math.floor(Math.random() * ARCHETYPE_IDS.length)];
@@ -174,9 +204,9 @@ export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis
 
     return {
         archetype: parsed.archetype,
-        name: String(parsed.name || 'Unknown Wanderer'),
-        title: String(parsed.title || 'Seeker of the Spire'),
-        traits: parsed.traits.map(String),
+        name: String(parsed.name || 'Unknown Wanderer').slice(0, 100),
+        title: String(parsed.title || 'Seeker of the Spire').slice(0, 100),
+        traits: parsed.traits.map((t: unknown) => String(t).slice(0, 50)),
     };
 }
 
