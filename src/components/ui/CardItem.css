@@ -27,7 +27,7 @@
     display: flex;
     flex-direction: column;
     pointer-events: auto;
-    cursor: pointer;
+    cursor: grab;
     touch-action: none;
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), z-index 0s, margin 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
@@ -36,8 +36,10 @@
 }
 
 .card.unplayable {
-    filter: grayscale(80%) brightness(0.6);
+    filter: grayscale(100%) brightness(0.45);
+    opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* Animation variables scoped to the playing wrapper */
@@ -105,6 +107,7 @@
 
 .card:hover,
 .card.is-dragging {
+    cursor: grabbing;
     transform: translateY(var(--card-hover-lift)) rotate(0deg) scale(var(--card-hover-scale)) !important;
     z-index: var(--z-card-hover) !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 1);
@@ -112,14 +115,17 @@
 
 .card.type-attack {
     border-color: var(--color-accent-red);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(211, 47, 47, 0.2);
 }
 
 .card.type-skill {
     border-color: var(--color-accent-blue);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(25, 118, 210, 0.2);
 }
 
 .card.type-power {
     border-color: var(--color-text-highlight);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(240, 219, 79, 0.2);
 }
 
 .card-cost {
@@ -142,14 +148,14 @@
 .card-name {
     font-family: var(--font-family-display);
     font-weight: bold;
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     text-align: center;
     margin-bottom: 0.1rem;
     text-transform: uppercase;
 }
 
 .card-type {
-    font-size: 0.4rem;
+    font-size: 0.45rem;
     text-align: center;
     color: var(--color-text-secondary);
     border-bottom: 1px solid var(--color-border);
@@ -168,8 +174,8 @@
 }
 
 .card-desc {
-    font-size: 0.45rem;
-    line-height: 1.1;
+    font-size: 0.5rem;
+    line-height: 1.15;
     text-align: center;
     flex-grow: 1;
     display: flex;

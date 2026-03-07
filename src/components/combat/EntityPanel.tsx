@@ -1,5 +1,5 @@
 import React, { useRef, useLayoutEffect } from 'react';
-import { Entity } from '../../core/models';
+import { Entity, Enemy } from '../../core/models';
 import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { STATUS_REGISTRY } from '../../data/statusEffects';
@@ -32,7 +32,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         if (!isPlayer) {
             e.preventDefault();
-            e.stopPropagation(); // Don't let the CombatView background catch this drop
+            e.stopPropagation();
             e.dataTransfer.dropEffect = 'move';
         }
     };
@@ -59,7 +59,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             const centerX = bounds.left + bounds.width / 2;
             const centerY = bounds.top + bounds.height / 2;
             const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
-            const hoverRadius = (bounds.width / 2) + 20;
+            const hoverRadius = (bounds.width / 2) + 30;
 
             if (dist < hoverRadius) {
                 isTargeted = true;
@@ -80,7 +80,6 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             const destCX = destRect.left + destRect.width / 2;
             const destCY = destRect.top + destRect.height / 2;
 
-            // Lunge ~30% of the distance towards the target
             lungeStyle = {
                 '--lunge-x': `${(destCX - sourceCX) * 0.3}px`,
                 '--lunge-y': `${(destCY - sourceCY) * 0.3}px`
@@ -88,54 +87,83 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         }
     }
 
-    const renderIntent = () => {
-        if (isPlayer) return null;
-        const enemy = entity as import('../../core/models').Enemy;
-        if (!enemy.intent) return null;
-
-        const { type, damage, block } = enemy.intent;
-
+    // --- Player: compact presence (avatar + floating text only, stats in TopBar) ---
+    if (isPlayer) {
         return (
-            <div className="intent-badge">
-                {type.includes('Attack') && (
-                    <div className="intent-item attack">
-                        <Swords size={20} className="intent-icon" />
-                        <span className="intent-value">{damage}</span>
+            <div className="entity-panel player">
+                <div className="entity-avatar-container">
+                    <div
+                        ref={avatarRef}
+                        className={`entity-avatar ${animClasses}`}
+                        style={lungeStyle}
+                        data-entity-id={entity.id}
+                    >
+                        🛡️
                     </div>
-                )}
-                {type.includes('Defend') && type !== 'AttackDefend' && (
-                    <div className="intent-item defend">
-                        <ShieldPlus size={20} className="intent-icon" />
-                        {block && <span className="intent-value">{block}</span>}
-                    </div>
-                )}
-                {type === 'AttackDefend' && (
-                    <div className="intent-item defend">
-                        <ShieldPlus size={16} className="intent-icon secondary" />
-                    </div>
-                )}
-                {type.includes('Buff') && (
-                    <div className="intent-item buff">
-                        <Zap size={20} className="intent-icon" />
-                    </div>
-                )}
+                    {floatingTexts.map(ft => (
+                        <div key={ft.id} className={`floating-text ${ft.type}`}>
+                            {ft.type === 'damage' ? `-${ft.value}` : ft.type === 'status' ? ft.value : `+${ft.value}`}
+                        </div>
+                    ))}
+                </div>
+                <div className="entity-name player-name">{entity.name}</div>
             </div>
         );
-    };
+    }
+
+    // --- Enemy: card-style threat panel ---
+    const enemy = entity as Enemy;
+    const intent = enemy.intent;
+
+    let threatClass = '';
+    if (intent) {
+        if (intent.type.includes('Attack')) threatClass = 'threat-attack';
+        else if (intent.type.includes('Defend')) threatClass = 'threat-defend';
+        else if (intent.type.includes('Buff')) threatClass = 'threat-buff';
+    }
 
     return (
-        <div className={`entity-panel ${isPlayer ? 'player' : 'enemy'}`}>
+        <div
+            className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''}`}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
+            {/* Intent row at top of card */}
+            {intent && (
+                <div className="intent-row">
+                    {intent.type.includes('Attack') && (
+                        <div className="intent-item attack">
+                            <Swords size={16} />
+                            <span className="intent-value">{intent.damage}</span>
+                        </div>
+                    )}
+                    {intent.type.includes('Defend') && intent.type !== 'AttackDefend' && (
+                        <div className="intent-item defend">
+                            <ShieldPlus size={16} />
+                            {intent.block && <span className="intent-value">{intent.block}</span>}
+                        </div>
+                    )}
+                    {intent.type === 'AttackDefend' && (
+                        <div className="intent-item defend">
+                            <ShieldPlus size={14} />
+                        </div>
+                    )}
+                    {intent.type.includes('Buff') && (
+                        <div className="intent-item buff">
+                            <Zap size={16} />
+                        </div>
+                    )}
+                </div>
+            )}
+
             <div className="entity-avatar-container">
-                {renderIntent()}
                 <div
                     ref={avatarRef}
                     className={`entity-avatar ${isTargeted ? 'targeted' : ''} ${animClasses}`}
                     style={lungeStyle}
                     data-entity-id={entity.id}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
                 >
-                    {isPlayer ? '🛡️' : '👹'}
+                    👹
                 </div>
                 {floatingTexts.map(ft => (
                     <div key={ft.id} className={`floating-text ${ft.type}`}>
@@ -149,7 +177,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
 
                 {entity.block > 0 && (
                     <div className="entity-block">
-                        <Shield size={16} /> <span>{entity.block}</span>
+                        <Shield size={14} /> <span>{entity.block}</span>
                     </div>
                 )}
 
@@ -167,7 +195,11 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                     {entity.statuses.map(status => {
                         const def = STATUS_REGISTRY[status.id];
                         return (
-                            <div key={status.id} className={`status-icon ${status.id}`} title={def?.name || status.id}>
+                            <div
+                                key={status.id}
+                                className={`status-icon ${def?.type === 'Debuff' ? 'debuff' : 'buff'}`}
+                                title={`${def?.name}: ${def?.type === 'Debuff' ? 'Takes 50% more damage' : 'Deals 25% less damage'}`}
+                            >
                                 {def?.icon || '❓'} {status.amount}
                             </div>
                         );
