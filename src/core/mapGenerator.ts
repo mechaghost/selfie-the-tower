@@ -103,7 +103,7 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         type: 'Boss',
         x: 0.5,
         y: MAP_HEIGHT - 1,
-        encounterId: rng.randomElement(ENCOUNTER_POOLS.act1_elite).id,
+        encounterId: rng.randomElement(ENCOUNTER_POOLS.act1_boss).id,
         connections: []
     };
     nodes.push(bossNode);

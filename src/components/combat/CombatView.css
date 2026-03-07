@@ -1,3 +1,5 @@
+/* === Mobile-first base styles === */
+
 .combat-stage {
     position: relative;
     width: 100vw;
@@ -11,13 +13,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
     position: absolute;
-    top: 140px;
-    bottom: 360px;
+    top: 60px;
+    bottom: 200px;
     left: 0;
     right: 0;
-    padding: 0 2rem;
+    padding: 0.5rem 2vw;
 }
 
 .player-side {
@@ -31,12 +33,12 @@
     max-width: 600px;
     height: 2px;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-    margin: 1rem 0;
+    margin: 0.5rem 0;
 }
 
 .enemy-side {
     display: flex;
-    gap: 5rem 2rem;
+    gap: 2rem 1rem;
     flex-wrap: wrap-reverse;
     justify-content: center;
     align-items: center;
@@ -45,15 +47,13 @@
 
 .table-controls {
     position: absolute;
-    bottom: 260px;
-    /* Inside 320px table height */
+    bottom: 150px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    /* Pin bottoms to the table rim */
-    padding: 0 4rem;
+    padding: 0 1rem;
     pointer-events: none;
     z-index: 150;
 }
@@ -66,11 +66,11 @@
     background: linear-gradient(135deg, #1e88e5, #0d47a1);
     border: 2px solid #82b1ff;
     border-radius: 8px;
-    padding: 0.5rem 1.5rem;
+    padding: 0.3rem 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     font-weight: 900;
     font-family: var(--font-family-display);
     color: white;
@@ -80,7 +80,6 @@
     overflow: hidden;
 }
 
-/* Add a subtle shine sweep to the badge */
 .energy-badge::after {
     content: '';
     position: absolute;
@@ -113,8 +112,8 @@
     background: var(--color-bg-elevated);
     border: 2px solid var(--color-border);
     color: var(--color-text-primary);
-    padding: 1rem 2rem;
-    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
     font-family: var(--font-family-display);
     font-weight: bold;
     cursor: pointer;
@@ -136,28 +135,24 @@
     bottom: 0;
     left: 0;
     right: 0;
-    /* Create a distinct 'table' surface background */
     background: linear-gradient(to bottom, rgba(30, 30, 35, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%);
     border-top: 3px solid #444;
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
-
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    /* Hand sits at the bottom */
-    padding: 0 4rem 1.5rem;
-    /* left/right 4rem, bottom 1.5rem */
-    height: 320px;
+    padding: 1rem 1rem;
+    height: 180px;
     pointer-events: none;
     z-index: 100;
 }
 
 .pile {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     position: absolute;
-    top: 40px;
+    top: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -165,11 +160,11 @@
 }
 
 .draw-pile {
-    left: 4rem;
+    left: 1rem;
 }
 
 .discard-pile {
-    right: 4rem;
+    right: 1rem;
 }
 
 .pile-count {
@@ -182,56 +177,56 @@
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 5px rgba(255, 255, 255, 1);
 }
 
-@media (max-width: 768px) {
+/* === Desktop overrides === */
+
+@media (min-width: 769px) {
     .entities-container {
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        position: absolute;
-        top: 100px;
-        bottom: 300px;
-        left: 0;
-        right: 0;
-        padding: 0 2vw;
-        gap: 1rem;
+        top: 70px;
+        bottom: 250px;
+        padding: 0 2rem;
+        gap: 0.75rem;
+        overflow-y: auto;
+    }
+
+    .battleground-divider {
+        margin: 0.25rem 0;
     }
 
     .enemy-side {
-        gap: 2rem 1rem;
+        gap: 1rem 2rem;
     }
 
     .table-controls {
-        bottom: 150px;
-        /* Inside 200px table */
-        padding: 0 1rem;
+        bottom: 190px;
+        padding: 0 4rem;
     }
 
     .energy-badge {
-        padding: 0.3rem 1rem;
-        font-size: 1.2rem;
+        padding: 0.5rem 1.5rem;
+        font-size: 1.8rem;
     }
 
     .end-turn-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+        padding: 1rem 2rem;
+        font-size: 1.25rem;
     }
 
     .deck-table {
-        padding: 1rem 1rem;
-        height: 200px;
+        padding: 0 4rem 1rem;
+        height: 240px;
     }
 
     .pile {
-        width: 30px;
-        height: 30px;
-        top: 50px;
+        width: 40px;
+        height: 40px;
+        top: 15px;
     }
 
     .draw-pile {
-        left: 1rem;
+        left: 4rem;
     }
 
     .discard-pile {
-        right: 1rem;
+        right: 4rem;
     }
 }

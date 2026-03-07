@@ -34,10 +34,7 @@ function App() {
         <div className="app-container">
             <h1>Slay the Tower</h1>
             <p>Roguelike Deckbuilder</p>
-            <button
-                style={{ padding: '1rem 2rem', fontSize: '1.2rem', marginTop: '2rem', cursor: 'pointer', fontFamily: 'var(--font-family-display)' }}
-                onClick={handleStartRun}
-            >
+            <button className="start-button" onClick={handleStartRun}>
                 Start New Run
             </button>
         </div>

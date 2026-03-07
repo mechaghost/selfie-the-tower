@@ -1,12 +1,15 @@
+/* === Mobile-first base styles === */
+
 .game-over-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--color-background);
+    background-color: var(--color-bg-base);
     background-image: radial-gradient(circle at center, rgba(160, 40, 40, 0.1) 0%, transparent 60%);
-    color: var(--color-text);
+    color: var(--color-text-primary);
+    padding: 1rem;
 }
 
 .game-over-content {
@@ -15,11 +18,12 @@
     align-items: center;
     text-align: center;
     background: rgba(30, 25, 25, 0.9);
-    padding: 3rem;
-    border-radius: var(--border-radius);
-    border: 2px solid var(--color-enemy-health);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-accent-red);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(160, 40, 40, 0.2);
     animation: fade-in-up 0.5s ease-out forwards;
+    max-width: 100%;
 }
 
 @keyframes fade-in-up {
@@ -35,25 +39,25 @@
 }
 
 .game-over-icon {
-    color: var(--color-enemy-health);
-    margin-bottom: 1rem;
+    color: var(--color-accent-red);
+    margin-bottom: 0.75rem;
     filter: drop-shadow(0 0 10px rgba(160, 40, 40, 0.5));
 }
 
 .game-over-title {
     font-family: var(--font-family-display);
-    font-size: 4rem;
-    color: var(--color-enemy-health);
+    font-size: 2.5rem;
+    color: var(--color-accent-red);
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 4px;
+    letter-spacing: 2px;
     text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
 }
 
 .game-over-stats {
-    font-size: 1.5rem;
-    color: var(--color-text-muted);
-    margin: 1.5rem 0 2.5rem 0;
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    margin: 1rem 0 1.5rem 0;
 }
 
 .game-over-stats strong {
@@ -62,40 +66,78 @@
 
 .game-over-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .restart-button,
 .retry-seed-button {
     font-family: var(--font-family-display);
-    padding: 0.8rem 1.5rem;
-    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     transition: all 0.2s ease;
     text-transform: uppercase;
     font-weight: bold;
 }
 
 .restart-button {
-    background-color: var(--color-primary);
+    background-color: var(--color-accent-red);
     color: white;
     border: none;
 }
 
 .restart-button:hover {
-    background-color: var(--color-accent);
+    filter: brightness(1.2);
     transform: scale(1.05);
 }
 
 .retry-seed-button {
     background-color: transparent;
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-text-muted);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-text-secondary);
 }
 
 .retry-seed-button:hover {
     color: white;
     border-color: white;
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* === Desktop overrides === */
+
+@media (min-width: 769px) {
+    .game-over-container {
+        padding: 2rem;
+    }
+
+    .game-over-content {
+        padding: 3rem;
+    }
+
+    .game-over-icon {
+        margin-bottom: 1rem;
+    }
+
+    .game-over-title {
+        font-size: 4rem;
+        letter-spacing: 4px;
+    }
+
+    .game-over-stats {
+        font-size: 1.5rem;
+        margin: 1.5rem 0 2.5rem 0;
+    }
+
+    .game-over-actions {
+        gap: 1rem;
+    }
+
+    .restart-button,
+    .retry-seed-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.2rem;
+    }
 }

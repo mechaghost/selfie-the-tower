@@ -1,4 +1,5 @@
 import { EnemyDefinition, Enemy } from '../core/models';
+import { RNG } from '../core/rng';
 
 export const enemies: Record<string, EnemyDefinition> = {
     'jaw_worm': {
@@ -65,22 +66,23 @@ export const enemies: Record<string, EnemyDefinition> = {
     }
 };
 
-export function createEnemyInstance(templateId: string, id: string, rng: any): Enemy {
+export function createEnemyInstance(templateId: string, id: string, rng: RNG | null): Enemy {
     const template = enemies[templateId];
     if (!template) throw new Error(`Enemy template ${templateId} not found`);
 
-    // Calculate max hp dynamically from range
     const [minHp, maxHp] = template.maxHpRange;
-    // Primitive random if no seed RNG context given
-    const finalMaxHp = rng ? Math.floor(rng.next() * (maxHp - minHp + 1)) + minHp : Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp;
+    const finalMaxHp = rng
+        ? Math.floor(rng.next() * (maxHp - minHp + 1)) + minHp
+        : Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp;
 
     return {
         id,
+        templateId,
         name: template.name,
         hp: finalMaxHp,
         maxHp: finalMaxHp,
         block: 0,
         statuses: [],
-        intent: null // Intent gets calculated dynamically by the engine
+        intent: null
     };
 }

@@ -1,4 +1,7 @@
 import { Card } from '../core/models';
+import { RNG } from '../core/rng';
+
+let _instanceCounter = 0;
 
 export const CARD_DATABASE: Record<string, Card> = {
     strike_red: {
@@ -43,12 +46,15 @@ export const CARD_DATABASE: Record<string, Card> = {
     }
 };
 
-export const createCardInstance = (cardId: string): Card => {
+export const createCardInstance = (cardId: string, rng?: RNG): Card => {
     const template = CARD_DATABASE[cardId];
     if (!template) throw new Error(`Card ${cardId} not found`);
+    const unique = rng
+        ? Math.floor(rng.next() * 2176782336).toString(36)
+        : (++_instanceCounter).toString(36);
     return {
         ...template,
-        instanceId: `${cardId}_${Math.random().toString(36).substr(2, 9)}`
+        instanceId: `${cardId}_${unique}`
     };
 };
 

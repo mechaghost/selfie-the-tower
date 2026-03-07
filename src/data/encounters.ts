@@ -19,5 +19,12 @@ export const ENCOUNTER_POOLS: Record<string, Encounter[]> = {
             name: 'Gremlin Nob',
             enemyIds: ['gremlin_nob']
         }
+    ],
+    act1_boss: [
+        {
+            id: 'gremlin_nob_boss',
+            name: 'Gremlin Nob',
+            enemyIds: ['gremlin_nob']
+        }
     ]
 };

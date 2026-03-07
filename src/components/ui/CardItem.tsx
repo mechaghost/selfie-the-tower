@@ -4,6 +4,10 @@ import { useGameStore } from '../../store/gameStore';
 import { Crosshair, Users, User } from 'lucide-react';
 import './CardItem.css';
 
+// Pre-load a 1x1 transparent pixel so it's decoded before any drag starts
+const EMPTY_DRAG_IMG = new Image();
+EMPTY_DRAG_IMG.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
 interface CardItemProps {
     card: Card;
     style?: React.CSSProperties;
@@ -59,9 +63,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
             currentY: e.clientY
         });
 
-        const img = new Image();
-        img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-        e.dataTransfer.setDragImage(img, 0, 0);
+        e.dataTransfer.setDragImage(EMPTY_DRAG_IMG, 0, 0);
     };
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {

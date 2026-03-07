@@ -139,7 +139,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                 </div>
                 {floatingTexts.map(ft => (
                     <div key={ft.id} className={`floating-text ${ft.type}`}>
-                        {ft.type === 'damage' ? `-${ft.value}` : `+${ft.value}`}
+                        {ft.type === 'damage' ? `-${ft.value}` : ft.type === 'status' ? ft.value : `+${ft.value}`}
                     </div>
                 ))}
             </div>

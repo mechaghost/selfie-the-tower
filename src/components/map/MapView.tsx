@@ -30,17 +30,17 @@ export function MapView() {
         }, 50);
     }, [mapData, floor]);
 
+    // Fix #8: Floor 0 shows Start nodes; after that use connections from currentNode
     const availableNodes = useMemo(() => {
         if (!mapData) return [];
         if (currentNodeId === null) {
-            // First floor choices
-            return mapData.nodes.filter(n => n.y === floor);
+            // First floor: show all Start nodes (floor 0)
+            return mapData.nodes.filter(n => n.y === 0);
         }
         const currentNode = mapData.nodes.find(n => n.id === currentNodeId);
         if (!currentNode) return [];
-        // Available choices are connected nodes on the current floor
-        return mapData.nodes.filter(n => n.y === floor && currentNode.connections.includes(n.id));
-    }, [mapData, floor, currentNodeId]);
+        return mapData.nodes.filter(n => currentNode.connections.includes(n.id));
+    }, [mapData, currentNodeId]);
 
     const handleNodeClick = (node: MapNode) => {
         if (!availableNodes.some(an => an.id === node.id)) return; // Can only click valid connected paths
@@ -75,18 +75,17 @@ export function MapView() {
         <div className="map-view-container" ref={scrollContainerRef}>
             <div className="map-scroll-area">
 
-                {/* SVG for drawing connecting dots */}
-                <svg className="map-connections">
+                {/* Fix #15: SVG uses numeric percentages instead of calc() which SVG doesn't support */}
+                <svg className="map-connections" viewBox="0 0 600 800" preserveAspectRatio="none">
                     {mapData.nodes.map(node =>
                         node.connections.map(targetId => {
                             const target = mapData.nodes.find(n => n.id === targetId);
                             if (!target) return null;
 
-                            const startX = `${node.x * 100}%`;
-                            const startY = `calc(${100 - (node.y / 10 * 100)}% - 30px)`; // Center of the 60px row
-
-                            const endX = `${target.x * 100}%`;
-                            const endY = `calc(${100 - (target.y / 10 * 100)}% - 30px)`;
+                            const startX = node.x * 600;
+                            const startY = (1 - node.y / 10) * 800 - 30;
+                            const endX = target.x * 600;
+                            const endY = (1 - target.y / 10) * 800 - 30;
 
                             return (
                                 <line

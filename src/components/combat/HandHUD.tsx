@@ -1,6 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CardItem } from '../ui/CardItem';
 import '../ui/CardItem.css';
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+    useEffect(() => {
+        const mql = window.matchMedia('(max-width: 768px)');
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mql.addEventListener('change', handler);
+        return () => mql.removeEventListener('change', handler);
+    }, []);
+    return isMobile;
+}
 
 export function HandHUD() {
     const { hand, player, playingCards } = useGameStore(state => ({
@@ -8,21 +20,21 @@ export function HandHUD() {
         player: state.player,
         playingCards: state.playingCards
     }));
+    const isMobile = useIsMobile();
 
     return (
         <div className="hand-container">
             {hand.map((card, index) => {
-                // Calculate dynamic fanning
                 const totalCards = hand.length;
                 const middleIndex = (totalCards - 1) / 2;
                 const offset = index - middleIndex;
-                const rotation = offset * 5; // 5 degrees per card
-                const translateY = Math.abs(offset) * 10; // Arching effect
+                const rotation = offset * 5;
+                const translateY = Math.abs(offset) * 10;
 
                 const canPlay = player.energy >= card.cost;
 
-                // Convert pure Flexbox to bounded Absolute positioning to enable transition easing
-                const cardWidth = window.innerWidth <= 768 ? 70 : 120; // smaller spacing on mobile
+                // Fix #16: Use reactive isMobile instead of window.innerWidth in render path
+                const cardWidth = isMobile ? 70 : 100;
                 const cardLeftOffset = `calc(50% + ${offset * cardWidth}px - ${cardWidth / 2}px)`;
 
                 return (

@@ -85,6 +85,7 @@ export interface Player extends Entity {
 }
 
 export interface Enemy extends Entity {
+    templateId: string;
     intent: EnemyIntent | null;
 }
 

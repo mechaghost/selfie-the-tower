@@ -6,15 +6,13 @@ import { TargetingArrow } from './TargetingArrow';
 import './CombatView.css';
 
 export function CombatView() {
-    const { player, enemies, endTurn, energy, maxEnergy, playCard, drawPile, discardPile } = useGameStore((state) => ({
+    const { player, enemies, endTurn, energy, maxEnergy, playCard } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
         maxEnergy: state.player.maxEnergy,
-        playCard: state.playCard,
-        drawPile: state.drawPile,
-        discardPile: state.discardPile
+        playCard: state.playCard
     }));
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -69,15 +67,7 @@ export function CombatView() {
             </div>
 
             <div className="deck-table">
-                <div className="pile draw-pile">
-                    <div className="pile-count">{drawPile.length}</div>
-                </div>
-
                 <HandHUD />
-
-                <div className="pile discard-pile">
-                    <div className="pile-count">{discardPile.length}</div>
-                </div>
             </div>
 
             <TargetingArrow />
