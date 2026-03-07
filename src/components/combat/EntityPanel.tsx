@@ -23,13 +23,14 @@ interface EntityPanelProps {
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
-    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds } = useGameStore(state => ({
+    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl } = useGameStore(state => ({
         playCard: state.playCard,
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
         activeAnimations: state.activeAnimations.filter(a => a.targetId === entity.id),
         setEntityBounds: state.setEntityBounds,
         dragState: state.dragState,
-        entityBounds: state.entityBounds
+        entityBounds: state.entityBounds,
+        playerPortraitUrl: state.player?.portraitUrl,
     }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
@@ -112,11 +113,14 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                 <div className="entity-avatar-container">
                     <div
                         ref={avatarRef}
-                        className={`entity-avatar ${animClasses}`}
+                        className={`entity-avatar ${animClasses} ${playerPortraitUrl ? 'has-portrait' : ''}`}
                         style={lungeStyle}
                         data-entity-id={entity.id}
                     >
-                        🛡️
+                        {playerPortraitUrl
+                            ? <img src={playerPortraitUrl} alt={entity.name} className="player-portrait-img" />
+                            : '🛡️'
+                        }
                     </div>
                     {floatingTexts.map(ft => (
                         <div key={ft.id} className={`floating-text ${ft.type}`}>

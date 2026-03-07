@@ -420,6 +420,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 energy: generatedCharacter.maxEnergy,
                 maxEnergy: generatedCharacter.maxEnergy,
                 gold: generatedCharacter.startingGold,
+                portraitUrl: generatedCharacter.portraitUrl || undefined,
             },
             masterDeck,
             ugcPhase: null,

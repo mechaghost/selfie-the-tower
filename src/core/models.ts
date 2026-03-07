@@ -83,6 +83,7 @@ export interface Player extends Entity {
     energy: number;
     maxEnergy: number;
     gold: number;
+    portraitUrl?: string;
 }
 
 export interface Enemy extends Entity {
