@@ -24,7 +24,7 @@ const RATE_LIMIT_MS = 4000; // 4s between requests to avoid quota issues
 const MAX_RETRIES = 3;
 
 // ── Art style ──
-const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism.`;
+const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism. IMPORTANT: Full bleed artwork — the illustration must extend to every edge of the image. No white borders, no margins, no frames, no matte, no padding. Edge-to-edge color.`;
 
 // ── Archetype prompts ──
 const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {

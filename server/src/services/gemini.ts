@@ -11,7 +11,7 @@ export interface GeminiAnalysis {
 }
 
 // ── Shared art style applied to ALL image generation ──
-const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism.`;
+const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism. IMPORTANT: Full bleed artwork — the illustration must extend to every edge of the image. No white borders, no margins, no frames, no matte, no padding. Edge-to-edge color.`;
 
 // ── Selfie moderation ──
 const MODERATION_PROMPT = `Analyze this image. Respond with ONLY a JSON object (no markdown, no code fences):
