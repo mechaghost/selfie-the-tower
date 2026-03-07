@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CardItem } from '../ui/CardItem';
 import { Card } from '../../core/models';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import './CharacterRevealScreen.css';
 
 export function CharacterRevealScreen() {
@@ -12,6 +13,7 @@ export function CharacterRevealScreen() {
     }));
 
     const [revealStep, setRevealStep] = useState(0);
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const timers = [
@@ -21,6 +23,35 @@ export function CharacterRevealScreen() {
             setTimeout(() => setRevealStep(4), 6500),   // CTA button
         ];
         return () => timers.forEach(clearTimeout);
+    }, []);
+
+    // Keyboard navigation for lightbox
+    useEffect(() => {
+        if (lightboxIndex === null) return;
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setLightboxIndex(null);
+            if (e.key === 'ArrowLeft') setLightboxIndex(i => i !== null ? Math.max(0, i - 1) : null);
+            if (e.key === 'ArrowRight' && displayCards) {
+                setLightboxIndex(i => i !== null ? Math.min(displayCards.length - 1, i + 1) : null);
+            }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [lightboxIndex]);
+
+    // Swipe support for lightbox
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        (e.currentTarget as any)._touchStartX = e.touches[0].clientX;
+    }, []);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        const startX = (e.currentTarget as any)._touchStartX;
+        if (startX == null || !displayCards) return;
+        const diff = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diff) > 50) {
+            if (diff < 0) setLightboxIndex(i => i !== null ? Math.min(displayCards.length - 1, i + 1) : null);
+            else setLightboxIndex(i => i !== null ? Math.max(0, i - 1) : null);
+        }
     }, []);
 
     if (!generatedCharacter || !generatedCards) return null;
@@ -74,8 +105,9 @@ export function CharacterRevealScreen() {
                         key={card.instanceId}
                         className="reveal-card-slot"
                         style={{ animationDelay: `${i * 0.15}s` }}
+                        onClick={() => setLightboxIndex(i)}
                     >
-                        <CardItem card={card} canPlay={false} isDraggable={false} />
+                        <CardItem card={card} canPlay={true} isDraggable={false} />
                     </div>
                 ))}
             </div>
@@ -87,6 +119,53 @@ export function CharacterRevealScreen() {
             >
                 Begin Your Journey
             </button>
+
+            {/* Card Lightbox */}
+            {lightboxIndex !== null && (
+                <div className="card-lightbox-overlay" onClick={() => setLightboxIndex(null)}>
+                    <div
+                        className="card-lightbox"
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={handleTouchEnd}
+                    >
+                        <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>
+                            <X size={20} />
+                        </button>
+
+                        <button
+                            className="lightbox-nav lightbox-prev"
+                            onClick={() => setLightboxIndex(Math.max(0, lightboxIndex - 1))}
+                            disabled={lightboxIndex === 0}
+                        >
+                            <ChevronLeft size={28} />
+                        </button>
+
+                        <div className="lightbox-card">
+                            <CardItem card={displayCards[lightboxIndex]} canPlay={true} isDraggable={false} />
+                        </div>
+
+                        <button
+                            className="lightbox-nav lightbox-next"
+                            onClick={() => setLightboxIndex(Math.min(displayCards.length - 1, lightboxIndex + 1))}
+                            disabled={lightboxIndex === displayCards.length - 1}
+                        >
+                            <ChevronRight size={28} />
+                        </button>
+
+                        {/* Breadcrumb dots */}
+                        <div className="lightbox-dots">
+                            {displayCards.map((_, i) => (
+                                <button
+                                    key={i}
+                                    className={`lightbox-dot ${i === lightboxIndex ? 'active' : ''}`}
+                                    onClick={() => setLightboxIndex(i)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

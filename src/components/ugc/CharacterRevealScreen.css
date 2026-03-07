@@ -123,11 +123,22 @@
     opacity: 1;
 }
 
+/* Override card styles inside reveal screen */
 .reveal-card-slot {
     opacity: 0;
     transform: translateY(20px) scale(0.9);
     animation: card-reveal 0.4s ease forwards;
     animation-play-state: paused;
+    cursor: pointer;
+}
+
+.reveal-card-slot .card {
+    cursor: pointer;
+}
+
+.reveal-card-slot .card:hover {
+    transform: translateY(-4px) scale(1.05) !important;
+    box-shadow: 0 8px 24px rgba(255, 110, 199, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .reveal-cards.visible .reveal-card-slot {
@@ -179,6 +190,159 @@
     transform: translateY(-2px);
 }
 
+/* ========== Card Lightbox ========== */
+
+.card-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: lightbox-fade-in 0.2s ease;
+}
+
+@keyframes lightbox-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.card-lightbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: -8px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 4px;
+    z-index: 1001;
+    transition: color 0.2s;
+}
+
+.lightbox-close:hover {
+    color: white;
+}
+
+.lightbox-card {
+    --card-width: 240px;
+    --card-height: 340px;
+    pointer-events: none;
+    animation: lightbox-card-pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lightbox-card .card {
+    cursor: default;
+    padding: 0.6rem;
+    border-width: 3px;
+    border-radius: 10px;
+}
+
+.lightbox-card .card-cost {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+    top: -8px;
+    left: -8px;
+    border-width: 2px;
+}
+
+.lightbox-card .card-target-badge {
+    width: 26px;
+    height: 26px;
+    top: -8px;
+    right: -8px;
+    border-width: 2px;
+}
+
+.lightbox-card .card-name {
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.lightbox-card .card-type {
+    font-size: 0.7rem;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+
+.lightbox-card .card-desc {
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+@keyframes lightbox-card-pop {
+    from { opacity: 0.5; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-nav {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s, opacity 0.2s;
+    z-index: 1001;
+}
+
+.lightbox-nav:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-nav:disabled {
+    opacity: 0.2;
+    cursor: default;
+}
+
+/* Breadcrumb dots */
+.lightbox-dots {
+    position: absolute;
+    bottom: -44px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.lightbox-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.lightbox-dot:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-dot.active {
+    background: var(--color-text-highlight);
+    border-color: var(--color-text-highlight);
+    transform: scale(1.3);
+}
+
 /* === Desktop overrides === */
 
 @media (min-width: 769px) {
@@ -218,5 +382,33 @@
         font-size: 1.2rem;
         padding: 0.85rem 2.5rem;
         margin-top: 1rem;
+    }
+
+    .lightbox-card {
+        --card-width: 300px;
+        --card-height: 420px;
+    }
+
+    .lightbox-card .card-cost {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+
+    .lightbox-card .card-name {
+        font-size: 1.15rem;
+    }
+
+    .lightbox-card .card-type {
+        font-size: 0.8rem;
+    }
+
+    .lightbox-card .card-desc {
+        font-size: 0.95rem;
+    }
+
+    .lightbox-nav {
+        width: 48px;
+        height: 48px;
     }
 }
