@@ -180,8 +180,9 @@
 }
 
 .card-artwork {
-    width: 100%;
-    height: 100%;
+    width: 106%;
+    height: 106%;
+    margin: -3% 0 0 -3%;
     object-fit: cover;
 }
 
