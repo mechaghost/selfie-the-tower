@@ -67,6 +67,7 @@
     filter: blur(10px);
     transform: scale(0.9);
     transition: opacity 1s ease, filter 1.2s ease, transform 1s ease;
+    background-color: var(--color-bg-base);
 }
 
 .reveal-portrait.visible {

@@ -9,7 +9,8 @@ export function TargetingArrow() {
         hand: state.hand
     }));
 
-    if (!dragState.isActive) return null;
+    // Only show targeting arrow for enemy-targeted cards
+    if (!dragState.isActive || dragState.targetType !== 'Enemy') return null;
 
     // Calculate Bezier curve control points to make an arching arrow
     const startX = dragState.startX;

@@ -8,42 +8,20 @@ import './CombatView.css';
 
 export function CombatView() {
     const {
-        player, enemies, endTurn, energy, playCard, isPlayerTurn, combatResult
+        player, enemies, endTurn, energy, isPlayerTurn, combatResult
     } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
-        playCard: state.playCard,
         isPlayerTurn: state.isPlayerTurn,
         combatResult: state.combatResult
     }));
 
     const isDisabled = !isPlayerTurn || combatResult !== null;
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    };
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        try {
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            if (data.target !== 'Enemy') {
-                playCard(data.instanceId);
-            }
-        } catch (err) {
-            // Ignore invalid drops
-        }
-    };
-
     return (
-        <div
-            className="combat-stage"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-        >
+        <div className="combat-stage">
             {/* Background particle layer */}
             <div className="combat-particles" />
 

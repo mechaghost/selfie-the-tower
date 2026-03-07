@@ -36,6 +36,7 @@ export function CharacterRevealScreen() {
         target: gc.target,
         effects: gc.effects,
         imageUrl: gc.imageUrl,
+        imageId: gc.imageId,
         exhausts: gc.exhausts,
     }));
 

@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Card } from '../../core/models';
 import { useGameStore } from '../../store/gameStore';
 import { Crosshair, Users, User } from 'lucide-react';
 import './CardItem.css';
-
-// Pre-load a 1x1 transparent pixel so it's decoded before any drag starts
-const EMPTY_DRAG_IMG = new Image();
-EMPTY_DRAG_IMG.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
 interface CardItemProps {
     card: Card;
@@ -23,25 +19,15 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         playCard: state.playCard
     }));
 
-    const isBeingTouched = dragState.isActive && dragState.isTouch && dragState.cardId === card.instanceId;
+    const cardRef = useRef<HTMLDivElement>(null);
+    const isMouseDragging = useRef(false);
 
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        if (!canPlay) {
-            e.preventDefault();
-            return;
-        }
+    const isTargetingMode = card.target === 'Enemy';
+    const isThisActive = dragState.isActive && dragState.cardId === card.instanceId;
+    const isBeingTouched = isThisActive && dragState.isTouch;
 
-        e.dataTransfer.setData('application/json', JSON.stringify({
-            instanceId: card.instanceId,
-            target: card.target
-        }));
-        e.dataTransfer.effectAllowed = 'move';
-
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-        const startX = rect.left + rect.width / 2;
-        const startY = rect.top;
-
-        // Recalculate all bounding boxes precisely at drag start
+    // --- Shared: recalculate enemy bounds ---
+    const refreshEnemyBounds = useCallback(() => {
         if (card.target === 'Enemy') {
             const state = useGameStore.getState();
             document.querySelectorAll('.entity-avatar').forEach(el => {
@@ -51,59 +37,112 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
                 }
             });
         }
+    }, [card.target]);
+
+    // ==========================================
+    // MOUSE: Enemy-target → arrow targeting mode
+    // MOUSE: Self/AoE → card-drag mode
+    // ==========================================
+
+    const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!canPlay || !isDraggable || e.button !== 0) return;
+        e.preventDefault();
+
+        isMouseDragging.current = true;
+        refreshEnemyBounds();
+
+        const rect = cardRef.current!.getBoundingClientRect();
+
+        // Enemy cards: start from card center (arrow origin)
+        // Self/AoE cards: start from mouse position (so card follows with zero offset)
+        const sx = isTargetingMode ? rect.left + rect.width / 2 : e.clientX;
+        const sy = isTargetingMode ? rect.top : e.clientY;
 
         setDragState({
             isActive: true,
             cardId: card.instanceId,
             targetType: card.target,
             isTouch: false,
-            startX,
-            startY,
+            startX: sx,
+            startY: sy,
             currentX: e.clientX,
             currentY: e.clientY
         });
 
-        e.dataTransfer.setDragImage(EMPTY_DRAG_IMG, 0, 0);
-    };
+        const handleMouseMove = (ev: MouseEvent) => {
+            if (!isMouseDragging.current) return;
+            const state = useGameStore.getState();
+            if (state.dragState.isActive) {
+                state.setDragState({
+                    currentX: ev.clientX,
+                    currentY: ev.clientY
+                });
+            }
+        };
 
-    const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-        if (e.clientX === 0 && e.clientY === 0) return;
+        const handleMouseUp = (ev: MouseEvent) => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            isMouseDragging.current = false;
 
-        const state = useGameStore.getState();
-        if (state.dragState.isActive) {
-            state.setDragState({
-                currentX: e.clientX,
-                currentY: e.clientY
-            });
-        }
-    };
+            const state = useGameStore.getState();
+            if (!state.dragState.isActive) return;
 
-    const handleDragEnd = () => {
-        resetDragState();
-    };
+            if (isTargetingMode) {
+                // Enemy target: check if cursor is over an enemy
+                const el = document.elementFromPoint(ev.clientX, ev.clientY);
+                const enemyAvatar = el?.closest('.entity-avatar') as HTMLElement | null;
+                if (enemyAvatar) {
+                    const enemyId = enemyAvatar.getAttribute('data-entity-id');
+                    if (enemyId && enemyId !== 'player') {
+                        playCard(card.instanceId, enemyId);
+                        return;
+                    }
+                }
+                // Also check by distance to entity bounds
+                const { entityBounds } = state;
+                for (const [id, rect] of Object.entries(entityBounds)) {
+                    if (id === 'player') continue;
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const dist = Math.hypot(cx - ev.clientX, cy - ev.clientY);
+                    if (dist < (rect.width / 2) + 25) {
+                        playCard(card.instanceId, id);
+                        return;
+                    }
+                }
+            } else {
+                // Self/AllEnemies: release above the hand area to play
+                if (ev.clientY < window.innerHeight - 250) {
+                    playCard(card.instanceId);
+                    return;
+                }
+            }
+
+            state.resetDragState();
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    }, [canPlay, isDraggable, card.instanceId, card.target, isTargetingMode, refreshEnemyBounds, setDragState, playCard, resetDragState]);
+
+    // ==========================================
+    // TOUCH: Same split behavior
+    // ==========================================
 
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
         if (!canPlay) return;
-
-        // Recalculate bounds for touch targets before drag starts
-        if (card.target === 'Enemy') {
-            const state = useGameStore.getState();
-            document.querySelectorAll('.entity-avatar').forEach(el => {
-                const id = el.getAttribute('data-entity-id');
-                if (id) {
-                    state.setEntityBounds(id, el.getBoundingClientRect());
-                }
-            });
-        }
+        refreshEnemyBounds();
 
         const touch = e.touches[0];
+        const rect = cardRef.current!.getBoundingClientRect();
         setDragState({
             isActive: true,
             isTouch: true,
             cardId: card.instanceId,
             targetType: card.target,
-            startX: touch.clientX,
-            startY: touch.clientY,
+            startX: rect.left + rect.width / 2,
+            startY: rect.top,
             currentX: touch.clientX,
             currentY: touch.clientY
         });
@@ -111,7 +150,6 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
 
     const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
         if (!isBeingTouched) return;
-        // Prevent generic scrolling
         if (e.cancelable) e.preventDefault();
 
         const touch = e.touches[0];
@@ -125,30 +163,28 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         if (!isBeingTouched) return;
         const touch = e.changedTouches[0];
 
-        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-        let dropSuccessful = false;
-
-        if (card.target === 'Enemy') {
-            const enemyAvatar = elementUnder?.closest('.entity-avatar') as HTMLElement | null;
+        if (isTargetingMode) {
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            const enemyAvatar = el?.closest('.entity-avatar') as HTMLElement | null;
             if (enemyAvatar) {
                 const enemyId = enemyAvatar.getAttribute('data-entity-id');
                 if (enemyId && enemyId !== 'player') {
                     playCard(card.instanceId, enemyId);
-                    dropSuccessful = true;
+                    return;
                 }
             }
         } else {
-            // Self or AllEnemies cards just need to be dragged high enough (above the bottom 250px UI zone)
             if (touch.clientY < window.innerHeight - 250) {
                 playCard(card.instanceId);
-                dropSuccessful = true;
+                return;
             }
         }
 
-        if (!dropSuccessful) {
-            resetDragState();
-        }
+        resetDragState();
     };
+
+    // --- Prevent native drag (we use pointer events now) ---
+    const handleDragStart = (e: React.DragEvent) => e.preventDefault();
 
     const getTargetIcon = (target: string) => {
         switch (target) {
@@ -159,22 +195,38 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         }
     };
 
+    // --- Compute styles ---
     const combinedStyle: React.CSSProperties = { ...style };
+    const isAnyDragActive = dragState.isActive && !dragState.isTouch;
 
-    // During a mouse drag, make all non-dragging cards event-transparent
-    // so AoE/Self drops pass through to the combat stage handler
-    const isThisBeingDragged = dragState.isActive && dragState.cardId === card.instanceId;
-    if (dragState.isActive && !dragState.isTouch && !isThisBeingDragged) {
+    if (isAnyDragActive && isThisActive && !isTargetingMode) {
+        // Self/AoE card-drag: card follows cursor
+        const dx = dragState.currentX - dragState.startX;
+        const dy = dragState.currentY - dragState.startY;
+        combinedStyle.transform = `translate(${dx}px, ${dy}px) translateY(var(--card-hover-lift)) rotate(0deg) scale(1.05)`;
+        combinedStyle.transition = 'none';
+        combinedStyle.zIndex = 9999;
+        combinedStyle.pointerEvents = 'none'; // Prevent :hover from fighting the drag transform
+        combinedStyle.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.8)';
+    } else if (isAnyDragActive && !isThisActive) {
+        // Other cards: transparent to pointer events during any drag
         combinedStyle.pointerEvents = 'none';
     }
 
+    const cardClasses = [
+        'card',
+        canPlay ? 'playable' : 'unplayable',
+        `type-${card.type.toLowerCase()}`,
+        isBeingTouched ? 'is-dragging' : '',
+        isThisActive && isTargetingMode ? 'is-targeting' : '',
+    ].filter(Boolean).join(' ');
+
     return (
         <div
-            className={`card ${canPlay ? 'playable' : 'unplayable'} type-${card.type.toLowerCase()} ${isBeingTouched ? 'is-dragging' : ''}`}
-            draggable={isDraggable && canPlay}
+            ref={cardRef}
+            className={cardClasses}
+            onMouseDown={handleMouseDown}
             onDragStart={handleDragStart}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -189,7 +241,9 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
             <div className="card-name">{card.name}</div>
             <div className="card-type">{card.type}</div>
             {(card.imageUrl || card.imageId) ? (
-                <img src={card.imageUrl || `/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+                <div className="card-artwork-wrap">
+                    <img src={card.imageUrl || `/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+                </div>
             ) : (
                 <div className="card-artwork-placeholder" />
             )}

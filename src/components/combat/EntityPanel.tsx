@@ -23,8 +23,7 @@ interface EntityPanelProps {
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
-    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl, playerSpriteUrl } = useGameStore(state => ({
-        playCard: state.playCard,
+    const { floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl, playerSpriteUrl } = useGameStore(state => ({
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
         activeAnimations: state.activeAnimations.filter(a => a.targetId === entity.id),
         setEntityBounds: state.setEntityBounds,
@@ -48,29 +47,6 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         window.addEventListener('resize', updateBounds);
         return () => window.removeEventListener('resize', updateBounds);
     }, [updateBounds]);
-
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        if (!isPlayer) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = 'move';
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        if (!isPlayer) {
-            e.preventDefault();
-            e.stopPropagation();
-            try {
-                const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                if (data.target === 'Enemy') {
-                    playCard(data.instanceId, entity.id);
-                }
-            } catch (err) {
-                // Ignore invalid
-            }
-        }
-    };
 
     let isTargeted = false;
     if (!isPlayer && dragState.isActive && dragState.targetType === 'Enemy') {
@@ -159,8 +135,6 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     return (
         <div
             className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''}`}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
         >
             {/* Intent row at top of card */}
             {intent && (

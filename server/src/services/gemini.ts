@@ -28,26 +28,32 @@ The image is VALID only if ALL of these are true:
 Reject anything that is not a straightforward photo of a person's face.`;
 
 // ── Archetype analysis prompt ──
-const ANALYSIS_PROMPT = `You are a street oracle in a neon-lit urban magic card game called "Selfie the Spire."
+const ANALYSIS_PROMPT = `You are a street oracle in a neon-lit 1980s urban magic card game called "Selfie the Spire."
 A brave challenger has stepped out of the city crowd and revealed their face to you.
 Analyze their appearance, expression, and energy to determine their street magic archetype.
 
 The five archetypes are:
-- **neon** (fire): For those with fierce, intense, or passionate energy. Warm tones, bold expressions, fiery spirit. Street pyromancers who bend neon signs and spray-can flame.
-- **chrome** (water): For those with calm, adaptive, or mysterious energy. Cool composure, deep eyes, flowing presence. Rain walkers who command reflections and puddle magic.
-- **volt** (lightning): For those with electric, dynamic, or unpredictable energy. Sharp features, bright eyes, restless spirit. Rooftop punks who channel radio towers and power lines.
-- **concrete** (earth): For those with steady, grounded, or enduring energy. Strong build, patient gaze, unyielding presence. Urban druids who grow vines through pavement and abandoned lots.
-- **smoke** (shadow): For those with cunning, elusive, or precise energy. Sharp look, calculating eyes, mysterious aura. Alley ghosts who flicker streetlights and bend city fog.
+- **neon**: Fierce, intense, passionate energy. Street pyromancers who bend neon signs, spray-can sorcerers with flame tattoos. Think: 80s punk rocker meets Tokyo back-alley fire dancer.
+- **chrome**: Calm, adaptive, mysterious energy. Rain walkers who command reflections on wet pavement, chrome-mirror mages. Think: cyberpunk detective meets midnight city drifter.
+- **volt**: Electric, dynamic, unpredictable energy. Rooftop punks who channel radio towers and power lines, antenna hackers. Think: 80s skate punk meets lightning-rod rebel.
+- **concrete**: Steady, grounded, enduring energy. Urban druids who grow vines through cracked pavement, warehouse wardens. Think: construction worker turned street shaman, moss and rebar.
+- **smoke**: Cunning, elusive, precise energy. Alley ghosts who flicker streetlights and bend city fog, shadow runners. Think: 80s noir detective meets phantom graffiti artist.
+
+IMPORTANT: This game is set in a neon-soaked 1980s city (Tokyo/LA mashup). All names and titles MUST sound urban, street-level, and retro — like characters from an 80s anime or arcade game. Do NOT use generic fantasy names or medieval/nature titles.
+
+Good name examples: "Blaze Tanaka", "Nyx Fuego", "Sparks Miyamoto", "Shade Mori", "Rex Ampere"
+Good title examples: "Street Pyromancer", "The Chrome Mirror", "Antenna Punk", "Warehouse Warden", "The Smoke Signal"
+BAD examples (too fantasy): "Tidecaller", "Earthshaper", "Flamebringer", "Shadowweaver", "Stormkeeper"
 
 Based on this person's image, respond with ONLY a JSON object (no markdown, no code fences):
 {
   "archetype": "<one of: neon, chrome, volt, concrete, smoke>",
-  "name": "<a unique character name that mixes urban/street culture with subtle fantasy — think 80s anime meets LA street art>",
-  "title": "<a dramatic title like 'Street Pyromancer' or 'The Smoke Signal'>",
+  "name": "<first + last name, urban/street style, 80s anime vibe>",
+  "title": "<dramatic street title, 2-4 words, urban not fantasy>",
   "traits": ["<trait1>", "<trait2>", "<trait3>"]
 }
 
-Be creative and make each character feel unique. The name should sound like it belongs in a 1980s neon-soaked city.`;
+Be creative and make each character feel unique. Every name should sound like it belongs on a neon sign in 1985 Shibuya.`;
 
 // ── Archetype-specific character descriptions ──
 const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {
