@@ -10,7 +10,25 @@ export interface GeminiAnalysis {
     traits: string[];
 }
 
-const PROMPT = `You are a mystical oracle in a dark fantasy card game called "Slay the Tower."
+// ── Shared art style applied to ALL image generation ──
+const ART_STYLE = `Hand-painted dark fantasy illustration in the style of Slay the Spire and Darkest Dungeon: bold thick outlines, rich saturated colors, painterly brushstrokes, exaggerated proportions, dramatic chiaroscuro lighting, slightly stylized and cartoonish but menacing. Textured like oil paint on canvas.`;
+
+// ── Selfie moderation ──
+const MODERATION_PROMPT = `Analyze this image. Respond with ONLY a JSON object (no markdown, no code fences):
+{
+  "valid": true/false,
+  "reason": "<brief reason if invalid>"
+}
+
+The image is VALID only if ALL of these are true:
+- It contains a clearly visible human face (selfie or portrait photo)
+- It is appropriate (no nudity, violence, gore, weapons, drugs, hate symbols, or offensive content)
+- It is a real photograph (not a drawing, screenshot, meme, or AI-generated image)
+
+Reject anything that is not a straightforward photo of a person's face.`;
+
+// ── Archetype analysis prompt ──
+const ANALYSIS_PROMPT = `You are a mystical oracle in a dark fantasy card game called "Slay the Tower."
 A brave adventurer has stepped forward and revealed their face to you.
 Analyze their appearance, expression, and energy to determine their elemental archetype.
 
@@ -31,6 +49,24 @@ Based on this adventurer's image, respond with ONLY a JSON object (no markdown, 
 
 Be creative and make each character feel unique. The name should sound fantastical but subtly echo something about the person's appearance or vibe.`;
 
+// ── Archetype-specific character descriptions ──
+const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {
+    ember: 'wreathed in living flames, with glowing ember-like eyes, wearing ornate crimson and gold armor with molten details, fire swirling around their feet',
+    tide: 'surrounded by flowing water and coral, with deep ocean-blue eyes, wearing iridescent scaled armor with pearl accents, waves crashing around them',
+    storm: 'crackling with lightning, with electric-white eyes, wearing sleek violet and chrome armor with arcing energy, storm clouds gathering behind them',
+    root: 'entwined with ancient vines and bark, with deep emerald eyes, wearing living wooden armor with glowing rune carvings, roots erupting from the ground',
+    shade: 'dissolving into shadow and smoke, with piercing violet eyes, wearing dark leather armor with ghostly wisps, darkness pooling at their feet',
+};
+
+const ARCHETYPE_PALETTES: Record<string, string> = {
+    ember: 'fiery reds, oranges, and molten gold. Flames, embers, and heat distortion',
+    tide: 'deep blues, teals, and aquamarines. Water, waves, and coral',
+    storm: 'electric purples, whites, and silvers. Lightning, wind, and crackling energy',
+    root: 'deep greens, browns, and amber. Vines, bark, ancient wood, and glowing runes',
+    shade: 'dark purples, blacks, and ghostly violet. Shadow, smoke, and darkness',
+};
+
+// ── Client setup ──
 let genAI: GoogleGenerativeAI | null = null;
 
 function getClient(): GoogleGenerativeAI {
@@ -44,39 +80,10 @@ function getClient(): GoogleGenerativeAI {
     return genAI;
 }
 
-const ARCHETYPE_PORTRAIT_PROMPTS: Record<string, string> = {
-    ember: 'wreathed in living flames, with glowing ember-like eyes and hair that flickers like fire, wearing ornate crimson and gold armor with molten details',
-    tide: 'surrounded by flowing water and coral, with deep ocean-blue eyes and flowing aquamarine hair, wearing iridescent scaled armor with pearl accents',
-    storm: 'crackling with lightning, with electric-white eyes and wind-swept silver hair, wearing sleek violet and chrome armor with arcing energy',
-    root: 'entwined with ancient vines and bark, with deep emerald eyes and moss-flecked brown hair, wearing living wooden armor with glowing rune carvings',
-    shade: 'dissolving into shadow and smoke, with piercing violet eyes and raven-black hair, wearing dark leather armor with ghostly wisps trailing off',
-};
-
-export async function generatePortrait(imageBase64: string, archetype: string): Promise<string> {
-    const model = getImageModel();
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-    const archetypeDesc = ARCHETYPE_PORTRAIT_PROMPTS[archetype] || ARCHETYPE_PORTRAIT_PROMPTS.ember;
-
-    const portraitPrompt = `Transform this person's photo into a dramatic fantasy character portrait for a dark card game. The character should be ${archetypeDesc}. Style: painted digital art, dramatic lighting, dark moody background, shoulders-up portrait composition. Keep the person's basic facial features recognizable but make them look like an epic fantasy hero.`;
-
-    const result = await model.generateContent([
-        {
-            inlineData: {
-                mimeType: 'image/jpeg',
-                data: base64Data,
-            },
-        },
-        { text: portraitPrompt },
-    ]);
-
-    return extractImageFromResponse(result);
-}
-
 function getImageModel() {
     const client = getClient();
     return client.getGenerativeModel({
         model: 'gemini-2.0-flash-exp-image-generation',
-        // @ts-ignore - responseModalities is supported by the API but not yet in SDK types
         generationConfig: {
             responseModalities: ['TEXT', 'IMAGE'],
         },
@@ -94,63 +101,50 @@ async function extractImageFromResponse(result: any): Promise<string> {
     throw new Error('No image generated in response');
 }
 
-const ARCHETYPE_STYLES: Record<string, string> = {
-    ember: 'fiery reds, oranges, and molten gold. Flames, embers, and heat distortion',
-    tide: 'deep blues, teals, and aquamarines. Water, waves, and coral',
-    storm: 'electric purples, whites, and silvers. Lightning, wind, and crackling energy',
-    root: 'deep greens, browns, and amber. Vines, bark, ancient wood, and glowing runes',
-    shade: 'dark purples, blacks, and ghostly violet. Shadow, smoke, and darkness',
-};
-
-export async function generateCardArt(
-    cardName: string,
-    cardDescription: string,
-    cardType: string,
-    archetype: string,
-): Promise<string> {
-    const model = getImageModel();
-    const style = ARCHETYPE_STYLES[archetype] || ARCHETYPE_STYLES.ember;
-
-    const prompt = `Generate a square card art illustration for a dark fantasy card game.
-Card: "${cardName}" - ${cardDescription}
-Card type: ${cardType}
-Color palette: ${style}
-Style: Dark fantasy digital painting, dramatic lighting, no text or words, centered iconic composition, suitable for a small card thumbnail.`;
-
-    const result = await model.generateContent([{ text: prompt }]);
-    return extractImageFromResponse(result);
+function stripBase64Prefix(imageBase64: string): string {
+    return imageBase64.replace(/^data:image\/\w+;base64,/, '');
 }
 
+// ── Moderation ──
+export async function moderateSelfie(imageBase64: string): Promise<{ valid: boolean; reason: string }> {
+    const client = getClient();
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const base64Data = stripBase64Prefix(imageBase64);
+
+    const result = await model.generateContent([
+        { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+        { text: MODERATION_PROMPT },
+    ]);
+
+    const text = result.response.text().trim();
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+
+    try {
+        const parsed = JSON.parse(cleaned);
+        return { valid: !!parsed.valid, reason: String(parsed.reason || '') };
+    } catch {
+        return { valid: false, reason: 'Could not verify image' };
+    }
+}
+
+// ── Archetype Analysis ──
 export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis> {
     const client = getClient();
     const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    // Strip data URL prefix if present
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const base64Data = stripBase64Prefix(imageBase64);
 
     const result = await model.generateContent([
-        {
-            inlineData: {
-                mimeType: 'image/jpeg',
-                data: base64Data,
-            },
-        },
-        { text: PROMPT },
+        { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+        { text: ANALYSIS_PROMPT },
     ]);
 
-    const response = result.response;
-    const text = response.text().trim();
-
-    // Parse JSON - strip any accidental markdown fences
+    const text = result.response.text().trim();
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
     const parsed = JSON.parse(cleaned);
 
-    // Validate archetype
     if (!ARCHETYPE_IDS.includes(parsed.archetype)) {
         parsed.archetype = ARCHETYPE_IDS[Math.floor(Math.random() * ARCHETYPE_IDS.length)];
     }
-
-    // Validate traits array
     if (!Array.isArray(parsed.traits) || parsed.traits.length !== 3) {
         parsed.traits = ['Mysterious', 'Resilient', 'Bold'];
     }
@@ -161,4 +155,40 @@ export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis
         title: String(parsed.title || 'Seeker of the Spire'),
         traits: parsed.traits.map(String),
     };
+}
+
+// ── Full-body Character Art ──
+export async function generateCharacterArt(imageBase64: string, archetype: string): Promise<string> {
+    const model = getImageModel();
+    const base64Data = stripBase64Prefix(imageBase64);
+    const desc = ARCHETYPE_CHARACTER_PROMPTS[archetype] || ARCHETYPE_CHARACTER_PROMPTS.ember;
+
+    const prompt = `Transform this person into a full-body fantasy character for a dark roguelike card game. The character should be ${desc}. Show the FULL BODY from head to toe in a powerful hero pose, standing on dark terrain. Keep facial features recognizable but stylized. ${ART_STYLE}`;
+
+    const result = await model.generateContent([
+        { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+        { text: prompt },
+    ]);
+
+    return extractImageFromResponse(result);
+}
+
+// ── Card Art ──
+export async function generateCardArt(
+    cardName: string,
+    cardDescription: string,
+    cardType: string,
+    archetype: string,
+): Promise<string> {
+    const model = getImageModel();
+    const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.ember;
+
+    const prompt = `Generate a square card art illustration for a dark fantasy roguelike card game.
+Card: "${cardName}" - ${cardDescription}
+Card type: ${cardType}
+Color palette: ${palette}
+No text, no words, no letters. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
+
+    const result = await model.generateContent([{ text: prompt }]);
+    return extractImageFromResponse(result);
 }

@@ -369,7 +369,10 @@ export const useGameStore = create<GameState>((set, get) => ({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: imageBase64 }),
             });
-            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => null);
+                throw new Error(errData?.error || `Server error: ${response.status}`);
+            }
             const data: GenerateCharacterResponse = await response.json();
             set({
                 ugcPhase: 'reveal',
