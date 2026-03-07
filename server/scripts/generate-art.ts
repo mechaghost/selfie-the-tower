@@ -24,7 +24,7 @@ const RATE_LIMIT_MS = 4000; // 4s between requests to avoid quota issues
 const MAX_RETRIES = 3;
 
 // ── Art style ──
-const ART_STYLE = `Risograph print illustration in the style of 1980s city pop album covers and retro arcade art: bold halftone grain, limited ink palette with overprint effects, thick outlines, stylized proportions, dramatic neon lighting against urban nightscapes. Textured like layered screen prints on rough paper. Mix of Japanese manga influence and 80s American street art.`;
+const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blocking in 2-3 solid ink layers, bold geometric shapes. Sparse hatching only for shading — large areas of clean flat color. No grain, no noise, no halftone dots. Sharp edges, high contrast, simple iconic forms. Inspired by modern risograph poster art and screen print minimalism.`;
 
 // ── Archetype prompts ──
 const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {
@@ -159,22 +159,20 @@ function buildTasks(): ArtTask[] {
         });
     }
 
-    // 2. Card art (50 × 512px)
+    // 2. Card art (50 × 4:3 landscape)
     for (const [archetypeId, archetype] of Object.entries(ARCHETYPES)) {
         const palette = ARCHETYPE_PALETTES[archetypeId];
         for (const card of archetype.cards) {
-            const cardSlug = toSnakeCase(card.name);
-            const imageId = `${archetypeId}_${cardSlug}`;
-            const outPath = path.join(OUTPUT_ROOT, 'cards', `${imageId}.png`);
+            const outPath = path.join(OUTPUT_ROOT, 'cards', `${card.imageId}.png`);
 
-            const prompt = `Generate a square card art illustration for a neon-soaked 1980s urban magic card game.
+            const prompt = `Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
 Card: "${card.name}" - ${card.description}
 Card type: ${card.type}
 Color palette: ${palette}
-No text, no words, no letters. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
+No text, no words, no letters, no numbers. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
 
             tasks.push({
-                label: `card/${imageId}`,
+                label: `card/${card.imageId}`,
                 outputPath: outPath,
                 generate: async () => {
                     const model = getImageModel();
