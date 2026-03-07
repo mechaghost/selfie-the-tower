@@ -238,7 +238,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     initializeRun: (seed: string) => {
         cancelAllTimeouts();
         const rng = new RNG(seed);
-        const charDef = CHARACTERS['ironclad'];
+        const charDef = CHARACTERS['street_runner'];
         const initialDeck = charDef.startingDeck.map(cardId => createCardInstance(cardId, rng));
 
         set({

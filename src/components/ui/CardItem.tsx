@@ -161,6 +161,13 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
 
     const combinedStyle: React.CSSProperties = { ...style };
 
+    // During a mouse drag, make all non-dragging cards event-transparent
+    // so AoE/Self drops pass through to the combat stage handler
+    const isThisBeingDragged = dragState.isActive && dragState.cardId === card.instanceId;
+    if (dragState.isActive && !dragState.isTouch && !isThisBeingDragged) {
+        combinedStyle.pointerEvents = 'none';
+    }
+
     return (
         <div
             className={`card ${canPlay ? 'playable' : 'unplayable'} type-${card.type.toLowerCase()} ${isBeingTouched ? 'is-dragging' : ''}`}

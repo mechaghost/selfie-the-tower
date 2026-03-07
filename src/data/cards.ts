@@ -4,10 +4,10 @@ import { RNG } from '../core/rng';
 let _instanceCounter = 0;
 
 export const CARD_DATABASE: Record<string, Card> = {
-    strike_red: {
-        id: 'strike_red',
-        instanceId: '', // Populated on instantiation
-        name: 'Strike',
+    neon_jab: {
+        id: 'neon_jab',
+        instanceId: '',
+        name: 'Neon Jab',
         type: 'Attack',
         cost: 1,
         description: 'Deal 6 damage.',
@@ -15,12 +15,12 @@ export const CARD_DATABASE: Record<string, Card> = {
         effects: [
             { type: 'Damage', amount: 6, target: 'Target' }
         ],
-        imageId: 'strike_red'
+        imageId: 'neon_neon_strike'
     },
-    defend_red: {
-        id: 'defend_red',
+    dodge_roll: {
+        id: 'dodge_roll',
         instanceId: '',
-        name: 'Defend',
+        name: 'Dodge Roll',
         type: 'Skill',
         cost: 1,
         description: 'Gain 5 Block.',
@@ -28,12 +28,12 @@ export const CARD_DATABASE: Record<string, Card> = {
         effects: [
             { type: 'Block', amount: 5, target: 'Self' }
         ],
-        imageId: 'defend_red'
+        imageId: 'neon_heat_shimmer'
     },
-    bash: {
-        id: 'bash',
+    haymaker: {
+        id: 'haymaker',
         instanceId: '',
-        name: 'Bash',
+        name: 'Haymaker',
         type: 'Attack',
         cost: 2,
         description: 'Deal 8 damage. Apply 2 Vulnerable.',
@@ -42,12 +42,12 @@ export const CARD_DATABASE: Record<string, Card> = {
             { type: 'Damage', amount: 8, target: 'Target' },
             { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }
         ],
-        imageId: 'bash'
+        imageId: 'neon_flash_burn'
     },
-    cleave: {
-        id: 'cleave',
+    shockwave: {
+        id: 'shockwave',
         instanceId: '',
-        name: 'Cleave',
+        name: 'Shockwave',
         type: 'Attack',
         cost: 1,
         description: 'Deal 8 damage to ALL enemies.',
@@ -55,7 +55,7 @@ export const CARD_DATABASE: Record<string, Card> = {
         effects: [
             { type: 'Damage', amount: 8, target: 'AllEnemies' }
         ],
-        imageId: 'strike_red'
+        imageId: 'neon_sign_burst'
     }
 };
 
@@ -70,5 +70,3 @@ export const createCardInstance = (cardId: string, rng?: RNG): Card => {
         instanceId: `${cardId}_${unique}`
     };
 };
-
-

@@ -1,16 +1,16 @@
 import { Character } from '../core/models';
 
 export const CHARACTERS: Record<string, Character> = {
-    'ironclad': {
-        id: 'ironclad',
-        name: 'The Ironclad',
+    'street_runner': {
+        id: 'street_runner',
+        name: 'Street Runner',
         maxHp: 80,
         maxEnergy: 3,
         startingGold: 99,
         startingDeck: [
-            'strike_red', 'strike_red', 'strike_red', 'strike_red',
-            'defend_red', 'defend_red', 'defend_red', 'defend_red',
-            'bash', 'cleave'
+            'neon_jab', 'neon_jab', 'neon_jab', 'neon_jab',
+            'dodge_roll', 'dodge_roll', 'dodge_roll', 'dodge_roll',
+            'haymaker', 'shockwave'
         ]
     }
 };
