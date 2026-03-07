@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Card, Enemy, Player, GameAction, GameActionType, FloatingText, ActiveAnimation, Effect, StatusEffect } from '../core/models';
+import { Card, Enemy, Player, GameAction, FloatingText, ActiveAnimation, Effect, StatusEffect, UgcPhase, GeneratedCharacter, GeneratedCard, GenerateCharacterResponse } from '../core/models';
 import { RNG } from '../core/rng';
 import { createCardInstance } from '../data/cards';
 import { STATUS_REGISTRY } from '../data/statusEffects';
@@ -37,6 +37,9 @@ interface GameState {
     // --- Combat State ---
     inCombat: boolean;
     isGameOver: boolean;
+    isPlayerTurn: boolean;
+    combatResult: null | 'victory' | 'defeat';
+    goldReward: number;
     player: Player;
     enemies: Enemy[];
 
@@ -57,10 +60,22 @@ interface GameState {
     dragState: DragState;
     entityBounds: Record<string, DOMRect>;
 
+    // --- UGC State ---
+    ugcPhase: UgcPhase;
+    generatedCharacter: GeneratedCharacter | null;
+    generatedCards: GeneratedCard[] | null;
+    ugcError: string | null;
+    selfieDataUrl: string | null;
+
     // --- Store Methods ---
     initializeRun: (seed: string) => void;
     startCombat: (enemies: Enemy[]) => void;
     advanceFloor: (node: import('../core/mapModels').MapNode) => void;
+    continueCombatResult: () => void;
+    startSelfieCapture: () => void;
+    submitSelfie: (imageBase64: string) => Promise<void>;
+    startGeneratedRun: () => void;
+    cancelUgc: () => void;
 
     // Queue Methods
     queueAction: (action: GameAction) => void;
@@ -77,6 +92,21 @@ interface GameState {
     setDragState: (state: Partial<DragState>) => void;
     resetDragState: () => void;
     setEntityBounds: (id: string, bounds: DOMRect) => void;
+}
+
+// Track pending timeouts so we can cancel them on combat end / run reset
+const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+function trackedTimeout(fn: () => void, ms: number) {
+    const id = setTimeout(() => {
+        pendingTimeouts.delete(id);
+        fn();
+    }, ms);
+    pendingTimeouts.add(id);
+    return id;
+}
+function cancelAllTimeouts() {
+    pendingTimeouts.forEach(id => clearTimeout(id));
+    pendingTimeouts.clear();
 }
 
 // Fix #2: resolveEffects now accepts RNG for deterministic RandomEnemy targeting
@@ -113,8 +143,8 @@ export function resolveEffects(
         }
 
         targets.forEach(targetId => {
-            // Fix #9: Handle all effect types
-            if (effect.type === 'Damage' && effect.amount) {
+            // H-3: Use != null checks instead of truthiness so amount: 0 works
+            if (effect.type === 'Damage' && effect.amount != null) {
                 if (sourceId) {
                     actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
                     actions.push({ type: 'DELAY', payload: { ms: 300 } });
@@ -122,19 +152,19 @@ export function resolveEffects(
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount } });
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
                 actions.push({ type: 'DELAY', payload: { ms: 400 } });
-            } else if (effect.type === 'Block' && effect.amount) {
+            } else if (effect.type === 'Block' && effect.amount != null) {
                 actions.push({ type: 'GAIN_BLOCK', payload: { sourceId, targetId, amount: effect.amount } });
-            } else if (effect.type === 'ApplyStatus' && effect.amount && effect.statusId) {
+            } else if (effect.type === 'ApplyStatus' && effect.amount != null && effect.statusId) {
                 actions.push({
                     type: 'APPLY_STATUS', payload: {
                         sourceId, targetId, status: { id: effect.statusId, name: effect.statusId, amount: effect.amount, justApplied: true }
                     }
                 });
-            } else if (effect.type === 'Heal' && effect.amount) {
-                actions.push({ type: 'HEAL_ENTITY' as GameActionType, payload: { targetId, amount: effect.amount } });
-            } else if (effect.type === 'Draw' && effect.amount) {
+            } else if (effect.type === 'Heal' && effect.amount != null) {
+                actions.push({ type: 'HEAL_ENTITY', payload: { targetId, amount: effect.amount } });
+            } else if (effect.type === 'Draw' && effect.amount != null) {
                 actions.push({ type: 'DRAW_CARD', payload: { amount: effect.amount } });
-            } else if (effect.type === 'Discard' && effect.amount) {
+            } else if (effect.type === 'Discard' && effect.amount != null) {
                 actions.push({ type: 'DISCARD_HAND', payload: { amount: effect.amount } });
             } else if (effect.type === 'Exhaust') {
                 // Exhaust is handled at the card level via card.exhausts flag
@@ -145,6 +175,19 @@ export function resolveEffects(
     return actions;
 }
 
+const defaultDragState: DragState = {
+    isActive: false,
+    cardId: null,
+    targetType: null,
+    isTouch: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    prevX: 0,
+    prevY: 0
+};
+
 export const useGameStore = create<GameState>((set, get) => ({
     seed: '',
     rng: null,
@@ -153,6 +196,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     isGameOver: false,
     inCombat: false,
+    isPlayerTurn: false,
+    combatResult: null,
+    goldReward: 0,
     player: {
         id: 'player',
         name: '',
@@ -178,24 +224,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     floatingTexts: [],
     activeAnimations: [],
 
-    dragState: {
-        isActive: false,
-        cardId: null,
-        targetType: null,
-        isTouch: false,
-        startX: 0,
-        startY: 0,
-        currentX: 0,
-        currentY: 0,
-        prevX: 0,
-        prevY: 0
-    },
+    dragState: { ...defaultDragState },
     entityBounds: {},
 
-    // Fix #1: Pass RNG to createCardInstance for deterministic instance IDs
-    initializeRun: (seed: string, characterId: string = 'ironclad') => {
+    ugcPhase: null,
+    generatedCharacter: null,
+    generatedCards: null,
+    ugcError: null,
+    selfieDataUrl: null,
+
+    // H-1: Removed undeclared characterId param; M-9: Reset ALL state fields
+    initializeRun: (seed: string) => {
+        cancelAllTimeouts();
         const rng = new RNG(seed);
-        const charDef = CHARACTERS[characterId] || CHARACTERS['ironclad'];
+        const charDef = CHARACTERS['ironclad'];
         const initialDeck = charDef.startingDeck.map(cardId => createCardInstance(cardId, rng));
 
         set({
@@ -216,7 +258,23 @@ export const useGameStore = create<GameState>((set, get) => ({
             },
             masterDeck: initialDeck,
             inCombat: false,
-            isGameOver: false
+            isGameOver: false,
+            isPlayerTurn: false,
+            combatResult: null,
+            goldReward: 0,
+            // M-9: Reset all combat state
+            actionQueue: [],
+            isResolving: false,
+            hand: [],
+            drawPile: [],
+            discardPile: [],
+            exhaustPile: [],
+            playingCards: [],
+            enemies: [],
+            floatingTexts: [],
+            activeAnimations: [],
+            entityBounds: {},
+            dragState: { ...defaultDragState }
         });
     },
 
@@ -234,6 +292,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             const shuffledDraw = state.rng.shuffle([...state.masterDeck]);
             return {
                 inCombat: true,
+                combatResult: null,
+                goldReward: 0,
                 enemies: combatEnemies,
                 drawPile: shuffledDraw,
                 discardPile: [],
@@ -296,12 +356,128 @@ export const useGameStore = create<GameState>((set, get) => ({
         // Shop and Unknown are no-ops for now (player just advances past them)
     },
 
+    startSelfieCapture: () => {
+        set({ ugcPhase: 'capture', ugcError: null });
+    },
+
+    submitSelfie: async (imageBase64: string) => {
+        set({ ugcPhase: 'generating', selfieDataUrl: imageBase64, ugcError: null });
+        try {
+            const apiUrl = (import.meta.env.VITE_API_URL || '') + '/api/generate-character';
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageBase64 }),
+            });
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            const data: GenerateCharacterResponse = await response.json();
+            set({
+                ugcPhase: 'reveal',
+                generatedCharacter: data.character,
+                generatedCards: data.cards,
+            });
+        } catch (err: any) {
+            set({ ugcPhase: 'capture', ugcError: err.message || 'Generation failed' });
+        }
+    },
+
+    startGeneratedRun: () => {
+        const { generatedCharacter, generatedCards } = get();
+        if (!generatedCharacter || !generatedCards) return;
+
+        cancelAllTimeouts();
+        const seed = `ugc_${generatedCharacter.id}_${Date.now()}`;
+        const rng = new RNG(seed);
+
+        const masterDeck: Card[] = generatedCards.map(gc => ({
+            id: gc.id,
+            instanceId: `${gc.id}_${Math.floor(rng.next() * 2176782336).toString(36)}`,
+            name: gc.name,
+            type: gc.type,
+            cost: gc.cost,
+            description: gc.description,
+            target: gc.target,
+            effects: gc.effects,
+            imageUrl: gc.imageUrl,
+            exhausts: gc.exhausts,
+        }));
+
+        set({
+            seed,
+            rng,
+            floor: 0,
+            currentNodeId: null,
+            player: {
+                id: 'player',
+                name: generatedCharacter.name,
+                hp: generatedCharacter.maxHp,
+                maxHp: generatedCharacter.maxHp,
+                block: 0,
+                statuses: [],
+                energy: generatedCharacter.maxEnergy,
+                maxEnergy: generatedCharacter.maxEnergy,
+                gold: generatedCharacter.startingGold,
+            },
+            masterDeck,
+            ugcPhase: null,
+            generatedCharacter: null,
+            generatedCards: null,
+            selfieDataUrl: null,
+            inCombat: false,
+            isGameOver: false,
+            isPlayerTurn: false,
+            combatResult: null,
+            goldReward: 0,
+            actionQueue: [],
+            isResolving: false,
+            hand: [],
+            drawPile: [],
+            discardPile: [],
+            exhaustPile: [],
+            playingCards: [],
+            enemies: [],
+            floatingTexts: [],
+            activeAnimations: [],
+            entityBounds: {},
+            dragState: { ...defaultDragState },
+        });
+    },
+
+    cancelUgc: () => {
+        set({
+            ugcPhase: null,
+            generatedCharacter: null,
+            generatedCards: null,
+            ugcError: null,
+            selfieDataUrl: null,
+        });
+    },
+
+    continueCombatResult: () => {
+        const state = get();
+        if (state.combatResult === 'victory') {
+            set({
+                inCombat: false,
+                combatResult: null,
+                enemies: [],
+                player: { ...state.player, gold: state.player.gold + state.goldReward },
+                goldReward: 0
+            });
+        } else if (state.combatResult === 'defeat') {
+            set({
+                inCombat: false,
+                combatResult: null,
+                isGameOver: true
+            });
+        }
+    },
+
     addFloatingText: (text) => {
         const id = Math.random().toString(36).substr(2, 9);
         set(state => ({
             floatingTexts: [...state.floatingTexts, { ...text, id }]
         }));
-        setTimeout(() => {
+        trackedTimeout(() => {
             set(state => ({
                 floatingTexts: state.floatingTexts.filter(ft => ft.id !== id)
             }));
@@ -313,7 +489,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         set(state => ({
             activeAnimations: [...state.activeAnimations, { id, targetId, type }]
         }));
-        setTimeout(() => {
+        trackedTimeout(() => {
             set(state => ({
                 activeAnimations: state.activeAnimations.filter(a => a.id !== id)
             }));
@@ -326,6 +502,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         }));
     },
 
+    // C-1: Serialized queue processor — single entry point, no concurrent execution
     resolveQueue: () => {
         const state = get();
         if (state.actionQueue.length === 0 || state.isResolving) return;
@@ -337,9 +514,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         switch (action.type) {
             case 'DAMAGE_ENTITY': {
                 const { sourceId, targetId, amount } = action.payload;
-                // Fix #14: Re-fetch state for each action to avoid stale closures
                 const freshState = get();
                 const isPlayer = targetId === 'player';
+
+                // C-3: Skip damage to dead enemies
+                if (!isPlayer) {
+                    const targetEnemy = freshState.enemies.find(e => e.id === targetId);
+                    if (!targetEnemy || targetEnemy.hp <= 0) break;
+                }
+
                 let target = isPlayer ? freshState.player : freshState.enemies.find(e => e.id === targetId);
                 let source = sourceId === 'player' ? freshState.player : freshState.enemies.find(e => e.id === sourceId);
 
@@ -382,25 +565,31 @@ export const useGameStore = create<GameState>((set, get) => ({
                     get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
 
                     if (isPlayer) {
-                        set({ player: { ...freshState.player, hp: newHp, block: newBlock } });
+                        // H-4: Re-fetch current player state before set
+                        const currentPlayer = get().player;
+                        set({ player: { ...currentPlayer, hp: newHp, block: newBlock } });
 
                         if (newHp <= 0) {
+                            cancelAllTimeouts();
                             set({
-                                isGameOver: true,
-                                inCombat: false,
+                                combatResult: 'defeat',
                                 actionQueue: [],
                                 isResolving: false
                             });
                             return;
                         }
                     } else {
-                        const updatedEnemies = freshState.enemies.map(e => e.id === targetId ? { ...e, hp: newHp, block: newBlock } : e);
+                        const currentEnemies = get().enemies;
+                        const updatedEnemies = currentEnemies.map(e => e.id === targetId ? { ...e, hp: newHp, block: newBlock } : e);
                         set({ enemies: updatedEnemies });
 
                         if (updatedEnemies.every(e => e.hp <= 0)) {
+                            cancelAllTimeouts();
+                            const rng = get().rng;
+                            const goldReward = rng ? rng.nextInt(10, 21) : 15;
                             set({
-                                inCombat: false,
-                                enemies: [],
+                                combatResult: 'victory',
+                                goldReward,
                                 actionQueue: [],
                                 isResolving: false
                             });
@@ -429,22 +618,27 @@ export const useGameStore = create<GameState>((set, get) => ({
 
                 get().addFloatingText({ targetId, value: finalBlock, type: 'block' });
                 if (targetId === 'player') {
-                    set({ player: { ...freshState.player, block: freshState.player.block + finalBlock } });
+                    const currentPlayer = get().player;
+                    set({ player: { ...currentPlayer, block: currentPlayer.block + finalBlock } });
                 } else {
-                    set({ enemies: freshState.enemies.map(e => e.id === targetId ? { ...e, block: e.block + finalBlock } : e) });
+                    const currentEnemies = get().enemies;
+                    set({ enemies: currentEnemies.map(e => e.id === targetId ? { ...e, block: e.block + finalBlock } : e) });
                 }
                 break;
             }
             case 'PLAY_CARD': {
                 const { card, targetId } = action.payload;
                 const freshState = get();
+                // C-3: Only target living enemies
                 const allEnemyIds = freshState.enemies.filter(e => e.hp > 0).map(e => e.id);
                 const cardActions = resolveEffects(card.effects || [], 'player', targetId, allEnemyIds, freshState.rng);
+                // C-1: Replace queue and continue synchronously via the tail call below
                 set((current) => ({
                     actionQueue: [...cardActions, ...current.actionQueue.slice(1)],
                     isResolving: false
                 }));
-                setTimeout(() => get().resolveQueue(), 0);
+                // C-1: Use trackedTimeout for serialization
+                trackedTimeout(() => get().resolveQueue(), 0);
                 return;
             }
             case 'APPLY_STATUS': {
@@ -461,47 +655,51 @@ export const useGameStore = create<GameState>((set, get) => ({
                         newStatuses.push(status);
                     }
                     if (isPlayer) {
-                        set({ player: { ...freshState.player, statuses: newStatuses } });
+                        set({ player: { ...get().player, statuses: newStatuses } });
                     } else {
-                        set({ enemies: freshState.enemies.map(e => e.id === targetId ? { ...e, statuses: newStatuses } : e) });
+                        set({ enemies: get().enemies.map(e => e.id === targetId ? { ...e, statuses: newStatuses } : e) });
                     }
                 }
                 break;
             }
-            // Fix #9: Handle HEAL_ENTITY action
-            case 'HEAL_ENTITY' as GameActionType: {
+            case 'HEAL_ENTITY': {
                 const { targetId, amount } = action.payload;
-                const freshState = get();
                 if (targetId === 'player') {
-                    const newHp = Math.min(freshState.player.maxHp, freshState.player.hp + amount);
+                    const currentPlayer = get().player;
+                    const newHp = Math.min(currentPlayer.maxHp, currentPlayer.hp + amount);
                     get().addFloatingText({ targetId, value: amount, type: 'heal' });
-                    set({ player: { ...freshState.player, hp: newHp } });
+                    set({ player: { ...currentPlayer, hp: newHp } });
                 } else {
-                    const enemy = freshState.enemies.find(e => e.id === targetId);
+                    const currentEnemies = get().enemies;
+                    const enemy = currentEnemies.find(e => e.id === targetId);
                     if (enemy) {
                         const newHp = Math.min(enemy.maxHp, enemy.hp + amount);
                         get().addFloatingText({ targetId, value: amount, type: 'heal' });
-                        set({ enemies: freshState.enemies.map(e => e.id === targetId ? { ...e, hp: newHp } : e) });
+                        set({ enemies: currentEnemies.map(e => e.id === targetId ? { ...e, hp: newHp } : e) });
                     }
                 }
                 break;
             }
-            // Fix #9: Handle DRAW_CARD action
             case 'DRAW_CARD': {
                 const drawAmount = action.payload?.amount ?? 1;
                 get().drawCards(drawAmount);
                 break;
             }
-            // Fix #9: Handle DISCARD_HAND action
+            // H-5: Discard random cards from hand using RNG
             case 'DISCARD_HAND': {
                 const discardAmount = action.payload?.amount;
-                if (discardAmount) {
-                    // Discard N random cards from hand
+                if (discardAmount != null && discardAmount > 0) {
                     set((current) => {
-                        const toDiscard = current.hand.slice(0, discardAmount);
-                        const remaining = current.hand.slice(discardAmount);
+                        const rng = current.rng;
+                        let handCopy = [...current.hand];
+                        const toDiscard: Card[] = [];
+                        const count = Math.min(discardAmount, handCopy.length);
+                        for (let i = 0; i < count; i++) {
+                            const idx = rng ? rng.nextInt(0, handCopy.length) : Math.floor(Math.random() * handCopy.length);
+                            toDiscard.push(handCopy.splice(idx, 1)[0]);
+                        }
                         return {
-                            hand: remaining,
+                            hand: handCopy,
                             discardPile: [...current.discardPile, ...toDiscard]
                         };
                     });
@@ -513,6 +711,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                 let enemyActions: GameAction[] = [];
                 const allEnemyIds = freshState.enemies.filter(e => e.hp > 0).map(e => e.id);
 
+                // M-6: Track turn phase
+                set({ isPlayerTurn: false });
+
                 // Fix #10: Only execute intents for living enemies
                 freshState.enemies.forEach(enemy => {
                     if (enemy.hp <= 0) return;
@@ -522,13 +723,12 @@ export const useGameStore = create<GameState>((set, get) => ({
                         if (enemy.intent.type.includes('Buff')) attackName = 'Buffs!';
                         if (enemy.intent.type === 'AttackDefend') attackName = 'Attacks & Defends!';
 
-                        // Fix #7: Use 'status' type for announcements instead of casting string to number
-                        enemyActions.push({ type: 'ANNOUNCE_INTENT' as GameActionType, payload: { targetId: enemy.id, text: attackName } });
+                        enemyActions.push({ type: 'ANNOUNCE_INTENT', payload: { targetId: enemy.id, text: attackName } });
 
                         const intentActions = resolveEffects(enemy.intent.effects, enemy.id, 'player', allEnemyIds, freshState.rng);
                         enemyActions = enemyActions.concat(intentActions);
 
-                        enemyActions.push({ type: 'DELAY' as GameActionType, payload: { ms: 600 } });
+                        enemyActions.push({ type: 'DELAY', payload: { ms: 600 } });
                     }
                 });
 
@@ -557,17 +757,17 @@ export const useGameStore = create<GameState>((set, get) => ({
                     enemies: newEnemies
                 }));
 
-                enemyActions.push({ type: 'CALCULATE_INTENTS' as GameActionType });
+                enemyActions.push({ type: 'CALCULATE_INTENTS' });
 
                 set((current) => ({
                     actionQueue: [...enemyActions, ...current.actionQueue.slice(1)],
                     isResolving: false
                 }));
-                setTimeout(() => get().resolveQueue(), 0);
+                trackedTimeout(() => get().resolveQueue(), 0);
                 return;
             }
             // Fix #3: Use enemy.templateId instead of hardcoded name matching
-            case 'CALCULATE_INTENTS' as GameActionType: {
+            case 'CALCULATE_INTENTS': {
                 const freshState = get();
                 const updatedEnemies = freshState.enemies.map(enemy => {
                     if (enemy.hp <= 0) return enemy;
@@ -593,9 +793,10 @@ export const useGameStore = create<GameState>((set, get) => ({
                             const roll = freshState.rng ? freshState.rng.next() * totalWeight : Math.random() * totalWeight;
                             let runningSum = 0;
 
+                            // L-1: Use < instead of <= for correct weighted selection
                             for (const p of validPatterns) {
                                 runningSum += p.chance;
-                                if (roll <= runningSum) {
+                                if (roll < runningSum) {
                                     newIntent = p.intent;
                                     break;
                                 }
@@ -610,35 +811,43 @@ export const useGameStore = create<GameState>((set, get) => ({
                     actionQueue: [{ type: 'START_TURN' }, ...current.actionQueue.slice(1)],
                     isResolving: false
                 }));
-                setTimeout(() => get().resolveQueue(), 0);
+                trackedTimeout(() => get().resolveQueue(), 0);
                 return;
             }
             case 'START_TURN': {
+                // C-2: Reset enemy block at start of player turn
                 set((current) => ({
-                    player: { ...current.player, energy: current.player.maxEnergy, block: 0 }
+                    player: { ...current.player, energy: current.player.maxEnergy, block: 0 },
+                    enemies: current.enemies.map(e => ({ ...e, block: 0 })),
+                    isPlayerTurn: true
                 }));
                 get().drawCards(5);
                 break;
             }
             case 'PLAY_ANIMATION': {
+                // C-3: Skip animations for dead enemies
+                const { targetId } = action.payload;
+                if (targetId !== 'player') {
+                    const enemy = get().enemies.find(e => e.id === targetId);
+                    if (!enemy || enemy.hp <= 0) break;
+                }
                 get().playAnimation(action.payload.targetId, action.payload.animation);
                 break;
             }
-            // Fix #7: ANNOUNCE_INTENT uses 'status' type for string floating text
-            case 'ANNOUNCE_INTENT' as GameActionType: {
+            case 'ANNOUNCE_INTENT': {
                 const { targetId, text } = action.payload;
                 get().addFloatingText({ targetId, value: text, type: 'status' });
                 delay = 1200;
                 break;
             }
-            case 'DELAY' as GameActionType: {
+            case 'DELAY': {
                 delay = action.payload.ms;
                 break;
             }
         }
 
-        // Remove processed action and trigger next after delay
-        setTimeout(() => {
+        // C-1: Advance queue with tracked timeout for proper serialization
+        trackedTimeout(() => {
             set((current) => ({
                 actionQueue: current.actionQueue.slice(1),
                 isResolving: false
@@ -691,7 +900,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
             const playAction: GameAction = { type: 'PLAY_CARD', payload: { card, targetId } };
 
-            setTimeout(() => {
+            trackedTimeout(() => {
                 get().cleanupPlayingCard(animId);
             }, 800);
 
@@ -755,20 +964,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     resetDragState: () => {
-        set({
-            dragState: {
-                isActive: false,
-                cardId: null,
-                targetType: null,
-                isTouch: false,
-                startX: 0,
-                startY: 0,
-                currentX: 0,
-                currentY: 0,
-                prevX: 0,
-                prevY: 0
-            }
-        });
+        set({ dragState: { ...defaultDragState } });
     },
 
     setEntityBounds: (id: string, bounds: DOMRect) => {

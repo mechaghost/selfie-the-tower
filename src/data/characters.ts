@@ -8,9 +8,9 @@ export const CHARACTERS: Record<string, Character> = {
         maxEnergy: 3,
         startingGold: 99,
         startingDeck: [
-            'strike_red', 'strike_red', 'strike_red', 'strike_red', 'strike_red',
+            'strike_red', 'strike_red', 'strike_red', 'strike_red',
             'defend_red', 'defend_red', 'defend_red', 'defend_red',
-            'bash'
+            'bash', 'cleave'
         ]
     }
 };

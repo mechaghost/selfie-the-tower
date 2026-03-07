@@ -1,9 +1,8 @@
-import React from 'react';
 import { useGameStore } from '../../store/gameStore';
 import './GameOverView.css';
 import { Skull } from 'lucide-react';
 
-export const GameOverView: React.FC = () => {
+export function GameOverView() {
     const { floor, initializeRun, seed } = useGameStore();
 
     const handleRestart = () => {
@@ -32,4 +31,4 @@ export const GameOverView: React.FC = () => {
             </div>
         </div>
     );
-};
+}

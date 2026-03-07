@@ -55,11 +55,32 @@ export const enemies: Record<string, EnemyDefinition> = {
         maxHpRange: [82, 86],
         aiPatterns: [
             {
+                condition: 'Turn1',
                 chance: 100,
+                intent: {
+                    type: 'Buff',
+                    effects: [
+                        { type: 'ApplyStatus', amount: 2, statusId: 'strength', target: 'Self' }
+                    ]
+                }
+            },
+            {
+                chance: 67,
                 intent: {
                     type: 'Attack',
                     damage: 14,
                     effects: [{ type: 'Damage', amount: 14, target: 'Target' }]
+                }
+            },
+            {
+                chance: 33,
+                intent: {
+                    type: 'AttackDebuff',
+                    damage: 8,
+                    effects: [
+                        { type: 'Damage', amount: 8, target: 'Target' },
+                        { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }
+                    ]
                 }
             }
         ]
@@ -72,7 +93,7 @@ export function createEnemyInstance(templateId: string, id: string, rng: RNG | n
 
     const [minHp, maxHp] = template.maxHpRange;
     const finalMaxHp = rng
-        ? Math.floor(rng.next() * (maxHp - minHp + 1)) + minHp
+        ? rng.nextInt(minHp, maxHp + 1)
         : Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp;
 
     return {

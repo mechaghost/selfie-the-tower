@@ -11,6 +11,7 @@ export interface Card {
     target: TargetType;
     effects: Effect[];
     imageId?: string;
+    imageUrl?: string; // Presigned URL for AI-generated card art
     exhausts?: boolean;
     ethereal?: boolean;
     upgraded?: boolean;
@@ -97,6 +98,7 @@ export type GameActionType =
     | 'DAMAGE_ENTITY'
     | 'GAIN_BLOCK'
     | 'APPLY_STATUS'
+    | 'HEAL_ENTITY'
     | 'END_TURN'
     | 'START_TURN'
     | 'CALCULATE_INTENTS'
@@ -130,4 +132,37 @@ export interface Character {
     maxEnergy: number;
     startingGold: number;
     startingDeck: string[]; // Card IDs to populate the masterDeck
+}
+
+// --- UGC Types ---
+export type Archetype = 'ember' | 'tide' | 'storm' | 'root' | 'shade';
+export type UgcPhase = 'capture' | 'generating' | 'reveal' | null;
+
+export interface GeneratedCharacter {
+    id: string;
+    name: string;
+    archetype: Archetype;
+    title: string;
+    portraitUrl: string;
+    maxHp: number;
+    maxEnergy: number;
+    startingGold: number;
+    traits: string[];
+}
+
+export interface GeneratedCard {
+    id: string;
+    name: string;
+    type: CardType;
+    cost: number;
+    description: string;
+    target: TargetType;
+    effects: Effect[];
+    imageUrl?: string;
+    exhausts?: boolean;
+}
+
+export interface GenerateCharacterResponse {
+    character: GeneratedCharacter;
+    cards: GeneratedCard[];
 }

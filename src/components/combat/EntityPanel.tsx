@@ -1,9 +1,20 @@
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import { Entity, Enemy } from '../../core/models';
 import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { STATUS_REGISTRY } from '../../data/statusEffects';
 import './EntityPanel.css';
+
+// M-3: Status tooltip descriptions keyed by status id
+const STATUS_DESCRIPTIONS: Record<string, string> = {
+    vulnerable: 'Takes 50% more damage',
+    weak: 'Deals 25% less damage',
+    strength: '+1 damage per stack',
+    dexterity: '+1 block per stack'
+};
+
+// M-5: Unified hover radius padding
+const HOVER_RADIUS_PADDING = 25;
 
 interface EntityPanelProps {
     entity: Entity;
@@ -22,12 +33,19 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
-    useLayoutEffect(() => {
+    // M-2: Update bounds on mount and window resize
+    const updateBounds = React.useCallback(() => {
         if (!isPlayer && avatarRef.current) {
-            const rect = avatarRef.current.getBoundingClientRect();
-            setEntityBounds(entity.id, rect);
+            setEntityBounds(entity.id, avatarRef.current.getBoundingClientRect());
         }
     }, [isPlayer, entity.id, setEntityBounds]);
+
+    useLayoutEffect(updateBounds, [updateBounds]);
+
+    useEffect(() => {
+        window.addEventListener('resize', updateBounds);
+        return () => window.removeEventListener('resize', updateBounds);
+    }, [updateBounds]);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         if (!isPlayer) {
@@ -59,7 +77,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             const centerX = bounds.left + bounds.width / 2;
             const centerY = bounds.top + bounds.height / 2;
             const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
-            const hoverRadius = (bounds.width / 2) + 30;
+            const hoverRadius = (bounds.width / 2) + HOVER_RADIUS_PADDING;
 
             if (dist < hoverRadius) {
                 isTargeted = true;
@@ -140,7 +158,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                     {intent.type.includes('Defend') && intent.type !== 'AttackDefend' && (
                         <div className="intent-item defend">
                             <ShieldPlus size={16} />
-                            {intent.block && <span className="intent-value">{intent.block}</span>}
+                            {intent.block != null && <span className="intent-value">{intent.block}</span>}
                         </div>
                     )}
                     {intent.type === 'AttackDefend' && (
@@ -148,9 +166,27 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                             <ShieldPlus size={14} />
                         </div>
                     )}
-                    {intent.type.includes('Buff') && (
+                    {/* M-4: Show block value when Buff intent includes block */}
+                    {intent.type === 'Buff' && (
                         <div className="intent-item buff">
                             <Zap size={16} />
+                            {intent.block != null && (
+                                <>
+                                    <ShieldPlus size={14} />
+                                    <span className="intent-value">{intent.block}</span>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    {intent.type === 'Debuff' && (
+                        <div className="intent-item debuff">
+                            <Zap size={16} />
+                        </div>
+                    )}
+                    {intent.type === 'AttackDebuff' && !intent.type.includes('Defend') && (
+                        <div className="intent-item attack">
+                            <Swords size={16} />
+                            <span className="intent-value">{intent.damage}</span>
                         </div>
                     )}
                 </div>
@@ -191,16 +227,18 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                     </div>
                 </div>
 
+                {/* M-3: Fixed status tooltip descriptions */}
                 <div className="status-container">
                     {entity.statuses.map(status => {
                         const def = STATUS_REGISTRY[status.id];
+                        const desc = STATUS_DESCRIPTIONS[status.id] || (def?.type === 'Debuff' ? 'Negative effect' : 'Positive effect');
                         return (
                             <div
                                 key={status.id}
                                 className={`status-icon ${def?.type === 'Debuff' ? 'debuff' : 'buff'}`}
-                                title={`${def?.name}: ${def?.type === 'Debuff' ? 'Takes 50% more damage' : 'Deals 25% less damage'}`}
+                                title={`${def?.name}: ${desc}`}
                             >
-                                {def?.icon || '❓'} {status.amount}
+                                {def?.icon || '?'} {status.amount}
                             </div>
                         );
                     })}

@@ -43,6 +43,19 @@ export const CARD_DATABASE: Record<string, Card> = {
             { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }
         ],
         imageId: 'bash'
+    },
+    cleave: {
+        id: 'cleave',
+        instanceId: '',
+        name: 'Cleave',
+        type: 'Attack',
+        cost: 1,
+        description: 'Deal 8 damage to ALL enemies.',
+        target: 'AllEnemies',
+        effects: [
+            { type: 'Damage', amount: 8, target: 'AllEnemies' }
+        ],
+        imageId: 'strike_red'
     }
 };
 

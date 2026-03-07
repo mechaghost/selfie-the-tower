@@ -3,26 +3,23 @@ import { TopBar } from '../ui/TopBar';
 import { EntityPanel } from './EntityPanel';
 import { HandHUD } from './HandHUD';
 import { TargetingArrow } from './TargetingArrow';
+import { CombatResultOverlay } from './CombatResultOverlay';
 import './CombatView.css';
 
 export function CombatView() {
     const {
-        player, enemies, endTurn, energy, maxEnergy, playCard,
-        drawPile, discardPile, hand, isResolving
+        player, enemies, endTurn, energy, playCard, isPlayerTurn, combatResult
     } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
-        maxEnergy: state.player.maxEnergy,
         playCard: state.playCard,
-        drawPile: state.drawPile,
-        discardPile: state.discardPile,
-        hand: state.hand,
-        isResolving: state.isResolving
+        isPlayerTurn: state.isPlayerTurn,
+        combatResult: state.combatResult
     }));
 
-    const isEnemyTurn = hand.length === 0 && isResolving;
+    const isDisabled = !isPlayerTurn || combatResult !== null;
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -67,7 +64,7 @@ export function CombatView() {
             </div>
 
             {/* Turn phase indicator */}
-            {isEnemyTurn && (
+            {!isPlayerTurn && !combatResult && (
                 <div className="turn-phase-banner enemy-turn">
                     ENEMY TURN
                 </div>
@@ -75,29 +72,24 @@ export function CombatView() {
 
             <div className="table-controls">
                 <div className="controls-left">
-                    <div className="energy-badge">
-                        {energy} / {maxEnergy}
-                    </div>
-                    <div className="pile-badge draw">
-                        {drawPile.length}
+                    <div className="energy-orb">
+                        {energy}
                     </div>
                 </div>
 
                 <div className="controls-right">
-                    <div className="pile-badge discard">
-                        {discardPile.length}
-                    </div>
-                    <button className="end-turn-button" onClick={endTurn} disabled={isEnemyTurn}>
+                    <button className="end-turn-button" onClick={endTurn} disabled={isDisabled}>
                         End Turn
                     </button>
                 </div>
             </div>
 
-            <div className={`deck-table ${isEnemyTurn ? 'disabled' : ''}`}>
+            <div className={`deck-table ${isDisabled ? 'disabled' : ''}`}>
                 <HandHUD />
             </div>
 
             <TargetingArrow />
+            <CombatResultOverlay />
         </div>
     );
 }

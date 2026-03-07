@@ -39,8 +39,8 @@ export function TargetingArrow() {
             // Calculate distance from cursor to center
             const dist = Math.hypot(centerX - dragState.currentX, centerY - dragState.currentY);
 
-            // Exact radius of the avatar circle plus 20px padding
-            const hoverRadius = (rect.width / 2) + 20;
+            // M-5: Unified hover radius matching EntityPanel
+            const hoverRadius = (rect.width / 2) + 25;
 
             if (dist < hoverRadius) {
                 isValidTarget = true;

@@ -38,6 +38,7 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
 
     // Generate middle floors (1 through 8)
     for (let y = 1; y < MAP_HEIGHT - 1; y++) {
+        const isCombatFloor = y === 1; // First real floor is always Combat
         const isEliteFloor = y >= 4; // Elites only appear after floor 4
         const isRestFloor = y === MAP_HEIGHT - 2; // Floor 8 is Rest Sites
 
@@ -70,7 +71,7 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
                 let childNode = grid[y][childX];
                 let isNew = false;
                 if (!childNode) {
-                    const type = isRestFloor ? 'Rest' : determineNodeType(rng, config, isEliteFloor, y);
+                    const type = isCombatFloor ? 'Combat' : isRestFloor ? 'Rest' : determineNodeType(rng, config, isEliteFloor, y);
                     childNode = createNode(rng, childX, y, type);
                     isNew = true;
                 }
@@ -107,12 +108,10 @@ export function generateMap(seed: string, config = DEFAULT_CONFIG): MapData {
         connections: []
     };
     nodes.push(bossNode);
+    // C-4: All rest nodes connect to boss (threshold 0.5 covers all 4 columns)
     grid[MAP_HEIGHT - 2].forEach((restNode) => {
         if (!restNode) return;
-        // Boss connection must also obey the physical limits!
-        if (Math.abs(restNode.x - bossNode.x) <= 0.32) {
-            restNode.connections.push(bossNode.id);
-        }
+        restNode.connections.push(bossNode.id);
     });
 
     // Cleanup orphaned nodes (nodes with no parents, except starts)

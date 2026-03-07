@@ -38,9 +38,32 @@ p {
     transition: all 0.2s;
 }
 
-.start-button:hover {
+.start-button.hero-button {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    border-color: #42a5f5;
+    color: white;
+}
+
+.start-button.hero-button:hover {
+    background: linear-gradient(135deg, #1976d2, #2196f3);
+    border-color: #90caf9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(25, 118, 210, 0.4);
+}
+
+.start-button.classic-button {
+    margin-top: 0.75rem;
+    background: transparent;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+
+.start-button.classic-button:hover {
     background: #333;
     border-color: #fff;
+    color: var(--color-text-primary);
     transform: translateY(-2px);
 }
 
