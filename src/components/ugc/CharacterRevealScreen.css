@@ -40,7 +40,7 @@
     font-family: var(--font-family-display);
     font-size: 1.75rem;
     color: var(--color-text-highlight);
-    text-shadow: 0 2px 12px rgba(240, 219, 79, 0.3);
+    text-shadow: 0 0 20px rgba(255, 110, 199, 0.4);
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -61,7 +61,7 @@
     border-radius: 50%;
     overflow: hidden;
     border: 3px solid var(--color-text-highlight);
-    box-shadow: 0 0 30px rgba(240, 219, 79, 0.2);
+    box-shadow: 0 0 30px rgba(255, 110, 199, 0.3);
     flex-shrink: 0;
     opacity: 0;
     filter: blur(10px);
@@ -148,8 +148,8 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     padding: 0.75rem 2rem;
-    background: linear-gradient(135deg, #1565c0, #1976d2);
-    border: 2px solid #42a5f5;
+    background: linear-gradient(135deg, #ff3860, #b967ff);
+    border: 2px solid #ff6ec7;
     color: white;
     border-radius: 8px;
     cursor: pointer;
@@ -168,13 +168,13 @@
 }
 
 @keyframes cta-pulse {
-    0%, 100% { box-shadow: 0 0 10px rgba(25, 118, 210, 0.3); }
-    50% { box-shadow: 0 0 25px rgba(25, 118, 210, 0.6); }
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 110, 199, 0.3); }
+    50% { box-shadow: 0 0 25px rgba(255, 110, 199, 0.6); }
 }
 
 .reveal-cta:hover {
-    background: linear-gradient(135deg, #1976d2, #2196f3);
-    border-color: #90caf9;
+    background: linear-gradient(135deg, #ff6ec7, #b967ff);
+    border-color: #ffb3e6;
     transform: translateY(-2px);
 }
 

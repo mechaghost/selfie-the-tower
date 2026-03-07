@@ -14,7 +14,7 @@ h1 {
     font-family: var(--font-family-display);
     font-size: 2rem;
     color: var(--color-text-highlight);
-    text-shadow: 0 4px 12px rgba(240, 219, 79, 0.2);
+    text-shadow: 0 0 20px rgba(255, 110, 199, 0.5), 0 0 40px rgba(255, 110, 199, 0.2);
     margin-bottom: 0.5rem;
 }
 
@@ -39,16 +39,16 @@ p {
 }
 
 .start-button.hero-button {
-    background: linear-gradient(135deg, #1565c0, #1976d2);
-    border-color: #42a5f5;
+    background: linear-gradient(135deg, #ff3860, #b967ff);
+    border-color: #ff6ec7;
     color: white;
 }
 
 .start-button.hero-button:hover {
-    background: linear-gradient(135deg, #1976d2, #2196f3);
-    border-color: #90caf9;
+    background: linear-gradient(135deg, #ff6ec7, #b967ff);
+    border-color: #ffb3e6;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(25, 118, 210, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 110, 199, 0.4);
 }
 
 .start-button.classic-button {
@@ -61,7 +61,7 @@ p {
 }
 
 .start-button.classic-button:hover {
-    background: #333;
+    background: #252540;
     border-color: #fff;
     color: var(--color-text-primary);
     transform: translateY(-2px);

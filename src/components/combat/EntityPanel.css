@@ -19,19 +19,81 @@
     font-size: 2.5rem;
 }
 
-.entity-panel.player .entity-avatar.has-portrait {
+/* Circular portrait fallback (when no sprite) */
+.entity-panel.player .entity-avatar.has-portrait:not(.has-sprite) {
     width: 80px;
     height: 80px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid var(--color-gold);
-    box-shadow: 0 0 12px rgba(218, 165, 32, 0.4);
+    border: 2px solid var(--color-text-highlight);
+    box-shadow: 0 0 12px rgba(255, 110, 199, 0.4);
 }
 
 .player-portrait-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Full-body sprite (transparent background) */
+.entity-panel.player .entity-avatar.has-sprite {
+    width: 100px;
+    height: 160px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    animation: spriteIdle 3s ease-in-out infinite;
+}
+
+.player-sprite-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+}
+
+/* Idle breathing animation */
+@keyframes spriteIdle {
+    0%, 100% {
+        transform: translateY(0) scaleY(1);
+    }
+    50% {
+        transform: translateY(-3px) scaleY(1.01);
+    }
+}
+
+/* Override idle when lunge or stagger is active */
+.entity-panel.player .entity-avatar.has-sprite.anim-lunge {
+    animation: lungeDynamic 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.entity-panel.player .entity-avatar.has-sprite.anim-stagger {
+    animation: spriteStagger 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes spriteStagger {
+    0% {
+        transform: translateX(0);
+        filter: brightness(1);
+    }
+    20% {
+        transform: translateX(-12px) skewX(-5deg);
+        filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(4);
+    }
+    40% {
+        transform: translateX(8px) skewX(3deg);
+    }
+    60% {
+        transform: translateX(-5px);
+    }
+    80% {
+        transform: translateX(3px);
+        filter: brightness(1);
+    }
+    100% {
+        transform: translateX(0) skewX(0deg);
+    }
 }
 
 .player-name {
@@ -46,7 +108,7 @@
 .entity-panel.enemy {
     width: 100%;
     max-width: 110px;
-    background: rgba(30, 30, 35, 0.9);
+    background: rgba(26, 26, 46, 0.9);
     border: 1px solid var(--color-border);
     border-radius: 10px;
     padding: 0.35rem 0.25rem 0.5rem;
@@ -56,24 +118,24 @@
 
 /* Threat glow based on intent */
 .entity-panel.threat-attack {
-    border-color: rgba(211, 47, 47, 0.5);
-    box-shadow: 0 0 12px rgba(211, 47, 47, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 56, 96, 0.5);
+    box-shadow: 0 0 12px rgba(255, 56, 96, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .entity-panel.threat-defend {
-    border-color: rgba(25, 118, 210, 0.5);
-    box-shadow: 0 0 12px rgba(25, 118, 210, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .entity-panel.threat-buff {
-    border-color: rgba(56, 142, 60, 0.5);
-    box-shadow: 0 0 12px rgba(56, 142, 60, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(57, 255, 20, 0.5);
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Targeted panel highlight */
 .entity-panel.targeted-panel {
     border-color: var(--color-accent-red);
-    box-shadow: 0 0 20px rgba(211, 47, 47, 0.4), 0 0 40px rgba(211, 47, 47, 0.15);
+    box-shadow: 0 0 20px rgba(255, 56, 96, 0.4), 0 0 40px rgba(255, 56, 96, 0.15);
     transform: scale(1.05);
 }
 
@@ -102,7 +164,7 @@
 }
 
 .intent-item.defend {
-    color: #42a5f5;
+    color: var(--color-accent-blue);
 }
 
 .intent-item.buff {
@@ -125,6 +187,13 @@
     font-size: 2.8rem;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
     transition: transform 0.2s, filter 0.2s;
+}
+
+.enemy-portrait-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
 }
 
 .entity-panel.enemy:hover .entity-avatar {
@@ -214,7 +283,7 @@
 }
 
 .floating-text.block {
-    color: #42a5f5;
+    color: var(--color-accent-blue);
 }
 
 .floating-text.heal {
@@ -277,7 +346,7 @@
 .hp-bar-bg {
     width: 100%;
     height: 8px;
-    background: #333;
+    background: #1a1a2e;
     border-radius: 4px;
     overflow: hidden;
     border: 1px solid #000;
@@ -285,7 +354,7 @@
 
 .hp-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #d32f2f, #f44336);
+    background: linear-gradient(90deg, #ff3860, #ff6ec7);
     transition: width 0.3s ease-out;
 }
 
@@ -293,7 +362,7 @@
     position: absolute;
     top: -5px;
     right: 0;
-    background: #1976d2;
+    background: #00d4ff;
     border: 1px solid #fff;
     border-radius: 50%;
     width: 22px;
@@ -304,6 +373,7 @@
     justify-content: center;
     font-weight: bold;
     font-size: 0.6rem;
+    color: #0d0d1a;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     z-index: 10;
 }
@@ -327,12 +397,12 @@
 
 .status-icon.debuff {
     color: var(--color-accent-red);
-    border-color: rgba(211, 47, 47, 0.5);
+    border-color: rgba(255, 56, 96, 0.5);
 }
 
 .status-icon.buff {
     color: var(--color-accent-green);
-    border-color: rgba(56, 142, 60, 0.5);
+    border-color: rgba(57, 255, 20, 0.5);
 }
 
 /* === Desktop overrides === */
@@ -342,6 +412,11 @@
         width: 70px;
         height: 70px;
         font-size: 3.5rem;
+    }
+
+    .entity-panel.player .entity-avatar.has-sprite {
+        width: 140px;
+        height: 220px;
     }
 
     .player-name {

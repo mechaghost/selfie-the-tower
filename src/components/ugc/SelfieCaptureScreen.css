@@ -42,7 +42,7 @@
     font-family: var(--font-family-display);
     font-size: 1.5rem;
     color: var(--color-text-highlight);
-    text-shadow: 0 2px 8px rgba(240, 219, 79, 0.2);
+    text-shadow: 0 0 12px rgba(255, 110, 199, 0.3);
     margin: 0 0 0.25rem 0;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -83,7 +83,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 2px solid rgba(240, 219, 79, 0.3);
+    border: 2px solid rgba(255, 110, 199, 0.3);
     pointer-events: none;
     box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
 }
@@ -131,8 +131,8 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    background: linear-gradient(135deg, #1565c0, #1976d2);
-    border: 2px solid #42a5f5;
+    background: linear-gradient(135deg, #ff3860, #b967ff);
+    border: 2px solid #ff6ec7;
     color: white;
     border-radius: 8px;
     cursor: pointer;
@@ -140,10 +140,10 @@
 }
 
 .selfie-capture-btn:hover {
-    background: linear-gradient(135deg, #1976d2, #2196f3);
-    border-color: #90caf9;
+    background: linear-gradient(135deg, #ff6ec7, #b967ff);
+    border-color: #ffb3e6;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(25, 118, 210, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 110, 199, 0.4);
 }
 
 .selfie-upload-btn {
@@ -193,8 +193,8 @@
 }
 
 @keyframes selfie-pulse {
-    0%, 100% { border-color: var(--color-border); box-shadow: 0 0 20px rgba(240, 219, 79, 0.1); }
-    50% { border-color: var(--color-text-highlight); box-shadow: 0 0 30px rgba(240, 219, 79, 0.3); }
+    0%, 100% { border-color: var(--color-border); box-shadow: 0 0 20px rgba(255, 110, 199, 0.1); }
+    50% { border-color: var(--color-text-highlight); box-shadow: 0 0 30px rgba(255, 110, 199, 0.3); }
 }
 
 .generating-content {

@@ -18,17 +18,21 @@ export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portrait
         traits: analysis.traits,
     };
 
-    const cards = archetype.cards.map(card => ({
-        id: `${analysis.archetype}_${card.name.toLowerCase().replace(/\s+/g, '_')}`,
-        name: card.name,
-        type: card.type,
-        cost: card.cost,
-        description: card.description,
-        target: card.target,
-        effects: card.effects,
-        imageUrl: undefined as string | undefined,
-        ...(card.exhausts ? { exhausts: true } : {}),
-    }));
+    const cards = archetype.cards.map(card => {
+        const cardId = `${analysis.archetype}_${card.name.toLowerCase().replace(/\s+/g, '_')}`;
+        return {
+            id: cardId,
+            name: card.name,
+            type: card.type,
+            cost: card.cost,
+            description: card.description,
+            target: card.target,
+            effects: card.effects,
+            imageId: cardId,
+            imageUrl: undefined as string | undefined,
+            ...(card.exhausts ? { exhausts: true } : {}),
+        };
+    });
 
     return { character, cards };
 }
@@ -43,5 +47,6 @@ export function generateMockCharacter() {
     const traits = archetype.traits[Math.floor(Math.random() * archetype.traits.length)];
 
     const analysis: GeminiAnalysis = { archetype: archetypeId as any, name, title, traits };
-    return generateCharacterFromAnalysis(analysis);
+    const portraitUrl = `/assets/characters/${archetypeId}.png`;
+    return generateCharacterFromAnalysis(analysis, portraitUrl);
 }

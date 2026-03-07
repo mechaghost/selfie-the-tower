@@ -7,7 +7,7 @@
     height: 100vh;
     width: 100vw;
     background-color: var(--color-bg-base);
-    background-image: radial-gradient(circle at center, rgba(160, 40, 40, 0.1) 0%, transparent 60%);
+    background-image: radial-gradient(circle at center, rgba(255, 56, 96, 0.1) 0%, transparent 60%);
     color: var(--color-text-primary);
     padding: 1rem;
 }
@@ -17,11 +17,11 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    background: rgba(30, 25, 25, 0.9);
+    background: rgba(26, 13, 20, 0.9);
     padding: 1.5rem;
     border-radius: 8px;
     border: 2px solid var(--color-accent-red);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(160, 40, 40, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 56, 96, 0.15);
     animation: fade-in-up 0.5s ease-out forwards;
     max-width: 100%;
 }
@@ -41,7 +41,7 @@
 .game-over-icon {
     color: var(--color-accent-red);
     margin-bottom: 0.75rem;
-    filter: drop-shadow(0 0 10px rgba(160, 40, 40, 0.5));
+    filter: drop-shadow(0 0 10px rgba(255, 56, 96, 0.5));
 }
 
 .game-over-title {

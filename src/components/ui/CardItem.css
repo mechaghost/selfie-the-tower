@@ -120,17 +120,17 @@
 
 .card.type-attack {
     border-color: var(--color-accent-red);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(211, 47, 47, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 56, 96, 0.2);
 }
 
 .card.type-skill {
     border-color: var(--color-accent-blue);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(25, 118, 210, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 212, 255, 0.2);
 }
 
 .card.type-power {
-    border-color: var(--color-text-highlight);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(240, 219, 79, 0.2);
+    border-color: var(--color-accent-violet);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(185, 103, 255, 0.2);
 }
 
 .card-cost {
@@ -139,8 +139,8 @@
     left: -4px;
     width: 20px;
     height: 20px;
-    background: #1976d2;
-    border: 1px solid gold;
+    background: var(--color-accent-violet);
+    border: 1px solid #ffb3e6;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -178,6 +178,15 @@
     border: 1px solid var(--color-border);
 }
 
+.card-artwork-placeholder {
+    width: 100%;
+    aspect-ratio: 3/2;
+    border-radius: 3px;
+    margin-bottom: 0.1rem;
+    border: 1px solid var(--color-border);
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+}
+
 .card-desc {
     font-size: 0.5rem;
     line-height: 1.15;
@@ -202,7 +211,7 @@
     justify-content: center;
     color: var(--color-text-secondary);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    background-color: #2a2a2a;
+    background-color: #1a1a2e;
 }
 
 /* === Desktop overrides === */

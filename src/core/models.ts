@@ -84,6 +84,7 @@ export interface Player extends Entity {
     maxEnergy: number;
     gold: number;
     portraitUrl?: string;
+    spriteUrl?: string; // Full-body transparent sprite for combat animations
 }
 
 export interface Enemy extends Entity {
@@ -136,7 +137,7 @@ export interface Character {
 }
 
 // --- UGC Types ---
-export type Archetype = 'ember' | 'tide' | 'storm' | 'root' | 'shade';
+export type Archetype = 'neon' | 'chrome' | 'volt' | 'concrete' | 'smoke';
 export type UgcPhase = 'capture' | 'generating' | 'reveal' | null;
 
 export interface GeneratedCharacter {
@@ -159,6 +160,7 @@ export interface GeneratedCard {
     description: string;
     target: TargetType;
     effects: Effect[];
+    imageId?: string;
     imageUrl?: string;
     exhausts?: boolean;
 }

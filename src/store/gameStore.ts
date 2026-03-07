@@ -7,6 +7,7 @@ import { ENCOUNTER_POOLS } from '../data/encounters';
 import { createEnemyInstance, enemies } from '../data/enemies';
 import { CHARACTERS } from '../data/characters';
 
+
 export interface DragState {
     isActive: boolean;
     cardId: string | null;
@@ -374,6 +375,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 throw new Error(errData?.error || `Server error: ${response.status}`);
             }
             const data: GenerateCharacterResponse = await response.json();
+
             set({
                 ugcPhase: 'reveal',
                 generatedCharacter: data.character,
@@ -401,6 +403,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             description: gc.description,
             target: gc.target,
             effects: gc.effects,
+            imageId: gc.imageId,
             imageUrl: gc.imageUrl,
             exhausts: gc.exhausts,
         }));
@@ -421,6 +424,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 maxEnergy: generatedCharacter.maxEnergy,
                 gold: generatedCharacter.startingGold,
                 portraitUrl: generatedCharacter.portraitUrl || undefined,
+                spriteUrl: generatedCharacter.portraitUrl || undefined,
             },
             masterDeck,
             ugcPhase: null,

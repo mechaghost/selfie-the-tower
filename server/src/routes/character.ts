@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { moderateSelfie, analyzeSelfie, generateCharacterArt, generateCardArt } from '../services/gemini.js';
+import { moderateSelfie, analyzeSelfie } from '../services/gemini.js';
 import { generateCharacterFromAnalysis, generateMockCharacter } from '../services/generator.js';
 
 export const characterRoute = new Hono();
@@ -27,30 +27,9 @@ characterRoute.post('/generate-character', async (c) => {
             const analysis = await analyzeSelfie(body.image);
             console.log('Gemini analysis:', JSON.stringify(analysis));
 
-            // Step 3: Build character to get card list
-            const result = generateCharacterFromAnalysis(analysis);
-
-            // Step 4: Generate character art + all card art in parallel
-            console.log(`Generating character art + ${result.cards.length} card images...`);
-            const imagePromises = [
-                generateCharacterArt(body.image, analysis.archetype)
-                    .catch((err) => { console.warn('Character art failed:', err.message); return ''; }),
-                ...result.cards.map((card) =>
-                    generateCardArt(card.name, card.description, card.type, analysis.archetype)
-                        .catch((err) => { console.warn(`Card art failed for ${card.name}:`, err.message); return ''; })
-                ),
-            ];
-
-            const [portraitUrl, ...cardImages] = await Promise.all(imagePromises);
-            console.log(`Generated: character=${portraitUrl ? 'yes' : 'no'}, cards=${cardImages.filter(Boolean).length}/${result.cards.length}`);
-
-            // Attach images to results
-            result.character.portraitUrl = portraitUrl;
-            result.cards.forEach((card, i) => {
-                if (cardImages[i]) {
-                    card.imageUrl = cardImages[i];
-                }
-            });
+            // Step 3: Build character with static art paths
+            const portraitUrl = `/assets/characters/${analysis.archetype}.png`;
+            const result = generateCharacterFromAnalysis(analysis, portraitUrl);
 
             return c.json(result);
         } else {

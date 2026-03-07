@@ -22,8 +22,8 @@ function App() {
 
     return (
         <div className="app-container">
-            <h1>Slay the Tower</h1>
-            <p>Roguelike Deckbuilder</p>
+            <h1>Selfie the Spire</h1>
+            <p>Neon Roguelike Deckbuilder</p>
             <button className="start-button hero-button" onClick={startSelfieCapture}>
                 Create Your Hero
             </button>

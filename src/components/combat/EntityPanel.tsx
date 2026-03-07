@@ -23,7 +23,7 @@ interface EntityPanelProps {
 
 export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
-    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl } = useGameStore(state => ({
+    const { playCard, floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl, playerSpriteUrl } = useGameStore(state => ({
         playCard: state.playCard,
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
         activeAnimations: state.activeAnimations.filter(a => a.targetId === entity.id),
@@ -31,6 +31,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         dragState: state.dragState,
         entityBounds: state.entityBounds,
         playerPortraitUrl: state.player?.portraitUrl,
+        playerSpriteUrl: state.player?.spriteUrl,
     }));
     const hpPercentage = (entity.hp / entity.maxHp) * 100;
 
@@ -106,20 +107,31 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
         }
     }
 
-    // --- Player: compact presence (avatar + floating text only, stats in TopBar) ---
+    // --- Player: sprite or portrait or emoji fallback ---
     if (isPlayer) {
+        const hasSprite = !!playerSpriteUrl;
+        const hasPortrait = !!playerPortraitUrl;
+        const avatarClasses = [
+            'entity-avatar',
+            animClasses,
+            hasSprite ? 'has-sprite' : '',
+            hasPortrait && !hasSprite ? 'has-portrait' : '',
+        ].filter(Boolean).join(' ');
+
         return (
             <div className="entity-panel player">
                 <div className="entity-avatar-container">
                     <div
                         ref={avatarRef}
-                        className={`entity-avatar ${animClasses} ${playerPortraitUrl ? 'has-portrait' : ''}`}
+                        className={avatarClasses}
                         style={lungeStyle}
                         data-entity-id={entity.id}
                     >
-                        {playerPortraitUrl
-                            ? <img src={playerPortraitUrl} alt={entity.name} className="player-portrait-img" />
-                            : '🛡️'
+                        {hasSprite
+                            ? <img src={playerSpriteUrl} alt={entity.name} className="player-sprite-img" />
+                            : hasPortrait
+                                ? <img src={playerPortraitUrl} alt={entity.name} className="player-portrait-img" />
+                                : '🛡️'
                         }
                     </div>
                     {floatingTexts.map(ft => (
@@ -203,7 +215,12 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                     style={lungeStyle}
                     data-entity-id={entity.id}
                 >
-                    👹
+                    <img
+                        src={`/assets/enemies/${enemy.templateId}.png`}
+                        alt={entity.name}
+                        className="enemy-portrait-img"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; e.currentTarget.parentElement!.textContent = '👹'; }}
+                    />
                 </div>
                 {floatingTexts.map(ft => (
                     <div key={ft.id} className={`floating-text ${ft.type}`}>

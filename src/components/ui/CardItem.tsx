@@ -181,8 +181,10 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
             )}
             <div className="card-name">{card.name}</div>
             <div className="card-type">{card.type}</div>
-            {(card.imageUrl || card.imageId) && (
+            {(card.imageUrl || card.imageId) ? (
                 <img src={card.imageUrl || `/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+            ) : (
+                <div className="card-artwork-placeholder" />
             )}
             <div className="card-desc">{card.description}</div>
         </div>

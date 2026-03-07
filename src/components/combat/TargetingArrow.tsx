@@ -59,9 +59,9 @@ export function TargetingArrow() {
     if (draggedCard && draggedCard.effects.length > 0) {
         const primaryEffect = draggedCard.effects[0].type;
         if (primaryEffect === 'Block') {
-            validColor = '#42a5f5'; // Shield Blue
+            validColor = '#00d4ff'; // Shield Cyan
         } else if (primaryEffect === 'ApplyStatus') {
-            validColor = '#66bb6a'; // Buff Green
+            validColor = '#39ff14'; // Buff Neon Green
         }
     }
 
