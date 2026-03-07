@@ -28,7 +28,7 @@ export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portrait
             description: card.description,
             target: card.target,
             effects: card.effects,
-            imageId: cardId,
+            imageId: card.imageId,
             imageUrl: undefined as string | undefined,
             ...(card.exhausts ? { exhausts: true } : {}),
         };

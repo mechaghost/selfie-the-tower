@@ -250,20 +250,19 @@
 }
 
 .lightbox-card .card-cost {
-    width: 32px;
-    height: 32px;
-    font-size: 1.1rem;
-    top: -8px;
-    left: -8px;
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+    top: -6px;
+    left: -6px;
     border-width: 2px;
 }
 
-.lightbox-card .card-target-badge {
-    width: 26px;
-    height: 26px;
-    top: -8px;
-    right: -8px;
-    border-width: 2px;
+.lightbox-card .card-type-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.5rem;
+    bottom: 6px;
+    border-radius: 8px;
 }
 
 .lightbox-card .card-name {
@@ -271,10 +270,10 @@
     margin-bottom: 0.2rem;
 }
 
-.lightbox-card .card-type {
-    font-size: 0.7rem;
-    margin-bottom: 0.3rem;
-    padding-bottom: 0.3rem;
+.lightbox-card .card-artwork-wrap {
+    width: calc(100% + 1.2rem);
+    margin-left: -0.6rem;
+    margin-right: -0.6rem;
 }
 
 .lightbox-card .card-desc {
@@ -390,17 +389,19 @@
     }
 
     .lightbox-card .card-cost {
-        width: 36px;
-        height: 36px;
-        font-size: 1.2rem;
+        width: 28px;
+        height: 28px;
+        font-size: 0.95rem;
+    }
+
+    .lightbox-card .card-type-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.6rem;
+        bottom: 8px;
     }
 
     .lightbox-card .card-name {
         font-size: 1.15rem;
-    }
-
-    .lightbox-card .card-type {
-        font-size: 0.8rem;
     }
 
     .lightbox-card .card-desc {

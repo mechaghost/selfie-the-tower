@@ -1,7 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { Card } from '../../core/models';
 import { useGameStore } from '../../store/gameStore';
-import { Crosshair, Users, User } from 'lucide-react';
 import './CardItem.css';
 
 interface CardItemProps {
@@ -186,15 +185,6 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
     // --- Prevent native drag (we use pointer events now) ---
     const handleDragStart = (e: React.DragEvent) => e.preventDefault();
 
-    const getTargetIcon = (target: string) => {
-        switch (target) {
-            case 'Enemy': return <span title="Single Target" style={{ display: 'flex' }}><Crosshair size={14} /></span>;
-            case 'AllEnemies': return <span title="Multi Target" style={{ display: 'flex' }}><Users size={14} /></span>;
-            case 'Self': return <span title="Player Target" style={{ display: 'flex' }}><User size={14} /></span>;
-            default: return null;
-        }
-    };
-
     // --- Compute styles ---
     const combinedStyle: React.CSSProperties = { ...style };
     const isAnyDragActive = dragState.isActive && !dragState.isTouch;
@@ -233,16 +223,11 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
             style={combinedStyle}
         >
             <div className="card-cost">{card.cost}</div>
-            {card.target !== 'None' && (
-                <div className="card-target-badge">
-                    {getTargetIcon(card.target)}
-                </div>
-            )}
             <div className="card-name">{card.name}</div>
-            <div className="card-type">{card.type}</div>
             {(card.imageUrl || card.imageId) ? (
                 <div className="card-artwork-wrap">
                     <img src={card.imageUrl || `/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+                    <div className="card-type-badge">{card.type}</div>
                 </div>
             ) : (
                 <div className="card-artwork-placeholder" />

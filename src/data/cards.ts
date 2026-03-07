@@ -7,7 +7,7 @@ export const CARD_DATABASE: Record<string, Card> = {
     neon_jab: {
         id: 'neon_jab',
         instanceId: '',
-        name: 'Neon Jab',
+        name: 'Jab',
         type: 'Attack',
         cost: 1,
         description: 'Deal 6 damage.',
@@ -20,7 +20,7 @@ export const CARD_DATABASE: Record<string, Card> = {
     dodge_roll: {
         id: 'dodge_roll',
         instanceId: '',
-        name: 'Dodge Roll',
+        name: 'Dodge',
         type: 'Skill',
         cost: 1,
         description: 'Gain 5 Block.',
@@ -47,7 +47,7 @@ export const CARD_DATABASE: Record<string, Card> = {
     shockwave: {
         id: 'shockwave',
         instanceId: '',
-        name: 'Shockwave',
+        name: 'Tremor',
         type: 'Attack',
         cost: 1,
         description: 'Deal 8 damage to ALL enemies.',
