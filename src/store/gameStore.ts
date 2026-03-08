@@ -77,6 +77,7 @@ interface GameState {
     submitSelfie: (imageBase64: string) => Promise<void>;
     startGeneratedRun: () => void;
     cancelUgc: () => void;
+    abandonRun: () => void;
 
     // Queue Methods
     queueAction: (action: GameAction) => void;
@@ -189,6 +190,47 @@ const defaultDragState: DragState = {
     prevY: 0
 };
 
+// --- Run Persistence (localStorage) ---
+const SAVE_KEY = 'stt_run';
+
+const PERSISTED_KEYS = [
+    'seed', 'floor', 'currentNodeId',
+    'player', 'masterDeck', 'drawPile', 'hand', 'discardPile', 'exhaustPile',
+    'inCombat', 'enemies', 'isPlayerTurn', 'isGameOver',
+    'generatedCharacter', 'generatedCards',
+] as const;
+
+function saveRun(state: GameState) {
+    if (!state.seed || state.isGameOver || state.isResolving) return;
+    try {
+        const data: Record<string, unknown> = {};
+        for (const key of PERSISTED_KEYS) {
+            data[key] = state[key];
+        }
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch { /* localStorage full or unavailable */ }
+}
+
+function loadRun(): Partial<GameState> | null {
+    try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data.seed) return null;
+        // Reconstruct RNG from seed (position won't match, but that's fine)
+        data.rng = new RNG(data.seed);
+        return data;
+    } catch {
+        return null;
+    }
+}
+
+function clearRun() {
+    try { localStorage.removeItem(SAVE_KEY); } catch { /* noop */ }
+}
+
+const savedRun = loadRun();
+
 export const useGameStore = create<GameState>((set, get) => ({
     seed: '',
     rng: null,
@@ -233,6 +275,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     generatedCards: null,
     ugcError: null,
     selfieDataUrl: null,
+
+    // Restore saved run if one exists
+    ...savedRun,
 
     // H-1: Removed undeclared characterId param; M-9: Reset ALL state fields
     initializeRun: (seed: string) => {
@@ -462,6 +507,41 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
     },
 
+    abandonRun: () => {
+        cancelAllTimeouts();
+        clearRun();
+        set({
+            seed: '',
+            rng: null,
+            floor: 0,
+            currentNodeId: null,
+            inCombat: false,
+            isGameOver: false,
+            isPlayerTurn: false,
+            combatResult: null,
+            goldReward: 0,
+            player: { id: 'player', name: '', hp: 0, maxHp: 0, block: 0, statuses: [], energy: 0, maxEnergy: 0, gold: 0 },
+            enemies: [],
+            masterDeck: [],
+            drawPile: [],
+            hand: [],
+            discardPile: [],
+            exhaustPile: [],
+            playingCards: [],
+            actionQueue: [],
+            isResolving: false,
+            floatingTexts: [],
+            activeAnimations: [],
+            dragState: { ...defaultDragState },
+            entityBounds: {},
+            ugcPhase: null,
+            generatedCharacter: null,
+            generatedCards: null,
+            ugcError: null,
+            selfieDataUrl: null,
+        });
+    },
+
     continueCombatResult: () => {
         const state = get();
         if (state.combatResult === 'victory') {
@@ -473,6 +553,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 goldReward: 0
             });
         } else if (state.combatResult === 'defeat') {
+            clearRun();
             set({
                 inCombat: false,
                 combatResult: null,
@@ -985,3 +1066,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         }));
     }
 }));
+
+// Auto-save run state to localStorage (debounced)
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+useGameStore.subscribe((state) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveRun(state), 100);
+});

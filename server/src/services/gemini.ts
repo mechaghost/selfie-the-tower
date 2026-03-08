@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import sharp from 'sharp';
 
 const ARCHETYPE_IDS = ['neon', 'chrome', 'volt', 'concrete', 'smoke'] as const;
 type ArchetypeId = typeof ARCHETYPE_IDS[number];
@@ -112,6 +113,17 @@ async function extractImageFromResponse(result: any): Promise<string> {
 
 function stripBase64Prefix(imageBase64: string): string {
     return imageBase64.replace(/^data:image\/\w+;base64,/, '');
+}
+
+// Optimize generated images: resize + convert to webp
+async function optimizeImage(dataUrl: string, width: number, height?: number): Promise<string> {
+    const base64Data = stripBase64Prefix(dataUrl);
+    const buffer = Buffer.from(base64Data, 'base64');
+    const optimized = await sharp(buffer)
+        .resize(width, height, { fit: 'cover' })
+        .webp({ quality: 80 })
+        .toBuffer();
+    return `data:image/webp;base64,${optimized.toString('base64')}`;
 }
 
 // Retry wrapper for flaky image generation
@@ -232,7 +244,8 @@ No text, no words, no letters.`;
             { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
             { text: prompt },
         ]);
-        return extractImageFromResponse(result);
+        const raw = await extractImageFromResponse(result);
+        return optimizeImage(raw, 512, 512);
     });
 }
 
@@ -254,7 +267,8 @@ No text, no words, no letters, no numbers. Centered iconic composition, suitable
 
     return withRetry(async () => {
         const result = await model.generateContent([{ text: prompt }]);
-        return extractImageFromResponse(result);
+        const raw = await extractImageFromResponse(result);
+        return optimizeImage(raw, 384, 288);
     });
 }
 
@@ -426,6 +440,7 @@ No text, no words, no letters, no numbers. Centered iconic composition.`;
             { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
             { text: prompt },
         ]);
-        return extractImageFromResponse(result);
+        const raw = await extractImageFromResponse(result);
+        return optimizeImage(raw, 384, 288);
     });
 }

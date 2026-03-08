@@ -29,7 +29,7 @@ app.use('*', cors({
 // ── Rate limiting (in-memory, per IP) ──
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10; // max requests per window
+const RATE_LIMIT_MAX = 3; // max generation requests per IP per minute
 
 app.use('/api/*', async (c, next) => {
     const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
@@ -64,6 +64,33 @@ setInterval(() => {
         if (now > entry.resetAt) rateLimitMap.delete(ip);
     }
 }, 60_000);
+
+// ── Daily generation cap (global, resets at midnight UTC) ──
+let dailyGenerations = 0;
+let dailyResetDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+const DAILY_GENERATION_CAP = parseInt(process.env.DAILY_GENERATION_CAP || '200', 10);
+
+function checkDailyCap(): boolean {
+    const today = new Date().toISOString().slice(0, 10);
+    if (today !== dailyResetDate) {
+        dailyGenerations = 0;
+        dailyResetDate = today;
+    }
+    return dailyGenerations < DAILY_GENERATION_CAP;
+}
+
+function incrementDailyCap(): void {
+    dailyGenerations++;
+    console.log(`Daily generations: ${dailyGenerations}/${DAILY_GENERATION_CAP}`);
+}
+
+app.use('/api/generate-character', async (c, next) => {
+    if (!checkDailyCap()) {
+        return c.json({ error: 'Daily generation limit reached. Please try again tomorrow.' }, 503);
+    }
+    incrementDailyCap();
+    await next();
+});
 
 // ── Request body size limit (5MB) ──
 app.use('/api/*', async (c, next) => {

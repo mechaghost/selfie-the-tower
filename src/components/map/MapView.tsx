@@ -4,6 +4,7 @@ import { MapNode, MapData } from '../../core/mapModels';
 import { generateMap } from '../../core/mapGenerator';
 import { Skull, Tent, Store, Swords } from 'lucide-react';
 import { eightiesIcon } from '../ui/EightiesIcons';
+import { TopBar } from '../ui/TopBar';
 import './MapView.css';
 
 export function MapView() {
@@ -75,6 +76,7 @@ export function MapView() {
 
     return (
         <div className="map-view-container">
+            <TopBar />
             <div className="map-sparkle map-sparkle-1"><img src={eightiesIcon(1)} alt="" /></div>
             <div className="map-sparkle map-sparkle-2"><img src={eightiesIcon(6)} alt="" /></div>
             <div className="map-sparkle map-sparkle-3"><img src={eightiesIcon(15)} alt="" /></div>
