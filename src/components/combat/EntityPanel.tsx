@@ -56,7 +56,7 @@ interface EntityPanelProps {
     onInspect?: (enemyId: string) => void;
 }
 
-export function EntityPanel({ entity, isPlayer, inspectedEnemyId, onInspect }: EntityPanelProps) {
+export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
     const { floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl, playerSpriteUrl } = useGameStore(state => ({
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
