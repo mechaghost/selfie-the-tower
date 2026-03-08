@@ -24,6 +24,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
     const isTargetingMode = card.target === 'Enemy';
     const isThisActive = dragState.isActive && dragState.cardId === card.instanceId;
     const isBeingTouched = isThisActive && dragState.isTouch;
+    const isAnyMouseDrag = dragState.isActive && !dragState.isTouch;
 
     // --- Shared: recalculate enemy bounds ---
     const refreshEnemyBounds = useCallback(() => {
@@ -135,13 +136,16 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
 
         const touch = e.touches[0];
         const rect = cardRef.current!.getBoundingClientRect();
+        // Enemy cards: arrow from card center. Self/AoE: follow from touch point.
+        const sx = isTargetingMode ? rect.left + rect.width / 2 : touch.clientX;
+        const sy = isTargetingMode ? rect.top : touch.clientY;
         setDragState({
             isActive: true,
             isTouch: true,
             cardId: card.instanceId,
             targetType: card.target,
-            startX: rect.left + rect.width / 2,
-            startY: rect.top,
+            startX: sx,
+            startY: sy,
             currentX: touch.clientX,
             currentY: touch.clientY
         });
@@ -187,18 +191,19 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
 
     // --- Compute styles ---
     const combinedStyle: React.CSSProperties = { ...style };
-    const isAnyDragActive = dragState.isActive && !dragState.isTouch;
 
-    if (isAnyDragActive && isThisActive && !isTargetingMode) {
-        // Self/AoE card-drag: card follows cursor
+    // Non-targeting drag: card follows cursor/finger (mouse or touch)
+    const isDragMoving = isThisActive && !isTargetingMode && (isAnyMouseDrag || isBeingTouched);
+
+    if (isDragMoving) {
         const dx = dragState.currentX - dragState.startX;
         const dy = dragState.currentY - dragState.startY;
-        combinedStyle.transform = `translate(${dx}px, ${dy}px) translateY(var(--card-hover-lift)) rotate(0deg) scale(1.05)`;
+        (combinedStyle as any)['--drag-dx'] = `${dx}px`;
+        (combinedStyle as any)['--drag-dy'] = `${dy}px`;
         combinedStyle.transition = 'none';
         combinedStyle.zIndex = 9999;
-        combinedStyle.pointerEvents = 'none'; // Prevent :hover from fighting the drag transform
-        combinedStyle.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.8)';
-    } else if (isAnyDragActive && !isThisActive) {
+        combinedStyle.pointerEvents = 'none';
+    } else if (isAnyMouseDrag && !isThisActive) {
         // Other cards: transparent to pointer events during any drag
         combinedStyle.pointerEvents = 'none';
     }
@@ -208,7 +213,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         canPlay ? 'playable' : 'unplayable',
         `type-${card.type.toLowerCase()}`,
         card.isHeroCard ? 'hero-card' : '',
-        isBeingTouched ? 'is-dragging' : '',
+        isDragMoving ? 'is-drag-moving' : '',
         isThisActive && isTargetingMode ? 'is-targeting' : '',
     ].filter(Boolean).join(' ');
 

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { Camera, Upload, ArrowLeft, Loader } from 'lucide-react';
+import { eightiesIcon } from '../ui/EightiesIcons';
 import './SelfieCaptureScreen.css';
 
 export function SelfieCaptureScreen() {
@@ -116,12 +117,21 @@ export function SelfieCaptureScreen() {
     if (isGenerating) {
         return (
             <div className="selfie-screen">
+                <div className="selfie-sparkle selfie-sparkle-1"><img src={eightiesIcon(0)} alt="" /></div>
+                <div className="selfie-sparkle selfie-sparkle-2"><img src={eightiesIcon(7)} alt="" /></div>
+                <div className="selfie-sparkle selfie-sparkle-3"><img src={eightiesIcon(3)} alt="" /></div>
+                <div className="selfie-sparkle selfie-sparkle-4"><img src={eightiesIcon(12)} alt="" /></div>
                 <div className="generating-overlay">
-                    {selfieDataUrl && (
-                        <img src={selfieDataUrl} className="generating-selfie" alt="Your photo" />
-                    )}
+                    <div className="generating-portal">
+                        <div className="generating-orbit generating-orbit-1" />
+                        <div className="generating-orbit generating-orbit-2" />
+                        {selfieDataUrl && (
+                            <img src={selfieDataUrl} className="generating-selfie" alt="Your photo" />
+                        )}
+                    </div>
                     <div className="generating-content">
-                        <Loader size={48} className="generating-spinner" />
+                        <Loader size={36} className="generating-spinner" />
+                        <p className="generating-label">80's Magic at work</p>
                         <p className="generating-text" key={statusIndex}>{STATUS_MESSAGES[statusIndex]}</p>
                     </div>
                 </div>
@@ -135,10 +145,16 @@ export function SelfieCaptureScreen() {
                 <ArrowLeft size={20} />
             </button>
 
-            <h2 className="selfie-title">Show Us Your Face</h2>
-            <p className="selfie-subtitle">We'll forge a hero from your essence</p>
+            <div className="selfie-sparkle selfie-sparkle-1"><img src={eightiesIcon(5)} alt="" /></div>
+            <div className="selfie-sparkle selfie-sparkle-2"><img src={eightiesIcon(14)} alt="" /></div>
+            <div className="selfie-sparkle selfie-sparkle-3"><img src={eightiesIcon(9)} alt="" /></div>
+            <div className="selfie-sparkle selfie-sparkle-4"><img src={eightiesIcon(18)} alt="" /></div>
+
+            <h2 className="selfie-title">Show Us Your Mug</h2>
+            <p className="selfie-subtitle">The neon reads your soul and spits out a legend</p>
 
             <div className="selfie-viewport">
+                <div className="selfie-orbit-ring" />
                 {!cameraError ? (
                     <video
                         ref={videoRef}
@@ -163,8 +179,8 @@ export function SelfieCaptureScreen() {
             <div className="selfie-actions">
                 {cameraReady && (
                     <button className="selfie-capture-btn" onClick={capturePhoto}>
-                        <Camera size={24} />
-                        Take Photo
+                        <img src={eightiesIcon(10)} alt="" className="btn-icon" />
+                        Snap It
                     </button>
                 )}
                 <button className="selfie-upload-btn" onClick={() => fileInputRef.current?.click()}>

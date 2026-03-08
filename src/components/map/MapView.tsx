@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/gameStore';
 import { MapNode, MapData } from '../../core/mapModels';
 import { generateMap } from '../../core/mapGenerator';
 import { Skull, Tent, Store, Swords } from 'lucide-react';
+import { eightiesIcon } from '../ui/EightiesIcons';
 import './MapView.css';
 
 export function MapView() {
@@ -70,8 +71,21 @@ export function MapView() {
 
     const sortedFloors = Object.keys(floorsMap).map(Number).sort((a, b) => b - a); // Top to bottom
 
+    const showHint = currentNodeId === null;
+
     return (
         <div className="map-view-container">
+            <div className="map-sparkle map-sparkle-1"><img src={eightiesIcon(1)} alt="" /></div>
+            <div className="map-sparkle map-sparkle-2"><img src={eightiesIcon(6)} alt="" /></div>
+            <div className="map-sparkle map-sparkle-3"><img src={eightiesIcon(15)} alt="" /></div>
+
+            {showHint && (
+                <div className="map-hint">
+                    <img src={eightiesIcon(8)} alt="" className="map-hint-icon" />
+                    <span>Pick your path up the Spire</span>
+                </div>
+            )}
+
             <div className="map-scroll-area">
 
                 {/* Fix #15: SVG uses numeric percentages instead of calc() which SVG doesn't support */}
@@ -120,6 +134,14 @@ export function MapView() {
                     </div>
                 ))}
 
+            </div>
+
+            <div className="map-legend">
+                <div className="map-legend-item"><Swords size={14} className="node-icon combat" /><span>Fight</span></div>
+                <div className="map-legend-item"><Skull size={14} className="node-icon elite" /><span>Elite</span></div>
+                <div className="map-legend-item"><Tent size={14} className="node-icon rest" /><span>Rest</span></div>
+                <div className="map-legend-item"><Store size={14} className="node-icon shop" /><span>Shop</span></div>
+                <div className="map-legend-item"><span className="node-icon unknown" style={{ fontSize: '0.75rem' }}>?</span><span>Mystery</span></div>
             </div>
         </div>
     );

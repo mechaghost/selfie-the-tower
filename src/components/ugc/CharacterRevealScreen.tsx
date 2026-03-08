@@ -102,6 +102,14 @@ export function CharacterRevealScreen() {
                 ))}
             </div>
 
+            {/* CTA — right below portrait */}
+            <button
+                className={`reveal-cta ${revealStep >= 4 ? 'visible' : ''}`}
+                onClick={startGeneratedRun}
+            >
+                Begin Your Journey
+            </button>
+
             {/* Hero Card */}
             {heroCard && (
                 <div className={`reveal-hero-section ${revealStep >= 3 ? 'visible' : ''}`}>
@@ -128,14 +136,6 @@ export function CharacterRevealScreen() {
                     </div>
                 ))}
             </div>
-
-            {/* CTA */}
-            <button
-                className={`reveal-cta ${revealStep >= 4 ? 'visible' : ''}`}
-                onClick={startGeneratedRun}
-            >
-                Begin Your Journey
-            </button>
 
             {/* Card Lightbox */}
             {lightboxIndex !== null && (

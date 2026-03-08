@@ -266,16 +266,16 @@ Archetype: {archetype}
 Traits: {traits}
 
 Design ONE powerful signature card that reflects this character's personality and fighting style.
-The card should combine 2-4 effects to feel like a devastating signature move.
+The card should combine exactly 2 effects to feel like a devastating signature move.
 
 CONSTRAINTS (follow EXACTLY):
 - name: exactly 1 word, max 10 characters, dramatic, relates to the character
 - type: "Attack" | "Skill" | "Power"
-- cost: 1 or 2
+- cost: 1 (always costs 1 energy)
 - target: "Enemy" | "Self" | "AllEnemies"
 - exhausts: true (hero cards always exhaust after use)
-- description: brief text describing the card effect (e.g. "Deal 14 damage. Apply 2 Vulnerable. Gain 5 Block.")
-- effects: array of 2-4 effect objects
+- description: MAX 60 characters. Short mechanical text ONLY. Example: "Deal 14 damage. Apply 2 Vulnerable." No flavor text, no adjectives.
+- effects: array of EXACTLY 2 effect objects
 
 Each effect MUST be one of these exact formats:
   { "type": "Damage", "amount": <8-20>, "target": "Target" }
@@ -317,11 +317,11 @@ interface HeroCardMechanics {
 }
 
 const HERO_FALLBACKS: Record<string, HeroCardMechanics> = {
-    neon: { name: 'Inferno', type: 'Attack', cost: 2, target: 'AllEnemies', exhausts: true, description: 'Deal 15 damage to ALL enemies. Apply 2 Vulnerable.', effects: [{ type: 'Damage', amount: 15, target: 'AllEnemies' }, { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'AllEnemies' }] },
-    chrome: { name: 'Deluge', type: 'Skill', cost: 2, target: 'Self', exhausts: true, description: 'Gain 16 Block. Gain 2 Dexterity.', effects: [{ type: 'Block', amount: 16, target: 'Self' }, { type: 'ApplyStatus', amount: 2, statusId: 'dexterity', target: 'Self' }] },
+    neon: { name: 'Inferno', type: 'Attack', cost: 1, target: 'AllEnemies', exhausts: true, description: 'Deal 15 damage to ALL. Apply 2 Vulnerable.', effects: [{ type: 'Damage', amount: 15, target: 'AllEnemies' }, { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'AllEnemies' }] },
+    chrome: { name: 'Deluge', type: 'Skill', cost: 1, target: 'Self', exhausts: true, description: 'Gain 16 Block. Gain 2 Dexterity.', effects: [{ type: 'Block', amount: 16, target: 'Self' }, { type: 'ApplyStatus', amount: 2, statusId: 'dexterity', target: 'Self' }] },
     volt: { name: 'Overdrive', type: 'Attack', cost: 1, target: 'Enemy', exhausts: true, description: 'Deal 12 damage. Draw 3 cards.', effects: [{ type: 'Damage', amount: 12, target: 'Target' }, { type: 'Draw', amount: 3, target: 'Self' }] },
-    concrete: { name: 'Fortress', type: 'Skill', cost: 2, target: 'Self', exhausts: true, description: 'Gain 18 Block. Heal 6.', effects: [{ type: 'Block', amount: 18, target: 'Self' }, { type: 'Heal', amount: 6, target: 'Self' }] },
-    smoke: { name: 'Eclipse', type: 'Attack', cost: 1, target: 'Enemy', exhausts: true, description: 'Deal 12 damage. Apply 2 Weak. Apply 2 Vulnerable.', effects: [{ type: 'Damage', amount: 12, target: 'Target' }, { type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }, { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }] },
+    concrete: { name: 'Fortress', type: 'Skill', cost: 1, target: 'Self', exhausts: true, description: 'Gain 18 Block. Heal 6.', effects: [{ type: 'Block', amount: 18, target: 'Self' }, { type: 'Heal', amount: 6, target: 'Self' }] },
+    smoke: { name: 'Eclipse', type: 'Attack', cost: 1, target: 'Enemy', exhausts: true, description: 'Deal 12 damage. Apply 2 Weak.', effects: [{ type: 'Damage', amount: 12, target: 'Target' }, { type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }] },
 };
 
 export async function generateHeroCardMechanics(analysis: GeminiAnalysis): Promise<HeroCardMechanics> {
@@ -360,7 +360,7 @@ export async function generateHeroCardMechanics(analysis: GeminiAnalysis): Promi
     // Validate and sanitize
     const name = String(parsed.name || 'Hero').split(/\s+/)[0].slice(0, 10);
     const type = VALID_CARD_TYPES.includes(parsed.type) ? parsed.type : 'Attack';
-    const cost = Math.max(1, Math.min(2, Math.round(Number(parsed.cost) || 2)));
+    const cost = 1;
     const target = VALID_CARD_TARGETS.includes(parsed.target) ? parsed.target : (type === 'Attack' ? 'Enemy' : 'Self');
 
     // Validate effects
@@ -377,7 +377,7 @@ export async function generateHeroCardMechanics(analysis: GeminiAnalysis): Promi
             ...(e.statusId ? { statusId: e.statusId } : {}),
             target: e.target,
         }))
-        .slice(0, 4);
+        .slice(0, 2);
 
     // If too few valid effects, use fallback
     if (validEffects.length < 2) {
@@ -389,7 +389,7 @@ export async function generateHeroCardMechanics(analysis: GeminiAnalysis): Promi
         name,
         type: type as HeroCardMechanics['type'],
         cost,
-        description: String(parsed.description || '').slice(0, 200),
+        description: String(parsed.description || '').slice(0, 80),
         target: target as HeroCardMechanics['target'],
         exhausts: true,
         effects: validEffects,

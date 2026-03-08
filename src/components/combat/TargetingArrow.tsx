@@ -12,21 +12,12 @@ export function TargetingArrow() {
     // Only show targeting arrow for enemy-targeted cards
     if (!dragState.isActive || dragState.targetType !== 'Enemy') return null;
 
-    // Calculate Bezier curve control points to make an arching arrow
     const startX = dragState.startX;
     const startY = dragState.startY;
     const endX = dragState.currentX;
     const endY = dragState.currentY;
 
-    // Control point 1 (pulls curve up from the card)
-    const cp1x = startX;
-    const cp1y = startY - 200;
-
-    // Control point 2 (pulls curve towards target horizontally)
-    const cp2x = endX;
-    const cp2y = startY - 200;
-
-    const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+    const pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
 
     // --- Hover Target Detection ---
     let isValidTarget = false;
@@ -68,11 +59,7 @@ export function TargetingArrow() {
 
     const arrowColor = isValidTarget ? validColor : 'rgba(255, 255, 255, 0.4)';
 
-    // Calculate arrow head rotation
-    // We estimate the tangent at the end of the bezier curve (t=1). 
-    // Deriv: 3*(1-t)^2*(P1-P0) + 6*(1-t)*t*(P2-P1) + 3*t^2*(P3-P2)
-    // at t=1, direction is vector (P3 - P2), which is (end - cp2)
-    const angleRad = Math.atan2(endY - cp2y, endX - cp2x);
+    const angleRad = Math.atan2(endY - startY, endX - startX);
     const angleDeg = (angleRad * 180) / Math.PI;
 
     return (

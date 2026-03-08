@@ -118,6 +118,17 @@
     box-shadow: 0 12px 30px rgba(0, 0, 0, 1);
 }
 
+/* Non-targeting drag: card follows cursor/finger — must beat :hover !important */
+.card.is-drag-moving,
+.card.is-drag-moving:hover {
+    transform: translate(var(--drag-dx), var(--drag-dy)) scale(1.05) !important;
+    transition: none !important;
+    z-index: 9999 !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+    pointer-events: none;
+    cursor: grabbing;
+}
+
 /* Enemy-target card in targeting mode: stays in place, glows */
 .card.is-targeting {
     transform: translateY(var(--card-hover-lift)) rotate(0deg) scale(var(--card-hover-scale)) !important;
@@ -263,23 +274,26 @@
     border-color: #ffd700;
 }
 
-/* === Mobile: compact grid hand (3 columns, 2 rows) === */
+/* === Mobile: absolute-positioned rows, centered, with transitions === */
 
 @media (max-width: 768px) {
     .hand-container {
-        display: grid;
-        grid-template-columns: repeat(3, var(--card-width));
-        justify-content: center;
-        align-content: end;
-        gap: 8px 10px;
+        position: relative;
+        width: 100%;
         height: 100%;
         margin-bottom: 0;
-        padding: 40px 0 8px;
-        box-sizing: border-box;
     }
 
     .card-slot {
-        position: static;
+        /* Center each row: 50% + rowOffset * (cardWidth + gap) - half card width */
+        left: calc(50% + var(--row-offset) * (var(--card-width) + 10px) - var(--card-width) / 2) !important;
+        /* Stack rows from bottom, vertically centered in container */
+        bottom: calc(
+            50% - (var(--total-rows) * (var(--card-height) + 8px) - 8px) / 2
+                + var(--row-index) * (var(--card-height) + 8px)
+        ) !important;
+        transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     /* Per-row fan: override full-hand fan with row-scoped rotation */
@@ -287,13 +301,19 @@
         transform: translateY(var(--row-lift)) rotate(var(--row-rotation)) !important;
     }
 
-    .hand-container .card:hover,
-    .hand-container .card.is-dragging {
+    .hand-container .card:hover {
         transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
     }
 
     .hand-container .card.is-targeting {
         transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
+    }
+
+    /* Drag-moving must beat all mobile overrides */
+    .hand-container .card.is-drag-moving,
+    .hand-container .card.is-drag-moving:hover {
+        transform: translate(var(--drag-dx), var(--drag-dy)) scale(1.05) !important;
+        transition: none !important;
     }
 }
 
