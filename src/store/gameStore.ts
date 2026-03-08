@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { Card, Enemy, Player, GameAction, FloatingText, ActiveAnimation, Effect, StatusEffect, UgcPhase, GeneratedCharacter, GeneratedCard, GenerateCharacterResponse } from '../core/models';
 import { RNG } from '../core/rng';
-import { createCardInstance } from '../data/cards';
+import { createCardInstance, CARD_DATABASE } from '../data/cards';
 import { STATUS_REGISTRY } from '../data/statusEffects';
 import { ENCOUNTER_POOLS } from '../data/encounters';
-import { createEnemyInstance, enemies } from '../data/enemies';
+import { createEnemyInstance, enemies, ELITE_TEMPLATE_IDS } from '../data/enemies';
 import { CHARACTERS } from '../data/characters';
+import { EVENTS, GameEvent } from '../data/events';
 
 
 export interface DragState {
@@ -61,6 +62,15 @@ interface GameState {
     dragState: DragState;
     entityBounds: Record<string, DOMRect>;
 
+    // --- Node Event State ---
+    nodeEvent: 'rest' | 'shop' | 'mystery' | null;
+    shopCards: Card[];
+    shopPrices: Record<string, number>;
+    cardRemovalCost: number;
+    cardRemovalsUsed: number;
+    currentEvent: GameEvent | null;
+    eventOutcome: string | null;
+
     // --- UGC State ---
     ugcPhase: UgcPhase;
     generatedCharacter: GeneratedCharacter | null;
@@ -73,6 +83,14 @@ interface GameState {
     startCombat: (enemies: Enemy[]) => void;
     advanceFloor: (node: import('../core/mapModels').MapNode) => void;
     continueCombatResult: () => void;
+    restHeal: () => void;
+    restUpgrade: (cardInstanceId: string) => void;
+    enterShop: () => void;
+    buyCard: (cardInstanceId: string, cost: number) => void;
+    removeCard: (cardInstanceId: string) => void;
+    enterMystery: () => void;
+    chooseEventOption: (choiceId: string) => void;
+    dismissNodeEvent: () => void;
     startSelfieCapture: () => void;
     submitSelfie: (imageBase64: string) => Promise<void>;
     startGeneratedRun: () => void;
@@ -198,6 +216,7 @@ const PERSISTED_KEYS = [
     'player', 'masterDeck', 'drawPile', 'hand', 'discardPile', 'exhaustPile',
     'inCombat', 'enemies', 'isPlayerTurn', 'isGameOver',
     'generatedCharacter', 'generatedCards',
+    'nodeEvent', 'shopCards', 'shopPrices', 'cardRemovalCost', 'cardRemovalsUsed',
 ] as const;
 
 function saveRun(state: GameState) {
@@ -270,6 +289,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     dragState: { ...defaultDragState },
     entityBounds: {},
 
+    nodeEvent: null,
+    shopCards: [],
+    shopPrices: {},
+    cardRemovalCost: 75,
+    cardRemovalsUsed: 0,
+    currentEvent: null,
+    eventOutcome: null,
+
     ugcPhase: null,
     generatedCharacter: null,
     generatedCards: null,
@@ -308,6 +335,13 @@ export const useGameStore = create<GameState>((set, get) => ({
             isPlayerTurn: false,
             combatResult: null,
             goldReward: 0,
+            nodeEvent: null,
+            shopCards: [],
+            shopPrices: {},
+            cardRemovalCost: 75,
+            cardRemovalsUsed: 0,
+            currentEvent: null,
+            eventOutcome: null,
             // M-9: Reset all combat state
             actionQueue: [],
             isResolving: false,
@@ -391,15 +425,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
             get().startCombat(enemiesData);
         } else if (node.type === 'Rest') {
-            // Heal 30% of max HP at rest sites
-            set((current) => ({
-                player: {
-                    ...current.player,
-                    hp: Math.min(current.player.maxHp, current.player.hp + Math.floor(current.player.maxHp * 0.3))
-                }
-            }));
+            set({ nodeEvent: 'rest' });
+        } else if (node.type === 'Shop') {
+            get().enterShop();
+        } else if (node.type === 'Unknown') {
+            get().enterMystery();
         }
-        // Shop and Unknown are no-ops for now (player just advances past them)
     },
 
     startSelfieCapture: () => {
@@ -494,6 +525,13 @@ export const useGameStore = create<GameState>((set, get) => ({
             activeAnimations: [],
             entityBounds: {},
             dragState: { ...defaultDragState },
+            nodeEvent: null,
+            shopCards: [],
+            shopPrices: {},
+            cardRemovalCost: 75,
+            cardRemovalsUsed: 0,
+            currentEvent: null,
+            eventOutcome: null,
         });
     },
 
@@ -504,6 +542,228 @@ export const useGameStore = create<GameState>((set, get) => ({
             generatedCards: null,
             ugcError: null,
             selfieDataUrl: null,
+        });
+    },
+
+    restHeal: () => {
+        set((current) => ({
+            player: {
+                ...current.player,
+                hp: Math.min(current.player.maxHp, current.player.hp + Math.floor(current.player.maxHp * 0.3))
+            },
+            nodeEvent: null
+        }));
+    },
+
+    restUpgrade: (cardInstanceId: string) => {
+        set((current) => {
+            const newDeck = current.masterDeck.map(card => {
+                if (card.instanceId !== cardInstanceId || card.upgraded) return card;
+                const upgradedCard = { ...card, upgraded: true };
+                // Upgrade first Damage effect: +3
+                const dmgIdx = upgradedCard.effects.findIndex(e => e.type === 'Damage' && e.amount != null);
+                if (dmgIdx !== -1) {
+                    const newEffects = [...upgradedCard.effects];
+                    newEffects[dmgIdx] = { ...newEffects[dmgIdx], amount: (newEffects[dmgIdx].amount || 0) + 3 };
+                    upgradedCard.effects = newEffects;
+                    upgradedCard.name = card.name + '+';
+                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
+                    return upgradedCard;
+                }
+                // Upgrade first Block effect: +3
+                const blkIdx = upgradedCard.effects.findIndex(e => e.type === 'Block' && e.amount != null);
+                if (blkIdx !== -1) {
+                    const newEffects = [...upgradedCard.effects];
+                    newEffects[blkIdx] = { ...newEffects[blkIdx], amount: (newEffects[blkIdx].amount || 0) + 3 };
+                    upgradedCard.effects = newEffects;
+                    upgradedCard.name = card.name + '+';
+                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
+                    return upgradedCard;
+                }
+                // Fallback: reduce cost by 1 (min 0)
+                upgradedCard.cost = Math.max(0, upgradedCard.cost - 1);
+                upgradedCard.name = card.name + '+';
+                return upgradedCard;
+            });
+            return { masterDeck: newDeck, nodeEvent: null };
+        });
+    },
+
+    enterShop: () => {
+        const state = get();
+        const rng = state.rng;
+        if (!rng) return;
+
+        const allCardIds = Object.keys(CARD_DATABASE);
+        const shuffled = rng.shuffle(allCardIds);
+        const selectedIds = shuffled.slice(0, 3);
+
+        const shopCards: Card[] = [];
+        const shopPrices: Record<string, number> = {};
+
+        selectedIds.forEach(cardId => {
+            const card = createCardInstance(cardId, rng);
+            shopCards.push(card);
+
+            const cardType = CARD_DATABASE[cardId].type;
+            let price: number;
+            if (cardType === 'Attack') {
+                price = rng.nextInt(50, 101);
+            } else if (cardType === 'Skill') {
+                price = rng.nextInt(50, 81);
+            } else {
+                price = rng.nextInt(60, 101);
+            }
+            shopPrices[card.instanceId] = price;
+        });
+
+        set({
+            nodeEvent: 'shop',
+            shopCards,
+            shopPrices,
+            cardRemovalCost: 75 + (state.cardRemovalsUsed * 25),
+        });
+    },
+
+    buyCard: (cardInstanceId: string, cost: number) => {
+        set((state) => {
+            if (state.player.gold < cost) return state;
+            const card = state.shopCards.find(c => c.instanceId === cardInstanceId);
+            if (!card) return state;
+
+            return {
+                player: { ...state.player, gold: state.player.gold - cost },
+                masterDeck: [...state.masterDeck, card],
+                shopCards: state.shopCards.filter(c => c.instanceId !== cardInstanceId),
+            };
+        });
+    },
+
+    removeCard: (cardInstanceId: string) => {
+        set((state) => {
+            if (state.player.gold < state.cardRemovalCost) return state;
+            const card = state.masterDeck.find(c => c.instanceId === cardInstanceId);
+            if (!card) return state;
+
+            return {
+                player: { ...state.player, gold: state.player.gold - state.cardRemovalCost },
+                masterDeck: state.masterDeck.filter(c => c.instanceId !== cardInstanceId),
+                cardRemovalsUsed: state.cardRemovalsUsed + 1,
+                cardRemovalCost: state.cardRemovalCost + 25,
+            };
+        });
+    },
+
+    enterMystery: () => {
+        const state = get();
+        if (!state.rng) return;
+        const eventIndex = state.rng.nextInt(0, EVENTS.length);
+        const event = EVENTS[eventIndex];
+        set({
+            nodeEvent: 'mystery',
+            currentEvent: event,
+            eventOutcome: null,
+        });
+    },
+
+    chooseEventOption: (choiceId: string) => {
+        const state = get();
+        if (!state.currentEvent) return;
+
+        const choice = state.currentEvent.choices.find(c => c.id === choiceId);
+        if (!choice) return;
+
+        let player = { ...state.player };
+        let masterDeck = [...state.masterDeck];
+        const rng = state.rng;
+        const outcomeLines: string[] = [];
+
+        for (const effect of choice.effects) {
+            switch (effect.type) {
+                case 'heal': {
+                    const amount = effect.amount || 0;
+                    const healed = Math.min(amount, player.maxHp - player.hp);
+                    player.hp = Math.min(player.maxHp, player.hp + amount);
+                    if (healed > 0) outcomeLines.push(`Healed ${healed} HP.`);
+                    break;
+                }
+                case 'healFull': {
+                    const healed = player.maxHp - player.hp;
+                    player.hp = player.maxHp;
+                    if (healed > 0) outcomeLines.push(`Fully healed! Restored ${healed} HP.`);
+                    else outcomeLines.push('Already at full health.');
+                    break;
+                }
+                case 'healPercent': {
+                    const amount = Math.floor(player.maxHp * (effect.amount || 0) / 100);
+                    const healed = Math.min(amount, player.maxHp - player.hp);
+                    player.hp = Math.min(player.maxHp, player.hp + amount);
+                    if (healed > 0) outcomeLines.push(`Healed ${healed} HP.`);
+                    break;
+                }
+                case 'damage': {
+                    const amount = effect.amount || 0;
+                    player.hp = Math.max(1, player.hp - amount);
+                    outcomeLines.push(`Took ${amount} damage.`);
+                    break;
+                }
+                case 'gold': {
+                    const amount = effect.amount || 0;
+                    player.gold = Math.max(0, player.gold + amount);
+                    if (amount > 0) outcomeLines.push(`Gained ${amount} gold.`);
+                    else if (amount < 0) outcomeLines.push(`Spent ${Math.abs(amount)} gold.`);
+                    break;
+                }
+                case 'loseMaxHp': {
+                    const amount = effect.amount || 0;
+                    player.maxHp = Math.max(1, player.maxHp - amount);
+                    if (player.hp > player.maxHp) player.hp = player.maxHp;
+                    outcomeLines.push(`Lost ${amount} max HP.`);
+                    break;
+                }
+                case 'removeRandomCard': {
+                    const removable = masterDeck.filter(c => !c.isHeroCard);
+                    if (removable.length > 0 && rng) {
+                        const idx = rng.nextInt(0, removable.length);
+                        const removed = removable[idx];
+                        masterDeck = masterDeck.filter(c => c.instanceId !== removed.instanceId);
+                        outcomeLines.push(`Removed "${removed.name}" from your deck.`);
+                    } else {
+                        outcomeLines.push('No removable cards in your deck.');
+                    }
+                    break;
+                }
+                case 'addRandomCard': {
+                    if (rng) {
+                        const cardKeys = Object.keys(CARD_DATABASE);
+                        const randomKey = cardKeys[rng.nextInt(0, cardKeys.length)];
+                        const newCard = createCardInstance(randomKey, rng);
+                        masterDeck.push(newCard);
+                        outcomeLines.push(`Added "${newCard.name}" to your deck.`);
+                    }
+                    break;
+                }
+                case 'nothing': {
+                    outcomeLines.push('You move on.');
+                    break;
+                }
+            }
+        }
+
+        set({
+            player,
+            masterDeck,
+            eventOutcome: outcomeLines.join(' '),
+        });
+    },
+
+    dismissNodeEvent: () => {
+        set({
+            nodeEvent: null,
+            shopCards: [],
+            shopPrices: {},
+            currentEvent: null,
+            eventOutcome: null,
         });
     },
 
@@ -534,6 +794,13 @@ export const useGameStore = create<GameState>((set, get) => ({
             activeAnimations: [],
             dragState: { ...defaultDragState },
             entityBounds: {},
+            nodeEvent: null,
+            shopCards: [],
+            shopPrices: {},
+            cardRemovalCost: 75,
+            cardRemovalsUsed: 0,
+            currentEvent: null,
+            eventOutcome: null,
             ugcPhase: null,
             generatedCharacter: null,
             generatedCards: null,
@@ -676,7 +943,11 @@ export const useGameStore = create<GameState>((set, get) => ({
                         if (updatedEnemies.every(e => e.hp <= 0)) {
                             cancelAllTimeouts();
                             const rng = get().rng;
-                            const goldReward = rng ? rng.nextInt(10, 21) : 15;
+                            // Elite encounters award bonus gold (50-80) vs normal (10-20)
+                            const hasElite = updatedEnemies.some(e => ELITE_TEMPLATE_IDS.has(e.templateId));
+                            const goldReward = hasElite
+                                ? (rng ? rng.nextInt(50, 81) : 65)
+                                : (rng ? rng.nextInt(10, 21) : 15);
                             set({
                                 combatResult: 'victory',
                                 goldReward,

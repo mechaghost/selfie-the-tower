@@ -1,0 +1,284 @@
+/* ============================================================
+   MYSTERY EVENT VIEW
+   Dark purple/violet atmosphere — back-alley encounter at 2am
+   ============================================================ */
+
+@keyframes mysteryFadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mysteryGlow {
+    0%, 100% {
+        box-shadow: 0 0 12px rgba(185, 103, 255, 0.25), inset 0 0 12px rgba(185, 103, 255, 0.05);
+        border-color: rgba(185, 103, 255, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 24px rgba(185, 103, 255, 0.45), inset 0 0 20px rgba(185, 103, 255, 0.08);
+        border-color: rgba(185, 103, 255, 0.55);
+    }
+}
+
+@keyframes mysteryPulse {
+    0%, 100% { opacity: 0.06; }
+    50% { opacity: 0.12; }
+}
+
+@keyframes mysteryTitleFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    92% { opacity: 0.7; }
+    94% { opacity: 1; }
+    96% { opacity: 0.85; }
+}
+
+.mystery-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(185, 103, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(255, 56, 96, 0.04) 0%, transparent 50%),
+        var(--color-bg-base);
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+/* Scanline overlay */
+.mystery-container::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(0, 0, 0, 0.08) 3px,
+        rgba(0, 0, 0, 0.08) 6px
+    );
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 1;
+}
+
+/* Ambient glow behind content */
+.mystery-container::after {
+    content: '';
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(185, 103, 255, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+    animation: mysteryPulse 4s ease-in-out infinite;
+}
+
+.mystery-content {
+    position: relative;
+    z-index: 2;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    animation: mysteryFadeIn 0.6s ease both;
+}
+
+/* --- Title --- */
+.mystery-title {
+    font-family: var(--font-family-display);
+    font-size: 2rem;
+    color: var(--color-accent-violet);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    margin: 0;
+    text-shadow:
+        0 0 20px rgba(185, 103, 255, 0.5),
+        0 0 40px rgba(185, 103, 255, 0.2);
+    animation: mysteryTitleFlicker 4s ease-in-out infinite;
+}
+
+/* --- Description --- */
+.mystery-description {
+    font-family: var(--font-family-base);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: rgba(26, 26, 46, 0.7);
+    border: 1px solid rgba(185, 103, 255, 0.15);
+    border-radius: 8px;
+    animation: mysteryGlow 5s ease-in-out infinite;
+}
+
+/* --- Choices --- */
+.mystery-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.mystery-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    background: var(--color-bg-surface);
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: left;
+    animation: mysteryFadeIn 0.5s ease both;
+}
+
+.mystery-choice:nth-child(1) { animation-delay: 0.15s; }
+.mystery-choice:nth-child(2) { animation-delay: 0.3s; }
+.mystery-choice:nth-child(3) { animation-delay: 0.45s; }
+
+.mystery-choice:hover {
+    border-color: var(--color-accent-violet);
+    background: var(--color-bg-elevated);
+    box-shadow: 0 0 16px rgba(185, 103, 255, 0.25), inset 0 0 8px rgba(185, 103, 255, 0.05);
+    transform: translateX(4px);
+}
+
+.mystery-choice:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+.mystery-choice-label {
+    font-family: var(--font-family-display);
+    font-size: 1.15rem;
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mystery-choice-label svg {
+    color: var(--color-accent-violet);
+    flex-shrink: 0;
+}
+
+.mystery-choice-desc {
+    font-family: var(--font-family-base);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    padding-left: 1.5rem;
+}
+
+/* --- Outcome --- */
+.mystery-outcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    width: 100%;
+    animation: mysteryFadeIn 0.5s ease both;
+}
+
+.mystery-outcome-text {
+    font-family: var(--font-family-base);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    text-align: center;
+    padding: 1rem 1.25rem;
+    background: rgba(26, 26, 46, 0.7);
+    border: 1px solid rgba(57, 255, 20, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mystery-continue-btn {
+    font-family: var(--font-family-display);
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.75rem 2rem;
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-accent-violet);
+    border-radius: 8px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.mystery-continue-btn:hover {
+    background: rgba(185, 103, 255, 0.15);
+    box-shadow: 0 0 20px rgba(185, 103, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.mystery-continue-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* --- Decorative icon --- */
+.mystery-icon-decor {
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+    filter: drop-shadow(0 0 8px rgba(185, 103, 255, 0.4));
+    animation: mysteryFadeIn 0.4s ease both;
+}
+
+/* ============================================================
+   DESKTOP OVERRIDES
+   ============================================================ */
+
+@media (min-width: 769px) {
+    .mystery-content {
+        max-width: 520px;
+        gap: 1.5rem;
+    }
+
+    .mystery-title {
+        font-size: 2.8rem;
+        letter-spacing: 5px;
+    }
+
+    .mystery-description {
+        font-size: 0.95rem;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .mystery-choice {
+        padding: 1rem 1.25rem;
+    }
+
+    .mystery-choice-label {
+        font-size: 1.25rem;
+    }
+
+    .mystery-choice-desc {
+        font-size: 0.8rem;
+    }
+
+    .mystery-icon-decor {
+        width: 56px;
+        height: 56px;
+    }
+
+    .mystery-container::after {
+        width: 500px;
+        height: 500px;
+    }
+}

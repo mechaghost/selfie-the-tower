@@ -517,6 +517,163 @@ export const enemies: Record<string, EnemyDefinition> = {
     // TIER 3 — Elites
     // ═══════════════════════════════════════════
 
+    'neon_sentinel': {
+        id: 'neon_sentinel',
+        name: 'Sentinel',
+        maxHpRange: [55, 65],
+        aiPatterns: [
+            {
+                condition: 'Turn1',
+                chance: 100,
+                intent: {
+                    type: 'Buff',
+                    effects: [
+                        { type: 'ApplyStatus', amount: 3, statusId: 'strength', target: 'Self' }
+                    ]
+                }
+            },
+            {
+                condition: 'BelowHalfHP',
+                chance: 100,
+                intent: {
+                    type: 'AttackDebuff',
+                    damage: 18,
+                    effects: [
+                        { type: 'Damage', amount: 18, target: 'Target' },
+                        { type: 'ApplyStatus', amount: 1, statusId: 'vulnerable', target: 'Target' }
+                    ]
+                }
+            },
+            {
+                chance: 50,
+                intent: {
+                    type: 'Attack',
+                    damage: 14,
+                    effects: [{ type: 'Damage', amount: 14, target: 'Target' }]
+                }
+            },
+            {
+                chance: 30,
+                intent: {
+                    type: 'AttackDefend',
+                    damage: 10,
+                    block: 8,
+                    effects: [
+                        { type: 'Damage', amount: 10, target: 'Target' },
+                        { type: 'Block', amount: 8, target: 'Self' }
+                    ]
+                }
+            },
+            {
+                chance: 20,
+                intent: {
+                    type: 'Defend',
+                    block: 12,
+                    effects: [{ type: 'Block', amount: 12, target: 'Self' }]
+                }
+            }
+        ]
+    },
+
+    'chrome_phantom': {
+        id: 'chrome_phantom',
+        name: 'Phantom',
+        maxHpRange: [45, 50],
+        aiPatterns: [
+            {
+                condition: 'Turn1',
+                chance: 100,
+                intent: {
+                    type: 'Debuff',
+                    effects: [
+                        { type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }
+                    ]
+                }
+            },
+            {
+                chance: 40,
+                intent: {
+                    type: 'Attack',
+                    damage: 12,
+                    effects: [{ type: 'Damage', amount: 12, target: 'Target' }]
+                }
+            },
+            {
+                chance: 35,
+                intent: {
+                    type: 'AttackDebuff',
+                    damage: 8,
+                    effects: [
+                        { type: 'Damage', amount: 8, target: 'Target' },
+                        { type: 'ApplyStatus', amount: 1, statusId: 'weak', target: 'Target' }
+                    ]
+                }
+            },
+            {
+                chance: 25,
+                intent: {
+                    type: 'Debuff',
+                    block: 10,
+                    effects: [
+                        { type: 'Block', amount: 10, target: 'Self' },
+                        { type: 'ApplyStatus', amount: 1, statusId: 'vulnerable', target: 'Target' }
+                    ]
+                }
+            }
+        ]
+    },
+
+    'voltage_king': {
+        id: 'voltage_king',
+        name: 'Voltage King',
+        maxHpRange: [60, 70],
+        aiPatterns: [
+            {
+                condition: 'Turn1',
+                chance: 100,
+                intent: {
+                    type: 'AttackDebuff',
+                    damage: 8,
+                    effects: [
+                        { type: 'Damage', amount: 8, target: 'Target' },
+                        { type: 'ApplyStatus', amount: 2, statusId: 'strength', target: 'Self' }
+                    ]
+                }
+            },
+            {
+                chance: 45,
+                intent: {
+                    type: 'Attack',
+                    damage: 16,
+                    effects: [{ type: 'Damage', amount: 16, target: 'Target' }]
+                }
+            },
+            {
+                chance: 30,
+                intent: {
+                    type: 'Attack',
+                    damage: 10,
+                    hits: 2,
+                    effects: [
+                        { type: 'Damage', amount: 10, target: 'Target' },
+                        { type: 'Damage', amount: 10, target: 'Target' }
+                    ]
+                }
+            },
+            {
+                chance: 25,
+                intent: {
+                    type: 'Buff',
+                    block: 8,
+                    effects: [
+                        { type: 'Block', amount: 8, target: 'Self' },
+                        { type: 'ApplyStatus', amount: 1, statusId: 'strength', target: 'Self' }
+                    ]
+                }
+            }
+        ]
+    },
+
     'circuit_breaker': {
         id: 'circuit_breaker',
         name: 'Breaker',
@@ -825,6 +982,16 @@ export const enemies: Record<string, EnemyDefinition> = {
         ]
     },
 };
+
+/** Set of all elite enemy templateIds for reward scaling */
+export const ELITE_TEMPLATE_IDS = new Set([
+    'neon_sentinel',
+    'chrome_phantom',
+    'voltage_king',
+    'circuit_breaker',
+    'neon_yakuza',
+    'chrome_bouncer',
+]);
 
 export function createEnemyInstance(templateId: string, id: string, rng: RNG | null): Enemy {
     const template = enemies[templateId];

@@ -79,6 +79,21 @@ export const ENCOUNTER_POOLS: Record<string, Encounter[]> = {
             name: 'Chrome Bouncer',
             enemyIds: ['chrome_bouncer']
         },
+        {
+            id: 'neon_sentinel_elite',
+            name: 'Neon Sentinel',
+            enemyIds: ['neon_sentinel']
+        },
+        {
+            id: 'chrome_phantom_elite',
+            name: 'Chrome Phantom',
+            enemyIds: ['chrome_phantom']
+        },
+        {
+            id: 'voltage_king_elite',
+            name: 'Voltage King',
+            enemyIds: ['voltage_king']
+        },
         // Tough medium combos
         {
             id: 'brute_squad',
