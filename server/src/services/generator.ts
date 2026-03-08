@@ -2,7 +2,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { ARCHETYPES } from './archetypes.js';
 import { GeminiAnalysis } from './gemini.js';
 
-export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portraitUrl: string = '') {
+interface HeroCardInput {
+    name: string;
+    type: string;
+    cost: number;
+    description: string;
+    target: string;
+    effects: any[];
+    exhausts: boolean;
+    imageUrl?: string;
+}
+
+export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portraitUrl: string = '', heroCard?: HeroCardInput) {
     const archetype = ARCHETYPES[analysis.archetype];
     const characterId = uuidv4();
 
@@ -18,7 +29,11 @@ export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portrait
         traits: analysis.traits,
     };
 
-    const cards = archetype.cards.map(card => {
+    const cards: Array<{
+        id: string; name: string; type: string; cost: number; description: string;
+        target: string; effects: any[]; imageId?: string; imageUrl?: string;
+        exhausts?: boolean; isHeroCard?: boolean;
+    }> = archetype.cards.map(card => {
         const cardId = `${analysis.archetype}_${card.name.toLowerCase().replace(/\s+/g, '_')}`;
         return {
             id: cardId,
@@ -33,6 +48,22 @@ export function generateCharacterFromAnalysis(analysis: GeminiAnalysis, portrait
             ...(card.exhausts ? { exhausts: true } : {}),
         };
     });
+
+    if (heroCard) {
+        cards.push({
+            id: `hero_${analysis.archetype}_${heroCard.name.toLowerCase().replace(/\s+/g, '_')}`,
+            name: heroCard.name,
+            type: heroCard.type as any,
+            cost: heroCard.cost,
+            description: heroCard.description,
+            target: heroCard.target as any,
+            effects: heroCard.effects,
+            imageId: undefined as string | undefined,
+            imageUrl: heroCard.imageUrl,
+            exhausts: heroCard.exhausts,
+            isHeroCard: true,
+        });
+    }
 
     return { character, cards };
 }

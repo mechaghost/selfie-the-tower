@@ -69,7 +69,11 @@ export function CharacterRevealScreen() {
         imageUrl: gc.imageUrl,
         imageId: gc.imageId,
         exhausts: gc.exhausts,
+        isHeroCard: gc.isHeroCard,
     }));
+
+    const regularCards = displayCards.filter(c => !c.isHeroCard);
+    const heroCard = displayCards.find(c => c.isHeroCard);
 
     return (
         <div className="reveal-screen">
@@ -98,14 +102,27 @@ export function CharacterRevealScreen() {
                 ))}
             </div>
 
+            {/* Hero Card */}
+            {heroCard && (
+                <div className={`reveal-hero-section ${revealStep >= 3 ? 'visible' : ''}`}>
+                    <p className="reveal-hero-label">Your Signature Move</p>
+                    <div
+                        className="reveal-hero-slot"
+                        onClick={() => setLightboxIndex(displayCards.indexOf(heroCard))}
+                    >
+                        <CardItem card={heroCard} canPlay={true} isDraggable={false} />
+                    </div>
+                </div>
+            )}
+
             {/* Cards */}
             <div className={`reveal-cards ${revealStep >= 3 ? 'visible' : ''}`}>
-                {displayCards.map((card, i) => (
+                {regularCards.map((card, i) => (
                     <div
                         key={card.instanceId}
                         className="reveal-card-slot"
                         style={{ animationDelay: `${i * 0.15}s` }}
-                        onClick={() => setLightboxIndex(i)}
+                        onClick={() => setLightboxIndex(displayCards.indexOf(card))}
                     >
                         <CardItem card={card} canPlay={true} isDraggable={false} />
                     </div>

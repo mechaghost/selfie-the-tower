@@ -7,7 +7,7 @@ import { CharacterRevealScreen } from './components/ugc/CharacterRevealScreen';
 import './App.css';
 
 function App() {
-    const { inCombat, initializeRun, seed, isGameOver, ugcPhase, startSelfieCapture } = useGameStore();
+    const { inCombat, seed, isGameOver, ugcPhase, startSelfieCapture } = useGameStore();
 
     if (import.meta.env.DEV) {
         (window as any).__gameStore = useGameStore; // eslint-disable-line
@@ -25,10 +25,7 @@ function App() {
             <h1>Selfie the Spire</h1>
             <p>Neon Roguelike Deckbuilder</p>
             <button className="start-button hero-button" onClick={startSelfieCapture}>
-                Create Your Hero
-            </button>
-            <button className="start-button classic-button" onClick={() => initializeRun('alpha_test_seed')}>
-                Classic Mode
+                Take a Selfie to Play
             </button>
         </div>
     );

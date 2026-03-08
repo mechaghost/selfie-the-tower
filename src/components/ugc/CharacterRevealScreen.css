@@ -56,18 +56,18 @@
 /* Portrait */
 .reveal-portrait {
     position: relative;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
+    width: 140px;
+    height: 220px;
+    border-radius: 8px;
     overflow: hidden;
-    border: 3px solid var(--color-text-highlight);
-    box-shadow: 0 0 30px rgba(255, 110, 199, 0.3);
+    border: 2px solid var(--color-accent-violet);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 10px rgba(185, 103, 255, 0.25);
     flex-shrink: 0;
     opacity: 0;
     filter: blur(10px);
     transform: scale(0.9);
     transition: opacity 1s ease, filter 1.2s ease, transform 1s ease;
-    background-color: var(--color-bg-base);
+    background-color: var(--color-bg-surface);
 }
 
 .reveal-portrait.visible {
@@ -77,8 +77,9 @@
 }
 
 .reveal-portrait-img {
-    width: 100%;
-    height: 100%;
+    width: 106%;
+    height: 106%;
+    margin: -3% 0 0 -3%;
     object-fit: cover;
 }
 
@@ -105,6 +106,68 @@
     color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Hero Card Section */
+.reveal-hero-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.reveal-hero-section.visible {
+    opacity: 1;
+}
+
+.reveal-hero-label {
+    font-family: var(--font-family-display);
+    font-size: 0.65rem;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 0;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+.reveal-hero-slot {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    animation: hero-reveal 0.6s ease forwards;
+    animation-play-state: paused;
+    animation-delay: 0.3s;
+    cursor: pointer;
+}
+
+.reveal-hero-section.visible .reveal-hero-slot {
+    animation-play-state: running;
+}
+
+.reveal-hero-slot .card {
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+.reveal-hero-slot .card:hover {
+    transform: translateY(-4px) scale(1.15) !important;
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes hero-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+        filter: blur(4px);
+    }
+    50% {
+        filter: blur(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* Cards grid */
@@ -363,13 +426,20 @@
     }
 
     .reveal-portrait {
-        width: 220px;
-        height: 220px;
+        width: 180px;
+        height: 280px;
+        border-width: 3px;
+        border-radius: 10px;
     }
 
     .reveal-trait {
         font-size: 0.75rem;
         padding: 0.25rem 0.6rem;
+    }
+
+    .reveal-hero-label {
+        font-size: 0.8rem;
+        letter-spacing: 4px;
     }
 
     .reveal-cards {

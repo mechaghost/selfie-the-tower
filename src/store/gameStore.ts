@@ -406,6 +406,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             imageId: gc.imageId,
             imageUrl: gc.imageUrl,
             exhausts: gc.exhausts,
+            isHeroCard: gc.isHeroCard,
         }));
 
         set({

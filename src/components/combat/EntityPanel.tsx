@@ -94,8 +94,38 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
             hasPortrait && !hasSprite ? 'has-portrait' : '',
         ].filter(Boolean).join(' ');
 
+        const hpPct = (entity.hp / entity.maxHp) * 100;
+
         return (
             <div className="entity-panel player">
+                <div className="player-info-bar">
+                    <div className="player-name">{entity.name}</div>
+                    <div className="hp-bar-container player-hp">
+                        <div className="hp-text">{entity.hp}/{entity.maxHp}</div>
+                        <div className="hp-bar-bg">
+                            <div className="hp-bar-fill" style={{ width: `${hpPct}%` }} />
+                        </div>
+                    </div>
+                    <div className="player-status-row">
+                        {entity.block > 0 && (
+                            <div className="player-block-inline">
+                                <Shield size={10} /> {entity.block}
+                            </div>
+                        )}
+                        {entity.statuses.map(status => {
+                            const def = STATUS_REGISTRY[status.id];
+                            return (
+                                <div
+                                    key={status.id}
+                                    className={`player-status-pip ${def?.type === 'Debuff' ? 'debuff' : 'buff'}`}
+                                    title={`${def?.name}: ${status.amount}`}
+                                >
+                                    {def?.icon}{status.amount}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
                 <div className="entity-avatar-container">
                     <div
                         ref={avatarRef}
@@ -116,7 +146,6 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                         </div>
                     ))}
                 </div>
-                <div className="entity-name player-name">{entity.name}</div>
             </div>
         );
     }
@@ -213,7 +242,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
                 )}
 
                 <div className="hp-bar-container">
-                    <div className="hp-text">{entity.hp} / {entity.maxHp}</div>
+                    <div className="hp-text">{entity.hp}/{entity.maxHp}</div>
                     <div className="hp-bar-bg">
                         <div
                             className="hp-bar-fill"

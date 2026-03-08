@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { moderateSelfie, analyzeSelfie } from '../services/gemini.js';
+import { moderateSelfie, analyzeSelfie, generateCharacterArt, generateHeroCardMechanics, generateHeroCardArt } from '../services/gemini.js';
 import { generateCharacterFromAnalysis, generateMockCharacter } from '../services/generator.js';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB in base64 chars
@@ -31,9 +31,26 @@ characterRoute.post('/generate-character', async (c) => {
             // Step 2: Analyze for archetype
             const analysis = await analyzeSelfie(body.image);
 
-            // Step 3: Build character with static art paths
-            const portraitUrl = `/assets/characters/${analysis.archetype}.png`;
-            const result = generateCharacterFromAnalysis(analysis, portraitUrl);
+            // Step 3: Generate portrait + hero card mechanics in parallel
+            const [portraitUrl, heroMechanics] = await Promise.all([
+                generateCharacterArt(body.image, analysis.archetype),
+                generateHeroCardMechanics(analysis),
+            ]);
+
+            // Step 4: Generate hero card art (needs mechanics for name/description)
+            const heroCardArtUrl = await generateHeroCardArt(
+                body.image,
+                heroMechanics.name,
+                heroMechanics.description,
+                heroMechanics.type,
+                analysis.archetype,
+            );
+
+            // Step 5: Assemble result with hero card
+            const result = generateCharacterFromAnalysis(analysis, portraitUrl, {
+                ...heroMechanics,
+                imageUrl: heroCardArtUrl,
+            });
 
             return c.json(result);
         } else {

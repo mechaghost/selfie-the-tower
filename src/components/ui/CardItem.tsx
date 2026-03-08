@@ -207,6 +207,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
         'card',
         canPlay ? 'playable' : 'unplayable',
         `type-${card.type.toLowerCase()}`,
+        card.isHeroCard ? 'hero-card' : '',
         isBeingTouched ? 'is-dragging' : '',
         isThisActive && isTargetingMode ? 'is-targeting' : '',
     ].filter(Boolean).join(' ');

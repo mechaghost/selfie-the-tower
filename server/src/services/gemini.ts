@@ -39,29 +39,29 @@ The five archetypes are:
 - **concrete**: Steady, grounded, enduring energy. Urban druids who grow vines through cracked pavement, warehouse wardens. Think: construction worker turned street shaman, moss and rebar.
 - **smoke**: Cunning, elusive, precise energy. Alley ghosts who flicker streetlights and bend city fog, shadow runners. Think: 80s noir detective meets phantom graffiti artist.
 
-IMPORTANT: This game is set in a neon-soaked 1980s city (Tokyo/LA mashup). All names and titles MUST sound urban, street-level, and retro — like characters from an 80s anime or arcade game. Do NOT use generic fantasy names or medieval/nature titles.
+IMPORTANT: Names should be 1980s arcade-style usernames/handles — short, punchy, all-caps energy. Think high score screens, BBS handles, and CB radio callsigns. NOT Japanese names, NOT fantasy names.
 
-Good name examples: "Blaze Tanaka", "Nyx Fuego", "Sparks Miyamoto", "Shade Mori", "Rex Ampere"
+Good name examples: "HOTSHOT", "BLADE", "NEON VIPER", "CHROME FOX", "STATIC", "GHOST WIRE", "TURBO"
 Good title examples: "Street Pyromancer", "The Chrome Mirror", "Antenna Punk", "Warehouse Warden", "The Smoke Signal"
-BAD examples (too fantasy): "Tidecaller", "Earthshaper", "Flamebringer", "Shadowweaver", "Stormkeeper"
+BAD examples: "Blaze Tanaka", "Akira Sato", "Tidecaller", "Earthshaper" (no Japanese names, no fantasy names)
 
 Based on this person's image, respond with ONLY a JSON object (no markdown, no code fences):
 {
   "archetype": "<one of: neon, chrome, volt, concrete, smoke>",
-  "name": "<first + last name, urban/street style, 80s anime vibe>",
+  "name": "<1-2 word 80s arcade handle/username, ALL CAPS energy>",
   "title": "<dramatic street title, 2-4 words, urban not fantasy>",
   "traits": ["<trait1>", "<trait2>", "<trait3>"]
 }
 
-Be creative and make each character feel unique. Every name should sound like it belongs on a neon sign in 1985 Shibuya.`;
+Be creative and make each character feel unique. Every name should sound like it belongs on an arcade high score screen in 1985.`;
 
-// ── Archetype-specific character descriptions ──
-const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {
-    neon: 'wreathed in neon flame tattoos that glow, wearing a vintage bomber jacket with glowing kanji patches, fingerless gloves crackling with fire, neon signs flickering behind them in a dark alley',
-    chrome: 'surrounded by floating rain droplets and chrome reflections, wearing a sleek silver trench coat with mirror-finish accents, rain-soaked city street behind them with reflected neon',
-    volt: 'crackling with electricity from rooftop antenna arrays, wearing torn punk vest with circuit-board patches, headphones around neck sparking with energy, radio tower silhouette behind them',
-    concrete: 'entwined with vines bursting through cracked pavement, wearing work boots and a moss-covered denim jacket with glowing rune graffiti, abandoned warehouse behind them with overgrown walls',
-    smoke: 'dissolving into city fog and cigarette smoke, wearing a dark hoodie with phosphorescent trim, flickering streetlight above them, shadows pooling unnaturally at their feet in a narrow alley',
+// ── Archetype magical effects (no costume overrides — person's real appearance drives the look) ──
+const ARCHETYPE_MAGIC_EFFECTS: Record<string, string> = {
+    neon: 'glowing flame tattoos on their arms, fire flickering from their hands, neon signs in the alley behind them',
+    chrome: 'floating rain droplets suspended around them, chrome reflections on wet pavement, neon reflected in puddles',
+    volt: 'electricity arcing from their fingertips, sparks in the air around them, radio tower silhouette behind them',
+    concrete: 'glowing rune graffiti on the wall behind them, vines cracking through the pavement at their feet',
+    smoke: 'wisps of smoke curling from their hands, shadows pooling at their feet, a flickering streetlight above',
 };
 
 const ARCHETYPE_PALETTES: Record<string, string> = {
@@ -214,9 +214,18 @@ export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis
 export async function generateCharacterArt(imageBase64: string, archetype: string): Promise<string> {
     const model = getImageModel();
     const base64Data = stripBase64Prefix(imageBase64);
-    const desc = ARCHETYPE_CHARACTER_PROMPTS[archetype] || ARCHETYPE_CHARACTER_PROMPTS.neon;
+    const magic = ARCHETYPE_MAGIC_EFFECTS[archetype] || ARCHETYPE_MAGIC_EFFECTS.neon;
+    const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.neon;
 
-    const prompt = `Transform this person into a full-body fantasy street mage character sprite for a neon-soaked 1980s urban magic card game. The character should be ${desc}. Show the FULL BODY from head to toe in a powerful idle standing pose. The background must be plain solid white (#FFFFFF). No scenery, no environment, no floor shadows — just the character on a white background. Keep facial features recognizable but stylized. ${ART_STYLE}`;
+    const prompt = `${ART_STYLE}
+
+Illustrate this person as a street mage character for a 1980s neon urban card game. ONLY ONE character, centered in frame, full body head to toe, powerful standing pose.
+
+IDENTITY IS CRITICAL: Preserve this person's EXACT face, hairstyle, skin tone, glasses, clothing, and accessories. Their real appearance drives the character — do NOT replace their outfit. Keep what they are actually wearing but enhance it with subtle magical elements.
+
+Magical effects to ADD (do not change their clothes, just layer these on): ${magic}.
+Dark moody neon-lit alley background. Color palette: ${palette}.
+No text, no words, no letters.`;
 
     return withRetry(async () => {
         const result = await model.generateContent([
@@ -245,6 +254,178 @@ No text, no words, no letters, no numbers. Centered iconic composition, suitable
 
     return withRetry(async () => {
         const result = await model.generateContent([{ text: prompt }]);
+        return extractImageFromResponse(result);
+    });
+}
+
+// ── Hero Card Mechanics (AI-generated unique card per player) ──
+const HERO_CARD_PROMPT = `You are designing a signature hero card for a player character in a 1980s neon urban deckbuilding card game.
+
+Character: {name} — {title}
+Archetype: {archetype}
+Traits: {traits}
+
+Design ONE powerful signature card that reflects this character's personality and fighting style.
+The card should combine 2-4 effects to feel like a devastating signature move.
+
+CONSTRAINTS (follow EXACTLY):
+- name: exactly 1 word, max 10 characters, dramatic, relates to the character
+- type: "Attack" | "Skill" | "Power"
+- cost: 1 or 2
+- target: "Enemy" | "Self" | "AllEnemies"
+- exhausts: true (hero cards always exhaust after use)
+- description: brief text describing the card effect (e.g. "Deal 14 damage. Apply 2 Vulnerable. Gain 5 Block.")
+- effects: array of 2-4 effect objects
+
+Each effect MUST be one of these exact formats:
+  { "type": "Damage", "amount": <8-20>, "target": "Target" }
+  { "type": "Damage", "amount": <8-20>, "target": "AllEnemies" }
+  { "type": "Block", "amount": <8-18>, "target": "Self" }
+  { "type": "ApplyStatus", "amount": <1-3>, "statusId": "vulnerable", "target": "Target" }
+  { "type": "ApplyStatus", "amount": <1-3>, "statusId": "weak", "target": "Target" }
+  { "type": "ApplyStatus", "amount": <1-3>, "statusId": "weak", "target": "AllEnemies" }
+  { "type": "ApplyStatus", "amount": <1-3>, "statusId": "strength", "target": "Self" }
+  { "type": "ApplyStatus", "amount": <1-3>, "statusId": "dexterity", "target": "Self" }
+  { "type": "Heal", "amount": <4-8>, "target": "Self" }
+  { "type": "Draw", "amount": <1-3>, "target": "Self" }
+
+Respond with ONLY a JSON object (no markdown, no code fences):
+{
+  "name": "...",
+  "type": "...",
+  "cost": ...,
+  "description": "...",
+  "target": "...",
+  "exhausts": true,
+  "effects": [...]
+}`;
+
+const VALID_EFFECT_TYPES = ['Damage', 'Block', 'ApplyStatus', 'Heal', 'Draw'];
+const VALID_STATUS_IDS = ['vulnerable', 'weak', 'strength', 'dexterity'];
+const VALID_TARGETS = ['Self', 'Target', 'AllEnemies'];
+const VALID_CARD_TYPES = ['Attack', 'Skill', 'Power'];
+const VALID_CARD_TARGETS = ['Enemy', 'Self', 'AllEnemies'];
+
+interface HeroCardMechanics {
+    name: string;
+    type: 'Attack' | 'Skill' | 'Power';
+    cost: number;
+    description: string;
+    target: 'Enemy' | 'Self' | 'AllEnemies';
+    exhausts: boolean;
+    effects: { type: string; amount?: number; statusId?: string; target: string }[];
+}
+
+const HERO_FALLBACKS: Record<string, HeroCardMechanics> = {
+    neon: { name: 'Inferno', type: 'Attack', cost: 2, target: 'AllEnemies', exhausts: true, description: 'Deal 15 damage to ALL enemies. Apply 2 Vulnerable.', effects: [{ type: 'Damage', amount: 15, target: 'AllEnemies' }, { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'AllEnemies' }] },
+    chrome: { name: 'Deluge', type: 'Skill', cost: 2, target: 'Self', exhausts: true, description: 'Gain 16 Block. Gain 2 Dexterity.', effects: [{ type: 'Block', amount: 16, target: 'Self' }, { type: 'ApplyStatus', amount: 2, statusId: 'dexterity', target: 'Self' }] },
+    volt: { name: 'Overdrive', type: 'Attack', cost: 1, target: 'Enemy', exhausts: true, description: 'Deal 12 damage. Draw 3 cards.', effects: [{ type: 'Damage', amount: 12, target: 'Target' }, { type: 'Draw', amount: 3, target: 'Self' }] },
+    concrete: { name: 'Fortress', type: 'Skill', cost: 2, target: 'Self', exhausts: true, description: 'Gain 18 Block. Heal 6.', effects: [{ type: 'Block', amount: 18, target: 'Self' }, { type: 'Heal', amount: 6, target: 'Self' }] },
+    smoke: { name: 'Eclipse', type: 'Attack', cost: 1, target: 'Enemy', exhausts: true, description: 'Deal 12 damage. Apply 2 Weak. Apply 2 Vulnerable.', effects: [{ type: 'Damage', amount: 12, target: 'Target' }, { type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }, { type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }] },
+};
+
+export async function generateHeroCardMechanics(analysis: GeminiAnalysis): Promise<HeroCardMechanics> {
+    const client = getClient();
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const prompt = HERO_CARD_PROMPT
+        .replace('{name}', analysis.name)
+        .replace('{title}', analysis.title)
+        .replace('{archetype}', analysis.archetype)
+        .replace('{traits}', analysis.traits.join(', '));
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    let result;
+    try {
+        result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        }, { signal: controller.signal } as any);
+    } finally {
+        clearTimeout(timeout);
+    }
+
+    const text = result.response.text().trim();
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+
+    let parsed: any;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        console.warn('Failed to parse hero card response, using fallback');
+        return HERO_FALLBACKS[analysis.archetype] || HERO_FALLBACKS.neon;
+    }
+
+    // Validate and sanitize
+    const name = String(parsed.name || 'Hero').split(/\s+/)[0].slice(0, 10);
+    const type = VALID_CARD_TYPES.includes(parsed.type) ? parsed.type : 'Attack';
+    const cost = Math.max(1, Math.min(2, Math.round(Number(parsed.cost) || 2)));
+    const target = VALID_CARD_TARGETS.includes(parsed.target) ? parsed.target : (type === 'Attack' ? 'Enemy' : 'Self');
+
+    // Validate effects
+    const rawEffects = Array.isArray(parsed.effects) ? parsed.effects : [];
+    const validEffects = rawEffects
+        .filter((e: any) => e && VALID_EFFECT_TYPES.includes(e.type) && VALID_TARGETS.includes(e.target))
+        .filter((e: any) => {
+            if (e.type === 'ApplyStatus' && !VALID_STATUS_IDS.includes(e.statusId)) return false;
+            return true;
+        })
+        .map((e: any) => ({
+            type: e.type,
+            amount: Math.max(1, Math.min(25, Math.round(Number(e.amount) || 1))),
+            ...(e.statusId ? { statusId: e.statusId } : {}),
+            target: e.target,
+        }))
+        .slice(0, 4);
+
+    // If too few valid effects, use fallback
+    if (validEffects.length < 2) {
+        console.warn('Hero card had fewer than 2 valid effects, using fallback');
+        return HERO_FALLBACKS[analysis.archetype] || HERO_FALLBACKS.neon;
+    }
+
+    return {
+        name,
+        type: type as HeroCardMechanics['type'],
+        cost,
+        description: String(parsed.description || '').slice(0, 200),
+        target: target as HeroCardMechanics['target'],
+        exhausts: true,
+        effects: validEffects,
+    };
+}
+
+// ── Hero Card Art (selfie-based, 4:3 landscape) ──
+export async function generateHeroCardArt(
+    imageBase64: string,
+    cardName: string,
+    cardDescription: string,
+    cardType: string,
+    archetype: string,
+): Promise<string> {
+    const model = getImageModel();
+    const base64Data = stripBase64Prefix(imageBase64);
+    const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.neon;
+
+    const prompt = `CRITICAL: The artwork must have ZERO border, ZERO frame, ZERO margin. Color must touch every single edge of the image.
+
+${ART_STYLE}
+
+Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
+This is a HERO CARD — the player's ultimate signature move called "${cardName}": ${cardDescription}.
+
+IDENTITY IS CRITICAL: Preserve this person's EXACT face, hairstyle, skin tone, glasses, and features. Show them in a dynamic action pose unleashing their power.
+
+Card type: ${cardType}. Color palette: ${palette}.
+Add a golden energy aura or golden light burst to mark this as a special hero card.
+No text, no words, no letters, no numbers. Centered iconic composition.`;
+
+    return withRetry(async () => {
+        const result = await model.generateContent([
+            { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+            { text: prompt },
+        ]);
         return extractImageFromResponse(result);
     });
 }

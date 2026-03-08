@@ -28,11 +28,11 @@ const ART_STYLE = `Clean minimalist risograph print illustration. Flat color blo
 
 // ── Archetype prompts ──
 const ARCHETYPE_CHARACTER_PROMPTS: Record<string, string> = {
-    neon: 'a street pyromancer wreathed in neon flame tattoos that glow, wearing a vintage bomber jacket with glowing kanji patches, fingerless gloves crackling with fire, neon signs flickering behind them in a dark alley',
-    chrome: 'a rain walker surrounded by floating rain droplets and chrome reflections, wearing a sleek silver trench coat with mirror-finish accents, rain-soaked city street behind them with reflected neon',
-    volt: 'a punk mage crackling with electricity from rooftop antenna arrays, wearing torn punk vest with circuit-board patches, headphones around neck sparking with energy, radio tower silhouette behind them',
-    concrete: 'an urban druid entwined with vines bursting through cracked pavement, wearing work boots and a moss-covered denim jacket with glowing rune graffiti, abandoned warehouse behind them with overgrown walls',
-    smoke: 'an alley ghost dissolving into city fog and cigarette smoke, wearing a dark hoodie with phosphorescent trim, flickering streetlight above them, shadows pooling unnaturally at their feet in a narrow alley',
+    neon: 'a street pyromancer with flame tattoos and a bomber jacket, fire in their fists, neon alley background',
+    chrome: 'a rain walker in a silver trench coat, floating rain droplets, wet neon-lit street background',
+    volt: 'a punk mage with electricity sparks, torn vest with circuit patches, radio tower silhouette background',
+    concrete: 'an urban druid with vines and moss, denim jacket with rune graffiti, cracked pavement background',
+    smoke: 'an alley ghost in a dark hoodie, dissolving into fog, flickering streetlight background',
 };
 
 const ARCHETYPE_PALETTES: Record<string, string> = {
@@ -43,28 +43,28 @@ const ARCHETYPE_PALETTES: Record<string, string> = {
     smoke: 'deep purple, lavender mist, ghostly white, and charcoal. Fog, smoke trails, flickering light',
 };
 
-// ── Enemy art descriptions ──
+// ── Enemy art descriptions (kept simple for risograph style) ──
 const ENEMY_DESCRIPTIONS: Record<string, string> = {
-    alley_rat: 'A large mutant rat with glowing neon-pink eyes, scurrying through a dark neon-lit alley. Matted fur with bioluminescent patches. Trash and broken bottles around it.',
-    neon_junkie: 'A twitchy humanoid figure with cracked glowing neon tubes embedded in their skin, wearing tattered rave clothes. Eyes wild and unfocused, sparking with unstable energy.',
-    graffiti_imp: 'A small mischievous creature made of living spray paint, dripping colors. Graffiti wings, sharp paint-splatter teeth, hovering near a tagged wall.',
-    stray_voltage: 'A floating ball of crackling electricity with a vaguely skull-like face, arcing between power lines. Blue-white lightning tendrils, sparks raining down.',
-    dumpster_crawler: 'A hulking creature assembled from dumpster parts — rusted metal plates as armor, a trash can lid shield, glowing eyes peering from behind refuse. Urban junkyard golem.',
-    smoke_specter: 'A translucent ghostly figure formed from exhaust fumes and cigarette smoke, drifting through a foggy alley. Hollow glowing eyes, wispy tendrils for hands.',
-    taxi_ghost: 'A spectral taxi driver, translucent and glowing yellow-green, emerging from a wrecked 1980s taxi cab. Ghostly meter still running, headlights like eyes.',
-    manhole_mimic: 'A manhole cover that has sprouted metallic jaws and tentacle-like pipes, lurching up from the street. Steam pouring out, iron teeth gleaming under streetlights.',
-    boombox_brute: 'A massive muscular figure carrying a giant ghetto blaster that radiates visible sound waves. Gold chains, headband, torn tank top, sneakers. Pure 80s muscle.',
-    neon_wraith: 'An ethereal being made of bent and broken neon sign tubes, floating above the street. Flickering between forms, casting colored light and shadow. Beautiful and terrifying.',
-    payphone_phantom: 'A haunted payphone booth come alive — the receiver is a screaming mouth, the cord writhes like a snake, coins orbit it like electrons. Cracked glass panels glow.',
-    sewer_slime: 'A massive blob of iridescent toxic sewer sludge with multiple glowing eyes. Bubbling, oozing up from a storm drain grate. Chemical rainbow sheen on its surface.',
-    fire_escape_spider: 'A giant mechanical spider made of fire escape ladders and iron railings. Riveted joints, rust-red body, webs of twisted metal cable. Climbing a brick wall.',
-    vending_golem: 'A rogue vending machine that has grown legs and arms from its internal mechanisms. Cracked display showing error codes, cans and bottles as projectiles. Menacing stance.',
-    circuit_breaker: 'A towering armored figure made of fused electrical switchgear and transformer parts. Sparking circuit patterns across its body, massive fist crackling with power. Industrial and imposing.',
-    neon_yakuza: 'A sleek, dangerous figure in a neon-trimmed black suit with a glowing katana. Irezumi tattoos visible, glowing with inner light. Rain-slicked rooftop, city lights behind.',
-    chrome_bouncer: 'A huge chrome-plated humanoid bouncer with mirror-finish skin, wearing a black suit that strains against metallic muscles. Velvet rope in one hand, reflecting neon signs.',
-    the_billboard: 'A massive living neon billboard sign that has ripped free from a rooftop. Hundreds of light bulbs form a shifting face. Electric tentacles of wire, towering over the street.',
-    subway_wyrm: 'A dragon-like creature made of subway cars and train parts, bursting from a tunnel mouth. Rails for horns, sparking third-rail electricity, graffiti-covered scales.',
-    dj_phantom: 'A ghostly DJ hovering behind spectral turntables, headphones fused to a skull-like head. Vinyl records orbit like weapons. Sound waves visible as neon rings. Rave energy.',
+    alley_rat: 'A mutant rat with glowing pink eyes, neon alley, vermillion and pink palette',
+    neon_junkie: 'A twitchy figure with cracked neon tubes in their skin, orange and pink palette',
+    graffiti_imp: 'A small creature made of living spray paint, dripping colors, graffiti wings',
+    stray_voltage: 'A floating electric skull with lightning tendrils, blue-white and violet palette',
+    dumpster_crawler: 'A hulking junkyard golem made of dumpster parts, rust-red and amber palette',
+    smoke_specter: 'A ghostly figure formed from smoke, hollow glowing eyes, purple and lavender palette',
+    taxi_ghost: 'A spectral taxi driver emerging from a wrecked cab, yellow-green glow',
+    manhole_mimic: 'A manhole cover with metallic jaws and pipe tentacles, steam rising, iron grey palette',
+    boombox_brute: 'A muscular figure with a giant boombox, gold chains, 80s muscle, orange and gold palette',
+    neon_wraith: 'An ethereal being made of broken neon tubes, flickering colored light, pink and cyan palette',
+    payphone_phantom: 'A haunted payphone booth come alive, glowing receiver mouth, teal and green palette',
+    sewer_slime: 'A toxic sludge blob with glowing eyes, rainbow chemical sheen, green and purple palette',
+    fire_escape_spider: 'A mechanical spider made of fire escape ladders, rust-red body, metal web',
+    vending_golem: 'A rogue vending machine with legs and arms, cracked display, menacing stance',
+    circuit_breaker: 'A towering armored figure made of switchgear, sparking circuits, electric blue palette',
+    neon_yakuza: 'A suited figure with a glowing katana, neon-trimmed black suit, red and cyan palette',
+    chrome_bouncer: 'A chrome-plated bouncer with mirror skin, black suit, silver and teal palette',
+    the_billboard: 'A massive living neon billboard with a light-bulb face, electric wire tentacles, towering',
+    subway_wyrm: 'A dragon made of subway cars, rail horns, sparking electricity, graffiti scales',
+    dj_phantom: 'A ghostly DJ with spectral turntables, orbiting vinyl records, neon sound waves',
 };
 
 // ── Gemini client ──
@@ -146,7 +146,8 @@ function buildTasks(): ArtTask[] {
     for (const archetype of Object.keys(ARCHETYPES)) {
         const outPath = path.join(OUTPUT_ROOT, 'characters', `${archetype}.png`);
         const desc = ARCHETYPE_CHARACTER_PROMPTS[archetype];
-        const prompt = `Generate a full-body character portrait of ${desc}. Show from head to toe in a powerful idle standing pose. The background should be a dark neon-lit urban alley with subtle city elements. ${ART_STYLE}`;
+        const palette = ARCHETYPE_PALETTES[archetype];
+        const prompt = `Generate a single full-body street mage character portrait of ${desc}. IMPORTANT: Only ONE character — do not duplicate or mirror the figure. Show from head to toe in a powerful idle standing pose, centered in the frame. Dark moody urban background with neon lighting. Color palette: ${palette}. No text, no words, no letters. ${ART_STYLE}`;
 
         tasks.push({
             label: `character/${archetype}`,
@@ -165,7 +166,9 @@ function buildTasks(): ArtTask[] {
         for (const card of archetype.cards) {
             const outPath = path.join(OUTPUT_ROOT, 'cards', `${card.imageId}.png`);
 
-            const prompt = `Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
+            const prompt = `CRITICAL: The artwork must have ZERO border, ZERO frame, ZERO margin. Color must touch every single edge of the image. Do NOT add any white, black, or colored border/frame around the artwork.
+
+Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
 Card: "${card.name}" - ${card.description}
 Card type: ${card.type}
 Color palette: ${palette}
@@ -186,7 +189,9 @@ No text, no words, no letters, no numbers. Centered iconic composition, suitable
     // 3. Enemy art (20 × 512px)
     for (const [enemyId, description] of Object.entries(ENEMY_DESCRIPTIONS)) {
         const outPath = path.join(OUTPUT_ROOT, 'enemies', `${enemyId}.png`);
-        const prompt = `Generate a monster/creature portrait for a neon-soaked 1980s urban magic card game.
+        const prompt = `CRITICAL: The artwork must have ZERO border, ZERO frame, ZERO margin. Color must touch every single edge of the image. Do NOT add any white, black, or colored border/frame around the artwork.
+
+Generate a monster/creature portrait for a neon-soaked 1980s urban magic card game.
 Subject: ${description}
 Show the creature in an aggressive or menacing pose. Dark urban background with neon lighting. No text, no words. ${ART_STYLE}`;
 

@@ -8,7 +8,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'alley_rat': {
         id: 'alley_rat',
-        name: 'Alley Rat',
+        name: 'Rat',
         maxHpRange: [12, 16],
         aiPatterns: [
             {
@@ -36,7 +36,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'neon_junkie': {
         id: 'neon_junkie',
-        name: 'Neon Junkie',
+        name: 'Junkie',
         maxHpRange: [22, 28],
         aiPatterns: [
             {
@@ -73,7 +73,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'graffiti_imp': {
         id: 'graffiti_imp',
-        name: 'Graffiti Imp',
+        name: 'Imp',
         maxHpRange: [14, 18],
         aiPatterns: [
             {
@@ -99,7 +99,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'stray_voltage': {
         id: 'stray_voltage',
-        name: 'Stray Voltage',
+        name: 'Voltage',
         maxHpRange: [18, 22],
         aiPatterns: [
             {
@@ -124,7 +124,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'dumpster_crawler': {
         id: 'dumpster_crawler',
-        name: 'Dumpster Crawler',
+        name: 'Crawler',
         maxHpRange: [26, 32],
         aiPatterns: [
             {
@@ -173,7 +173,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'smoke_specter': {
         id: 'smoke_specter',
-        name: 'Smoke Specter',
+        name: 'Specter',
         maxHpRange: [20, 24],
         aiPatterns: [
             {
@@ -240,7 +240,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'manhole_mimic': {
         id: 'manhole_mimic',
-        name: 'Manhole Mimic',
+        name: 'Mimic',
         maxHpRange: [24, 28],
         aiPatterns: [
             {
@@ -280,7 +280,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'boombox_brute': {
         id: 'boombox_brute',
-        name: 'Boombox Brute',
+        name: 'Boombox',
         maxHpRange: [38, 44],
         aiPatterns: [
             {
@@ -317,7 +317,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'neon_wraith': {
         id: 'neon_wraith',
-        name: 'Neon Wraith',
+        name: 'Wraith',
         maxHpRange: [30, 34],
         aiPatterns: [
             {
@@ -353,7 +353,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'payphone_phantom': {
         id: 'payphone_phantom',
-        name: 'Payphone Phantom',
+        name: 'Payphone',
         maxHpRange: [32, 38],
         aiPatterns: [
             {
@@ -393,7 +393,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'sewer_slime': {
         id: 'sewer_slime',
-        name: 'Sewer Slime',
+        name: 'Slime',
         maxHpRange: [36, 42],
         aiPatterns: [
             {
@@ -431,7 +431,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'fire_escape_spider': {
         id: 'fire_escape_spider',
-        name: 'Fire Escape Spider',
+        name: 'Spider',
         maxHpRange: [24, 28],
         aiPatterns: [
             {
@@ -469,7 +469,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'vending_golem': {
         id: 'vending_golem',
-        name: 'Vending Golem',
+        name: 'Golem',
         maxHpRange: [28, 34],
         aiPatterns: [
             {
@@ -519,7 +519,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'circuit_breaker': {
         id: 'circuit_breaker',
-        name: 'Circuit Breaker',
+        name: 'Breaker',
         maxHpRange: [78, 86],
         aiPatterns: [
             {
@@ -570,7 +570,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'neon_yakuza': {
         id: 'neon_yakuza',
-        name: 'Neon Yakuza',
+        name: 'Yakuza',
         maxHpRange: [68, 76],
         aiPatterns: [
             {
@@ -620,7 +620,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'chrome_bouncer': {
         id: 'chrome_bouncer',
-        name: 'Chrome Bouncer',
+        name: 'Bouncer',
         maxHpRange: [82, 90],
         aiPatterns: [
             {
@@ -672,7 +672,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'the_billboard': {
         id: 'the_billboard',
-        name: 'The Billboard',
+        name: 'Billboard',
         maxHpRange: [130, 145],
         aiPatterns: [
             {
@@ -721,7 +721,7 @@ export const enemies: Record<string, EnemyDefinition> = {
 
     'subway_wyrm': {
         id: 'subway_wyrm',
-        name: 'Subway Wyrm',
+        name: 'Wyrm',
         maxHpRange: [110, 125],
         aiPatterns: [
             {

@@ -15,6 +15,7 @@ export interface Card {
     exhausts?: boolean;
     ethereal?: boolean;
     upgraded?: boolean;
+    isHeroCard?: boolean;
 }
 
 export interface StatusDefinition {
@@ -163,6 +164,7 @@ export interface GeneratedCard {
     imageId?: string;
     imageUrl?: string;
     exhausts?: boolean;
+    isHeroCard?: boolean;
 }
 
 export interface GenerateCharacterResponse {

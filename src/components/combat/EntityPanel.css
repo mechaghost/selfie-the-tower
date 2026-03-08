@@ -13,6 +13,59 @@
     gap: 0.15rem;
 }
 
+/* Player info bar above portrait */
+.player-info-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    margin-bottom: 0.25rem;
+}
+
+.player-info-bar .player-name {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-highlight);
+}
+
+.player-info-bar .hp-bar-container.player-hp {
+    width: 100px;
+}
+
+.player-status-row {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.player-block-inline {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #00d4ff;
+}
+
+.player-status-pip {
+    font-size: 0.55rem;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.player-status-pip.buff {
+    color: #4ade80;
+}
+
+.player-status-pip.debuff {
+    color: #f87171;
+}
+
 .entity-panel.player .entity-avatar {
     width: 48px;
     height: 48px;
@@ -36,22 +89,23 @@
     object-fit: cover;
 }
 
-/* Full-body sprite */
+/* Full-body sprite with card frame */
 .entity-panel.player .entity-avatar.has-sprite {
     width: 100px;
     height: 160px;
-    background: var(--color-bg-base);
-    border: none;
+    background: var(--color-bg-surface);
+    border: 2px solid var(--color-accent-violet);
     border-radius: 8px;
     overflow: hidden;
     animation: spriteIdle 3s ease-in-out infinite;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 10px rgba(185, 103, 255, 0.25);
 }
 
 .player-sprite-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+    width: 106%;
+    height: 106%;
+    margin: -3% 0 0 -3%;
+    object-fit: cover;
 }
 
 /* Idle breathing animation */
@@ -97,12 +151,9 @@
     }
 }
 
-.player-name {
-    font-size: 0.7rem;
+.player-info-bar .player-name {
     font-family: var(--font-family-display);
-    font-weight: bold;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-    opacity: 0.7;
 }
 
 /* --- Enemy: card-style threat panel --- */
@@ -336,20 +387,24 @@
 
 .hp-text {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    text-align: center;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.55rem;
     font-weight: bold;
-    line-height: 8px;
     z-index: 2;
     text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
 
 .hp-bar-bg {
     width: 100%;
-    height: 8px;
+    height: 14px;
     background: #1a1a2e;
-    border-radius: 4px;
+    border-radius: 7px;
     overflow: hidden;
     border: 1px solid #000;
 }
@@ -419,10 +474,24 @@
     .entity-panel.player .entity-avatar.has-sprite {
         width: 140px;
         height: 220px;
+        border-width: 3px;
+        border-radius: 10px;
     }
 
-    .player-name {
+    .player-info-bar .player-name {
         font-size: 0.85rem;
+    }
+
+    .player-info-bar .hp-bar-container.player-hp {
+        width: 140px;
+    }
+
+    .player-block-inline {
+        font-size: 0.7rem;
+    }
+
+    .player-status-pip {
+        font-size: 0.65rem;
     }
 
     .entity-panel.enemy {
@@ -460,8 +529,8 @@
     }
 
     .hp-bar-bg {
-        height: 10px;
-        border-radius: 5px;
+        height: 16px;
+        border-radius: 8px;
     }
 
     .hp-text {
