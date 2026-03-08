@@ -162,6 +162,20 @@ export function resolveEffects(
                 break;
         }
 
+        // Batch AllEnemies damage so hits land simultaneously
+        if (effect.type === 'Damage' && effect.amount != null && effect.target === 'AllEnemies' && targets.length > 1) {
+            if (sourceId) {
+                actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
+                actions.push({ type: 'DELAY', payload: { ms: 300 } });
+            }
+            targets.forEach(targetId => {
+                actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount! } });
+                actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
+            });
+            actions.push({ type: 'DELAY', payload: { ms: 400 } });
+            return;
+        }
+
         targets.forEach(targetId => {
             // H-3: Use != null checks instead of truthiness so amount: 0 works
             if (effect.type === 'Damage' && effect.amount != null) {

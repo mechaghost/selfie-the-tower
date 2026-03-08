@@ -10,7 +10,8 @@ export const CHARACTERS: Record<string, Character> = {
         startingDeck: [
             'neon_jab', 'neon_jab', 'neon_jab', 'neon_jab',
             'dodge_roll', 'dodge_roll', 'dodge_roll', 'dodge_roll',
-            'haymaker', 'shockwave'
+            'haymaker', 'shockwave',
+            'finesse', 'shiv_toss'
         ]
     }
 };
