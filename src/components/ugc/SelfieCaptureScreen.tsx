@@ -20,6 +20,28 @@ export function SelfieCaptureScreen() {
     const [cameraError, setCameraError] = useState(false);
 
     const isGenerating = ugcPhase === 'generating';
+    const [statusIndex, setStatusIndex] = useState(0);
+
+    const STATUS_MESSAGES = [
+        'Reading your aura',
+        'Channeling street magic',
+        'Forging your archetype',
+        'Painting your portrait',
+        'Designing your signature move',
+        'Generating hero card art',
+        'Shuffling the deck',
+        'Tuning neon frequencies',
+        'Consulting the oracle',
+        'Infusing cards with power',
+    ];
+
+    useEffect(() => {
+        if (!isGenerating) return;
+        const interval = setInterval(() => {
+            setStatusIndex(i => (i + 1) % STATUS_MESSAGES.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [isGenerating]);
 
     const startCamera = useCallback(async () => {
         try {
@@ -100,8 +122,7 @@ export function SelfieCaptureScreen() {
                     )}
                     <div className="generating-content">
                         <Loader size={48} className="generating-spinner" />
-                        <p className="generating-text">Channeling your essence...</p>
-                        <p className="generating-subtext">Forging character & deck</p>
+                        <p className="generating-text" key={statusIndex}>{STATUS_MESSAGES[statusIndex]}</p>
                     </div>
                 </div>
             </div>

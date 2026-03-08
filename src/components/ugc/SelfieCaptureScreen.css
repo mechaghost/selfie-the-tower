@@ -220,12 +220,14 @@
     color: var(--color-text-highlight);
     margin: 0;
     letter-spacing: 1px;
+    animation: status-fade 3s ease infinite;
 }
 
-.generating-subtext {
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-    margin: 0;
+@keyframes status-fade {
+    0% { opacity: 0; transform: translateY(6px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-6px); }
 }
 
 /* === Desktop overrides === */

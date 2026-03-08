@@ -201,6 +201,8 @@
     pointer-events: none;
     z-index: var(--z-deck-table);
     transition: opacity 0.3s ease;
+    box-sizing: border-box;
+    overflow: visible;
 }
 
 .deck-table.disabled {

@@ -263,6 +263,40 @@
     border-color: #ffd700;
 }
 
+/* === Mobile: compact grid hand (3 columns, 2 rows) === */
+
+@media (max-width: 768px) {
+    .hand-container {
+        display: grid;
+        grid-template-columns: repeat(3, var(--card-width));
+        justify-content: center;
+        align-content: end;
+        gap: 8px 10px;
+        height: 100%;
+        margin-bottom: 0;
+        padding: 40px 0 8px;
+        box-sizing: border-box;
+    }
+
+    .card-slot {
+        position: static;
+    }
+
+    /* Per-row fan: override full-hand fan with row-scoped rotation */
+    .hand-container .card {
+        transform: translateY(var(--row-lift)) rotate(var(--row-rotation)) !important;
+    }
+
+    .hand-container .card:hover,
+    .hand-container .card.is-dragging {
+        transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
+    }
+
+    .hand-container .card.is-targeting {
+        transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
+    }
+}
+
 /* === Desktop overrides === */
 
 @media (min-width: 769px) {

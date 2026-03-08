@@ -21,15 +21,15 @@
 
   /* Layout dimensions */
   --topbar-height: 50px;
-  --hand-height: 180px;
+  --hand-height: 280px;
 
   /* Card dimensions & spacing */
   --card-width: 70px;
   --card-height: 100px;
   --card-spacing: 70px;
   --card-half-width: 35px;
-  --card-hover-lift: -30px;
-  --card-hover-scale: 1.4;
+  --card-hover-lift: -20px;
+  --card-hover-scale: 1.3;
 
   /* Z-index registry */
   --z-hand: 10;
