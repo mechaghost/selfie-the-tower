@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useEffect, useState } from 'react';
+import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import { Entity, Enemy } from '../../core/models';
 import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
@@ -13,7 +13,7 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
     dexterity: '+1 block per stack'
 };
 
-function describeIntent(intent: Enemy['intent']): string {
+export function describeIntent(intent: Enemy['intent']): string {
     if (!intent) return 'Waiting...';
     switch (intent.type) {
         case 'Attack': return `Attacking for ${intent.damage} damage`;
@@ -37,7 +37,7 @@ function describeIntent(intent: Enemy['intent']): string {
     }
 }
 
-function describeStatuses(statuses: Entity['statuses']): string[] {
+export function describeStatuses(statuses: Entity['statuses']): string[] {
     return statuses.map(s => {
         const desc = STATUS_DESCRIPTIONS[s.id];
         const def = STATUS_REGISTRY[s.id];
@@ -52,9 +52,11 @@ const HOVER_RADIUS_PADDING = 25;
 interface EntityPanelProps {
     entity: Entity;
     isPlayer?: boolean;
+    inspectedEnemyId?: string | null;
+    onInspect?: (enemyId: string) => void;
 }
 
-export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
+export function EntityPanel({ entity, isPlayer, inspectedEnemyId, onInspect }: EntityPanelProps) {
     const avatarRef = useRef<HTMLDivElement>(null);
     const { floatingTexts, activeAnimations, setEntityBounds, dragState, entityBounds, playerPortraitUrl, playerSpriteUrl } = useGameStore(state => ({
         floatingTexts: state.floatingTexts.filter(ft => ft.targetId === entity.id),
@@ -186,14 +188,7 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     // --- Enemy: card-style threat panel ---
     const enemy = entity as Enemy;
     const intent = enemy.intent;
-    const [showInfo, setShowInfo] = useState(false);
-
-    // Auto-dismiss info tooltip after 4 seconds
-    useEffect(() => {
-        if (!showInfo) return;
-        const timer = setTimeout(() => setShowInfo(false), 4000);
-        return () => clearTimeout(timer);
-    }, [showInfo]);
+    const showInfo = inspectedEnemyId === entity.id;
 
     let threatClass = '';
     if (intent) {
@@ -205,21 +200,9 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     return (
         <div
             className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''}`}
-            onClick={() => setShowInfo(prev => !prev)}
+            onClick={(e) => { e.stopPropagation(); onInspect?.(entity.id); }}
         >
-            {/* Tap-to-inspect info tooltip */}
-            {showInfo && (
-                <div className="enemy-info-tooltip">
-                    <p className="enemy-info-intent">{describeIntent(intent)}</p>
-                    {entity.block > 0 && <p className="enemy-info-line">Block: {entity.block}</p>}
-                    {describeStatuses(entity.statuses).map((line, i) => (
-                        <p key={i} className="enemy-info-line">{line}</p>
-                    ))}
-                    {entity.statuses.length === 0 && entity.block === 0 && (
-                        <p className="enemy-info-line">No active effects</p>
-                    )}
-                </div>
-            )}
+            {/* Tap-to-inspect highlight */}
             {/* Intent row at top of card */}
             {intent && (
                 <div className="intent-row">

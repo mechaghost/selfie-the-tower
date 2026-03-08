@@ -427,7 +427,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
 
                 if (encounterDef) {
-                    enemiesData = encounterDef.enemyIds.map((enemyTemplate, idx) =>
+                    enemiesData = encounterDef.enemyIds.slice(0, 3).map((enemyTemplate, idx) =>
                         createEnemyInstance(enemyTemplate, `enemy_${node.id}_${idx}`, state.rng)
                     );
                 }
