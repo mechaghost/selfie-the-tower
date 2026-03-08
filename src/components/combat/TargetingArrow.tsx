@@ -17,7 +17,18 @@ export function TargetingArrow() {
     const endX = dragState.currentX;
     const endY = dragState.currentY;
 
-    const pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+    // Bezier control point curves away from center so user can see it
+    const screenCenterX = window.innerWidth / 2;
+    const midX = (startX + endX) / 2;
+    const midY = (startY + endY) / 2;
+    // How far the midpoint is from center (-1 to 1), drives curve direction
+    const offsetRatio = (midX - screenCenterX) / (screenCenterX || 1);
+    // Curve bows opposite to the drag's side of screen — away from the finger
+    const curveStrength = Math.hypot(endX - startX, endY - startY) * 0.55;
+    const cpX = midX - offsetRatio * curveStrength;
+    const cpY = midY;
+
+    const pathD = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
 
     // --- Hover Target Detection ---
     let isValidTarget = false;
@@ -59,7 +70,8 @@ export function TargetingArrow() {
 
     const arrowColor = isValidTarget ? validColor : 'rgba(255, 255, 255, 0.4)';
 
-    const angleRad = Math.atan2(endY - startY, endX - startX);
+    // Tangent at end of quadratic bezier (from control point to end)
+    const angleRad = Math.atan2(endY - cpY, endX - cpX);
     const angleDeg = (angleRad * 180) / Math.PI;
 
     return (

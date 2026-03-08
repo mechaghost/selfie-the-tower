@@ -1,9 +1,9 @@
 .targeting-arrow-svg {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     pointer-events: none;
     /* Let clicks pass through to elements below */
     z-index: var(--z-targeting);
