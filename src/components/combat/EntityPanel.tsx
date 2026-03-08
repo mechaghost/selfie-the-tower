@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useRef, useLayoutEffect, useEffect, useState } from 'react';
 import { Entity, Enemy } from '../../core/models';
 import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
@@ -12,6 +12,39 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
     strength: '+1 damage per stack',
     dexterity: '+1 block per stack'
 };
+
+function describeIntent(intent: Enemy['intent']): string {
+    if (!intent) return 'Waiting...';
+    switch (intent.type) {
+        case 'Attack': return `Attacking for ${intent.damage} damage`;
+        case 'Defend': return `Defending — gaining ${intent.block} block`;
+        case 'AttackDefend': return `Attacking for ${intent.damage} and gaining ${intent.block} block`;
+        case 'Buff': {
+            const parts: string[] = [];
+            if (intent.block) parts.push(`gaining ${intent.block} block`);
+            intent.effects?.forEach(e => {
+                if (e.type === 'ApplyStatus') parts.push(`applying ${e.amount} ${e.statusId}`);
+            });
+            return `Buffing — ${parts.join(', ') || 'powering up'}`;
+        }
+        case 'Debuff': {
+            const effects = intent.effects?.filter(e => e.type === 'ApplyStatus')
+                .map(e => `${e.amount} ${e.statusId}`).join(', ');
+            return `Debuffing — applying ${effects || 'a debuff'} to you`;
+        }
+        case 'AttackDebuff': return `Attacking for ${intent.damage} and applying a debuff`;
+        default: return `Preparing something...`;
+    }
+}
+
+function describeStatuses(statuses: Entity['statuses']): string[] {
+    return statuses.map(s => {
+        const desc = STATUS_DESCRIPTIONS[s.id];
+        const def = STATUS_REGISTRY[s.id];
+        const name = def?.name || s.id;
+        return `${name} ×${s.amount}${desc ? ` — ${desc}` : ''}`;
+    });
+}
 
 // M-5: Unified hover radius padding
 const HOVER_RADIUS_PADDING = 25;
@@ -153,6 +186,14 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     // --- Enemy: card-style threat panel ---
     const enemy = entity as Enemy;
     const intent = enemy.intent;
+    const [showInfo, setShowInfo] = useState(false);
+
+    // Auto-dismiss info tooltip after 4 seconds
+    useEffect(() => {
+        if (!showInfo) return;
+        const timer = setTimeout(() => setShowInfo(false), 4000);
+        return () => clearTimeout(timer);
+    }, [showInfo]);
 
     let threatClass = '';
     if (intent) {
@@ -164,7 +205,21 @@ export function EntityPanel({ entity, isPlayer }: EntityPanelProps) {
     return (
         <div
             className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''}`}
+            onClick={() => setShowInfo(prev => !prev)}
         >
+            {/* Tap-to-inspect info tooltip */}
+            {showInfo && (
+                <div className="enemy-info-tooltip">
+                    <p className="enemy-info-intent">{describeIntent(intent)}</p>
+                    {entity.block > 0 && <p className="enemy-info-line">Block: {entity.block}</p>}
+                    {describeStatuses(entity.statuses).map((line, i) => (
+                        <p key={i} className="enemy-info-line">{line}</p>
+                    ))}
+                    {entity.statuses.length === 0 && entity.block === 0 && (
+                        <p className="enemy-info-line">No active effects</p>
+                    )}
+                </div>
+            )}
             {/* Intent row at top of card */}
             {intent && (
                 <div className="intent-row">
