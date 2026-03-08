@@ -21,14 +21,19 @@ Synthesize new images from text prompts.
   | `prompt` | string | Yes | Detailed description of the image to generate |
   | `model` | string | No | Model variant (see below) |
   | `aspect_ratio` | string | No | `1:1` (default), `3:4`, `4:3`, `9:16`, `16:9` |
+  | `output_resolution` | string | No | `""` (1K, default) or `"2K"` (Ultra model only) |
+  | `target_width` | integer | No | Exact pixel width to crop to (no stretching) |
+  | `target_height` | integer | No | Exact pixel height to crop to (no stretching) |
   | `file` | binary | No | Base image for image-to-image generation |
 
 - **Models**:
   - `imagen-4.0-generate-001` — Standard quality, balanced (default)
   - `imagen-4.0-fast-generate-001` — Fast drafts
-  - `imagen-4.0-ultra-generate-001` — Maximum quality, photorealism
+  - `imagen-4.0-ultra-generate-001` — Maximum quality, photorealism (supports 2K output)
 
 - **Response**: Raw PNG image bytes
+
+**IMPORTANT — Target Dimensions**: Always use `target_width` and `target_height` for card art and other assets with strict size requirements. The API crops (not stretches) to the exact pixel dimensions, eliminating white borders.
 
 ### 2. Background Removal — `POST /api/v1/process`
 
@@ -53,7 +58,7 @@ Always a **two-step process**:
 
 ### Opaque Asset (card art, backgrounds, portraits, enemy art)
 
-Single step — just use `/api/v1/generate`.
+Single step — use `/api/v1/generate` with `target_width` and `target_height`.
 
 ## Implementation
 
@@ -62,7 +67,21 @@ Use Python to call the API. Always use `multipart/form-data` (not JSON).
 ```python
 import requests
 
-# Step 1: Generate
+# Card art — use target dimensions to avoid white borders
+response = requests.post(
+    "http://127.0.0.1:43211/api/v1/generate",
+    data={
+        "prompt": "YOUR PROMPT HERE",
+        "model": "imagen-4.0-generate-001",
+        "aspect_ratio": "4:3",
+        "target_width": 1200,
+        "target_height": 896
+    }
+)
+with open("card_art.png", "wb") as f:
+    f.write(response.content)
+
+# Transparent asset — two-step workflow
 response = requests.post(
     "http://127.0.0.1:43211/api/v1/generate",
     data={
@@ -71,18 +90,29 @@ response = requests.post(
         "aspect_ratio": "1:1"
     }
 )
-with open("output.png", "wb") as f:
+with open("temp.png", "wb") as f:
     f.write(response.content)
 
-# Step 2: Remove background (for transparent assets)
-with open("output.png", "rb") as f:
+with open("temp.png", "rb") as f:
     response = requests.post(
         "http://127.0.0.1:43211/api/v1/process",
-        files={"file": ("output.png", f, "image/png")}
+        files={"file": ("temp.png", f, "image/png")}
     )
-with open("output_transparent.png", "wb") as f:
+with open("icon_transparent.png", "wb") as f:
     f.write(response.content)
 ```
+
+## Target Dimensions by Asset Type
+
+| Asset Type | `aspect_ratio` | `target_width` | `target_height` | Result |
+|------------|---------------|----------------|-----------------|--------|
+| Card art | `4:3` | `1200` | `896` | 1200x896 opaque |
+| Character portrait | `1:1` | `512` | `512` | 512x512 opaque |
+| Enemy portrait | `1:1` | `512` | `512` | 512x512 opaque |
+| Icons | `1:1` | — | — | Default size, then bg remove |
+| Backgrounds | `16:9` | `1920` | `1080` | 1920x1080 opaque |
+
+**NEVER overscale/resize images to fix white borders.** Use `target_width`/`target_height` instead — the API crops without stretching.
 
 ## Prompting Guide
 
@@ -126,12 +156,12 @@ Shield icon:
 
 Use the base art style prefix plus asset-specific direction:
 
-**Card art** (4:3 landscape):
+**Card art** (4:3 landscape, 1200x896):
 ```
-[ART STYLE PREFIX] [SCENE/ACTION DESCRIPTION]. Full bleed artwork — illustration extends to every edge. No white borders, no margins, no frames. Edge-to-edge color. Dark background with neon accent colors.
+[ART STYLE PREFIX] [SCENE/ACTION DESCRIPTION]. Full bleed artwork — illustration extends to every edge. No white borders, no margins, no frames. Edge-to-edge color. Dark background with neon accent colors. No text, no words, no letters, no numbers.
 ```
 
-**Enemy portraits** (1:1 square):
+**Enemy portraits** (1:1 square, 512x512):
 ```
 [ART STYLE PREFIX] [CREATURE DESCRIPTION] centered on dark background. Menacing pose. Full bleed artwork, edge-to-edge. [ARCHETYPE COLORS] neon accent lighting.
 ```
@@ -157,13 +187,13 @@ Use these when generating archetype-specific assets:
 
 Save generated assets to the appropriate directory:
 
-| Asset Type | Path | Naming | Aspect Ratio |
-|------------|------|--------|--------------|
-| Card art | `public/assets/cards/` | `{archetype}_{card_name}.png` | 4:3 |
-| Character portraits | `public/assets/characters/` | `{archetype}.png` | 1:1 |
-| Enemy portraits | `public/assets/enemies/` | `{enemy_id}.png` | 1:1 |
-| Icons / Items | `public/assets/icons/` | `{icon_name}.png` | 1:1 |
-| Backgrounds | `public/assets/` | `{name}.png` | 16:9 |
+| Asset Type | Path | Naming | Dimensions |
+|------------|------|--------|------------|
+| Card art | `public/assets/cards/` | `{archetype}_{card_name}.png` | 1200x896 |
+| Character portraits | `public/assets/characters/` | `{archetype}.png` | 512x512 |
+| Enemy portraits | `public/assets/enemies/` | `{enemy_id}.png` | 512x512 |
+| Icons / Items | `public/assets/icons/` | `{icon_name}.png` | ~256x256 |
+| Backgrounds | `public/assets/` | `{name}.png` | 1920x1080 |
 
 ### Current Enemy Assets (23 enemies)
 ```
@@ -209,7 +239,8 @@ The Express server (`server/src/services/gemini.ts`) generates images at runtime
 4. For transparent assets, ALWAYS do the two-step workflow (generate then process).
 5. Use the project's art style in all prompts unless the user specifies otherwise.
 6. Use `imagen-4.0-generate-001` by default. Use `ultra` only when explicitly requested or for hero/key art.
-7. When adding new enemies, also add the enemy definition to `src/data/enemies.ts` and encounters to `src/data/encounters.ts`.
-8. When adding new cards, also add the card definition to `src/data/cards.ts` (in the `CARD_DATABASE`).
-9. Enemy IDs in filenames must match the `id` field in `src/data/enemies.ts`.
-10. Card art filenames must match the `imageId` field in the card database.
+7. **Always use `target_width` and `target_height`** for card art (1200x896), portraits (512x512), and backgrounds (1920x1080). NEVER overscale or resize to fix borders.
+8. When adding new enemies, also add the enemy definition to `src/data/enemies.ts` and encounters to `src/data/encounters.ts`.
+9. When adding new cards, also add the card definition to `src/data/cards.ts` (in the `CARD_DATABASE`).
+10. Enemy IDs in filenames must match the `id` field in `src/data/enemies.ts`.
+11. Card art filenames must match the `imageId` field in the card database.

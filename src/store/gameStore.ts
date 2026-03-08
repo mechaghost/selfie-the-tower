@@ -466,10 +466,26 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
             const data: GenerateCharacterResponse = await response.json();
 
+            // Append colorless starter cards to the generated deck for reveal
+            const colorlessStarters = ['finesse', 'shiv_toss']
+                .map(id => CARD_DATABASE[id])
+                .filter(Boolean)
+                .map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    type: c.type,
+                    cost: c.cost,
+                    description: c.description,
+                    target: c.target,
+                    effects: c.effects,
+                    imageId: c.imageId,
+                    exhausts: c.exhausts,
+                }));
+
             set({
                 ugcPhase: 'reveal',
                 generatedCharacter: data.character,
-                generatedCards: data.cards,
+                generatedCards: [...data.cards, ...colorlessStarters],
             });
         } catch (err: any) {
             set({ ugcPhase: 'capture', ugcError: err.message || 'Generation failed' });

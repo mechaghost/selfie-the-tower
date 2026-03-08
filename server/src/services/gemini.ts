@@ -40,7 +40,9 @@ The five archetypes are:
 - **concrete**: Steady, grounded, enduring energy. Urban druids who grow vines through cracked pavement, warehouse wardens. Think: construction worker turned street shaman, moss and rebar.
 - **smoke**: Cunning, elusive, precise energy. Alley ghosts who flicker streetlights and bend city fog, shadow runners. Think: 80s noir detective meets phantom graffiti artist.
 
-IMPORTANT: Names should be 1980s arcade-style usernames/handles — short, punchy, all-caps energy. Think high score screens, BBS handles, and CB radio callsigns. NOT Japanese names, NOT fantasy names.
+IMPORTANT: Names should be 1980s arcade-style usernames/handles — short, punchy, all-caps energy. Think high score screens, BBS handles, and CB radio callsigns. NOT Japanese names, NOT fantasy names. MAX 12 CHARACTERS total including spaces.
+
+CELEBRITY RECOGNITION: If you recognize this person as a public figure, celebrity, athlete, musician, or internet personality — use their real-world NICKNAME or street name as inspiration. Examples: Dwayne Johnson → "THE ROCK", Snoop Dogg → "SNOOP", Arnold Schwarzenegger → "ARNIE", Beyoncé → "QUEEN B", Shaq → "SHAQ", Ice Cube → "CUBE". Keep it to their most iconic short nickname. If you don't recognize them, invent a fresh arcade handle.
 
 Good name examples: "HOTSHOT", "BLADE", "NEON VIPER", "CHROME FOX", "STATIC", "GHOST WIRE", "TURBO"
 Good title examples: "Street Pyromancer", "The Chrome Mirror", "Antenna Punk", "Warehouse Warden", "The Smoke Signal"
@@ -49,7 +51,7 @@ BAD examples: "Blaze Tanaka", "Akira Sato", "Tidecaller", "Earthshaper" (no Japa
 Based on this person's image, respond with ONLY a JSON object (no markdown, no code fences):
 {
   "archetype": "<one of: neon, chrome, volt, concrete, smoke>",
-  "name": "<1-2 word 80s arcade handle/username, ALL CAPS energy>",
+  "name": "<1-2 word 80s arcade handle, MAX 12 characters, ALL CAPS energy>",
   "title": "<dramatic street title, 2-4 words, urban not fantasy>",
   "traits": ["<trait1>", "<trait2>", "<trait3>"]
 }
@@ -216,8 +218,8 @@ export async function analyzeSelfie(imageBase64: string): Promise<GeminiAnalysis
 
     return {
         archetype: parsed.archetype,
-        name: String(parsed.name || 'Unknown Wanderer').slice(0, 100),
-        title: String(parsed.title || 'Seeker of the Spire').slice(0, 100),
+        name: String(parsed.name || 'RUNNER').slice(0, 12).trim(),
+        title: String(parsed.title || 'Seeker of the Spire').slice(0, 40).trim(),
         traits: parsed.traits.map((t: unknown) => String(t).slice(0, 50)),
     };
 }
@@ -229,15 +231,17 @@ export async function generateCharacterArt(imageBase64: string, archetype: strin
     const magic = ARCHETYPE_MAGIC_EFFECTS[archetype] || ARCHETYPE_MAGIC_EFFECTS.neon;
     const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.neon;
 
-    const prompt = `${ART_STYLE}
+    const prompt = `CRITICAL: The artwork must have ZERO border, ZERO frame, ZERO margin, ZERO white edges. Color must touch every single edge of the image. NO TEXT — zero words, zero letters, zero numbers, zero watermarks, zero signs, zero writing of any kind anywhere in the image.
 
-Illustrate this person as a street mage character for a 1980s neon urban card game. ONLY ONE character, centered in frame, full body head to toe, powerful standing pose.
+${ART_STYLE}
+
+Illustrate this person as a street mage character for a 1980s neon urban card game. ONLY ONE character, centered in frame. FULL BODY from head to feet — show their entire body including shoes/feet, do NOT crop at the waist or knees. Powerful standing pose.
 
 IDENTITY IS CRITICAL: Preserve this person's EXACT face, hairstyle, skin tone, glasses, clothing, and accessories. Their real appearance drives the character — do NOT replace their outfit. Keep what they are actually wearing but enhance it with subtle magical elements.
 
 Magical effects to ADD (do not change their clothes, just layer these on): ${magic}.
 Dark moody neon-lit alley background. Color palette: ${palette}.
-No text, no words, no letters.`;
+ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SIGNS anywhere in the image.`;
 
     return withRetry(async () => {
         const result = await model.generateContent([
@@ -259,11 +263,15 @@ export async function generateCardArt(
     const model = getImageModel();
     const palette = ARCHETYPE_PALETTES[archetype] || ARCHETYPE_PALETTES.neon;
 
-    const prompt = `Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
+    const prompt = `CRITICAL: The artwork must have ZERO border, ZERO frame, ZERO margin, ZERO white edges. Color must touch every single edge of the image.
+
+${ART_STYLE}
+
+Generate card art in landscape 4:3 aspect ratio for a neon-soaked 1980s urban magic card game.
 Card: "${cardName}" - ${cardDescription}
 Card type: ${cardType}
 Color palette: ${palette}
-No text, no words, no letters, no numbers. Centered iconic composition, suitable for a small card thumbnail. ${ART_STYLE}`;
+No text, no words, no letters, no numbers. Centered iconic composition, suitable for a small card thumbnail.`;
 
     return withRetry(async () => {
         const result = await model.generateContent([{ text: prompt }]);
