@@ -188,7 +188,6 @@ export function EntityPanel({ entity, isPlayer, inspectedEnemyId, onInspect }: E
     // --- Enemy: card-style threat panel ---
     const enemy = entity as Enemy;
     const intent = enemy.intent;
-    const showInfo = inspectedEnemyId === entity.id;
 
     let threatClass = '';
     if (intent) {
