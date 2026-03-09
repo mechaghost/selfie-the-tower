@@ -193,7 +193,6 @@ export function SelfieCaptureScreen() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="user"
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
             />
