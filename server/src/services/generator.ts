@@ -78,6 +78,6 @@ export function generateMockCharacter() {
     const traits = archetype.traits[Math.floor(Math.random() * archetype.traits.length)];
 
     const analysis: GeminiAnalysis = { archetype: archetypeId as any, name, title, traits };
-    const portraitUrl = `/assets/characters/${archetypeId}.png`;
+    const portraitUrl = `/assets/characters/${archetypeId}.webp`;
     return generateCharacterFromAnalysis(analysis, portraitUrl);
 }

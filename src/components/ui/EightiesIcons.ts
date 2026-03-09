@@ -8,5 +8,5 @@ export const EIGHTIES_ICONS = [
 
 /** Get a deterministic icon for a given index (wraps around) */
 export function eightiesIcon(index: number): string {
-    return `/assets/icons/${EIGHTIES_ICONS[index % EIGHTIES_ICONS.length]}.png`;
+    return `/assets/icons/${EIGHTIES_ICONS[index % EIGHTIES_ICONS.length]}.webp`;
 }

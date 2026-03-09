@@ -256,7 +256,7 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
                     data-entity-id={entity.id}
                 >
                     <img
-                        src={`/assets/enemies/${enemy.templateId}.png`}
+                        src={`/assets/enemies/${enemy.templateId}.webp`}
                         alt={entity.name}
                         className="enemy-portrait-img"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; e.currentTarget.parentElement!.textContent = '👹'; }}

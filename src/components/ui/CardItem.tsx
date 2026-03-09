@@ -232,7 +232,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
             <div className="card-name">{card.name}</div>
             {(card.imageUrl || card.imageId) ? (
                 <div className="card-artwork-wrap">
-                    <img src={card.imageUrl || `/assets/cards/${card.imageId}.png`} className="card-artwork" alt={card.name} />
+                    <img src={card.imageUrl || `/assets/cards/${card.imageId}.webp`} className="card-artwork" alt={card.name} />
                     <div className="card-type-badge">{card.type}</div>
                 </div>
             ) : (

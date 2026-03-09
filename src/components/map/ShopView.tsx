@@ -105,7 +105,7 @@ export function ShopView() {
                                         {(card.imageUrl || card.imageId) ? (
                                             <div className="shop-card-artwork-wrap">
                                                 <img
-                                                    src={card.imageUrl || `/assets/cards/${card.imageId}.png`}
+                                                    src={card.imageUrl || `/assets/cards/${card.imageId}.webp`}
                                                     className="shop-card-artwork"
                                                     alt={card.name}
                                                 />
@@ -195,7 +195,7 @@ export function ShopView() {
                                     {(card.imageUrl || card.imageId) ? (
                                         <div className="shop-card-artwork-wrap">
                                             <img
-                                                src={card.imageUrl || `/assets/cards/${card.imageId}.png`}
+                                                src={card.imageUrl || `/assets/cards/${card.imageId}.webp`}
                                                 className="shop-card-artwork"
                                                 alt={card.name}
                                             />
