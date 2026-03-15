@@ -147,11 +147,14 @@
 
 .reveal-hero-slot .card {
     cursor: pointer;
+    touch-action: manipulation;
 }
 
-.reveal-hero-slot .card:hover {
-    transform: translateY(-4px) scale(1.05) !important;
-    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
+@media (hover: hover) {
+    .reveal-hero-slot .card:hover {
+        transform: translateY(-4px) scale(1.05) !important;
+        box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
+    }
 }
 
 @keyframes hero-reveal {
@@ -196,11 +199,14 @@
 
 .reveal-card-slot .card {
     cursor: pointer;
+    touch-action: manipulation;
 }
 
-.reveal-card-slot .card:hover {
-    transform: translateY(-4px) scale(1.05) !important;
-    box-shadow: 0 8px 24px rgba(255, 110, 199, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
+@media (hover: hover) {
+    .reveal-card-slot .card:hover {
+        transform: translateY(-4px) scale(1.05) !important;
+        box-shadow: 0 8px 24px rgba(255, 110, 199, 0.3), 0 4px 12px rgba(0, 0, 0, 0.8);
+    }
 }
 
 .reveal-cards.visible .reveal-card-slot {
