@@ -17,9 +17,14 @@
     transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), z-index 0s;
 }
 
-.card-slot:has(.card:hover),
 .card-slot:has(.card.is-dragging) {
     z-index: var(--z-card-hover) !important;
+}
+
+@media (hover: hover) {
+    .card-slot:has(.card:hover) {
+        z-index: var(--z-card-hover) !important;
+    }
 }
 
 .card {
@@ -110,12 +115,20 @@
     }
 }
 
-.card:hover,
 .card.is-dragging {
     cursor: grabbing;
     transform: translateY(var(--card-hover-lift)) rotate(0deg) scale(var(--card-hover-scale)) !important;
     z-index: var(--z-card-hover) !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 1);
+}
+
+@media (hover: hover) {
+    .card:hover {
+        cursor: grabbing;
+        transform: translateY(var(--card-hover-lift)) rotate(0deg) scale(var(--card-hover-scale)) !important;
+        z-index: var(--z-card-hover) !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 1);
+    }
 }
 
 /* Non-targeting drag: card follows cursor/finger — must beat :hover !important */
@@ -260,11 +273,18 @@
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
-.card.hero-card:hover,
 .card.hero-card.is-dragging {
     box-shadow:
         0 12px 30px rgba(0, 0, 0, 1),
         0 0 25px rgba(255, 215, 0, 0.5);
+}
+
+@media (hover: hover) {
+    .card.hero-card:hover {
+        box-shadow:
+            0 12px 30px rgba(0, 0, 0, 1),
+            0 0 25px rgba(255, 215, 0, 0.5);
+    }
 }
 
 .card.hero-card.is-targeting {
@@ -301,10 +321,6 @@
         transform: translateY(var(--row-lift)) rotate(var(--row-rotation)) !important;
     }
 
-    .hand-container .card:hover {
-        transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
-    }
-
     .hand-container .card.is-targeting {
         transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
     }
@@ -314,6 +330,12 @@
     .hand-container .card.is-drag-moving:hover {
         transform: translate(var(--drag-dx), var(--drag-dy)) scale(1.05) !important;
         transition: none !important;
+    }
+}
+
+@media (max-width: 768px) and (hover: hover) {
+    .hand-container .card:hover {
+        transform: translateY(var(--card-hover-lift)) scale(var(--card-hover-scale)) !important;
     }
 }
 

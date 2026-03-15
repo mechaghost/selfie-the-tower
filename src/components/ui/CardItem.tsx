@@ -131,7 +131,7 @@ export function CardItem({ card, style, canPlay = true, isDraggable = true }: Ca
     // ==========================================
 
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-        if (!canPlay) return;
+        if (!canPlay || !isDraggable) return;
         refreshEnemyBounds();
 
         const touch = e.touches[0];
