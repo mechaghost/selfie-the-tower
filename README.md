@@ -18,11 +18,14 @@ Then you fight. Energy-based card combat, branching map paths, shops, mystery ev
 
 - **Selfie-to-hero pipeline** — face capture, archetype assignment, portrait + card art generation
 - **5 archetypes** — Neon (fire), Chrome (water), Volt (lightning), Concrete (earth), Smoke (shadow)
-- **70+ cards** — 10 per archetype + 20 colorless utility cards
+- **70+ cards** — 10 per archetype + 23 colorless utility cards
+- **7 status effects** — Vulnerable, Weak, Strength, Dexterity, plus Burn (damage over time), Spikes (retaliation), and Regen (healing over time)
+- **Combat loot** — pick 1 of 3 cards after every victory, or skip to keep the deck lean
 - **23 enemies** — including elites and bosses with varied intents
 - **Procedural maps** — seeded RNG for deterministic runs
 - **Node events** — rest sites, shops, mystery encounters with narrative choices
 - **Run persistence** — localStorage auto-save, resume where you left off
+- **Combat juice** — screen shake, hit bursts, death dissolves, chip-damage HP bars
 - **Mobile-first** — designed for phones, works on desktop
 
 ## Tech Stack
