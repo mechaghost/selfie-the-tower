@@ -996,6 +996,13 @@ export const ELITE_TEMPLATE_IDS = new Set([
     'chrome_bouncer',
 ]);
 
+/** Set of all boss templateIds for reward scaling */
+export const BOSS_TEMPLATE_IDS = new Set([
+    'the_billboard',
+    'subway_wyrm',
+    'dj_phantom',
+]);
+
 export function createEnemyInstance(templateId: string, id: string, rng: RNG | null): Enemy {
     const template = enemies[templateId];
     if (!template) throw new Error(`Enemy template ${templateId} not found`);

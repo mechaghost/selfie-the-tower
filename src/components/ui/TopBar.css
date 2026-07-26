@@ -175,11 +175,22 @@
     color: var(--color-accent-amber);
 }
 
+.stat.deck {
+    color: var(--color-accent-violet);
+    font-size: 0.75rem;
+}
+
 .floor-text {
     font-family: var(--font-family-display);
     font-size: 0.9rem;
     letter-spacing: 1px;
     color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.floor-total {
+    opacity: 0.55;
+    font-size: 0.8em;
 }
 
 /* === Desktop overrides === */
@@ -220,6 +231,10 @@
 
     .stat {
         font-size: 1.1rem;
+    }
+
+    .stat.deck {
+        font-size: 0.95rem;
     }
 
     .floor-text {

@@ -103,6 +103,10 @@ export function MapView() {
                             const endX = `${centeredX(target)}%`;
                             const endY = `${100 - floorPct(target.y)}%`;
 
+                            // Edges leaving the current node toward a pickable node glow
+                            const isWalkable = node.id === currentNodeId &&
+                                availableNodes.some(an => an.id === targetId);
+
                             return (
                                 <line
                                     key={`${node.id}-${targetId}`}
@@ -110,9 +114,7 @@ export function MapView() {
                                     y1={startY}
                                     x2={endX}
                                     y2={endY}
-                                    stroke="rgba(255, 255, 255, 0.2)"
-                                    strokeWidth="2"
-                                    strokeDasharray="4 4"
+                                    className={isWalkable ? 'map-edge walkable' : 'map-edge'}
                                 />
                             );
                         })
@@ -121,18 +123,28 @@ export function MapView() {
 
                 {sortedFloors.map(y => (
                     <div key={y} data-floor={y} className="map-floor" style={{ bottom: `${6 + ((y - 1) / 8) * 84}%` }}>
-                        {floorsMap[y].map(node => (
-                            <div
-                                key={node.id}
-                                className={`map-node ${availableNodes.some(an => an.id === node.id) ? 'available' : ''} ${node.y < floor || node.id === currentNodeId ? 'completed' : ''}`}
-                                style={{ left: `${centeredX(node)}%` }}
-                                onClick={() => handleNodeClick(node)}
-                            >
-                                <div className="node-circle">
-                                    {renderIcon(node.type)}
+                        {floorsMap[y].map(node => {
+                            const isCurrent = node.id === currentNodeId;
+                            const classes = [
+                                'map-node',
+                                `type-${node.type.toLowerCase()}`,
+                                availableNodes.some(an => an.id === node.id) ? 'available' : '',
+                                isCurrent ? 'current' : node.y < floor ? 'completed' : '',
+                            ].filter(Boolean).join(' ');
+                            return (
+                                <div
+                                    key={node.id}
+                                    className={classes}
+                                    style={{ left: `${centeredX(node)}%` }}
+                                    onClick={() => handleNodeClick(node)}
+                                >
+                                    <div className="node-circle">
+                                        {renderIcon(node.type)}
+                                    </div>
+                                    {isCurrent && <div className="node-you-marker">YOU</div>}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ))}
 

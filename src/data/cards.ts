@@ -400,3 +400,37 @@ export const createCardInstance = (cardId: string, rng?: RNG): Card => {
         instanceId: `${cardId}_${unique}`
     };
 };
+
+/**
+ * Upgrade a card in place-style: +3 to its first Damage effect, else +3 to
+ * its first Block effect, else cost -1. Used by rest-site forging and
+ * elite/boss loot. Returns the card unchanged if already upgraded.
+ */
+export const upgradeCard = (card: Card): Card => {
+    if (card.upgraded) return card;
+    const upgraded = { ...card, upgraded: true };
+
+    const dmgIdx = upgraded.effects.findIndex(e => e.type === 'Damage' && e.amount != null);
+    if (dmgIdx !== -1) {
+        const newEffects = [...upgraded.effects];
+        newEffects[dmgIdx] = { ...newEffects[dmgIdx], amount: (newEffects[dmgIdx].amount || 0) + 3 };
+        upgraded.effects = newEffects;
+        upgraded.name = card.name + '+';
+        upgraded.description = upgraded.description.replace(/\d+/, (m) => String(Number(m) + 3));
+        return upgraded;
+    }
+
+    const blkIdx = upgraded.effects.findIndex(e => e.type === 'Block' && e.amount != null);
+    if (blkIdx !== -1) {
+        const newEffects = [...upgraded.effects];
+        newEffects[blkIdx] = { ...newEffects[blkIdx], amount: (newEffects[blkIdx].amount || 0) + 3 };
+        upgraded.effects = newEffects;
+        upgraded.name = card.name + '+';
+        upgraded.description = upgraded.description.replace(/\d+/, (m) => String(Number(m) + 3));
+        return upgraded;
+    }
+
+    upgraded.cost = Math.max(0, upgraded.cost - 1);
+    upgraded.name = card.name + '+';
+    return upgraded;
+};
