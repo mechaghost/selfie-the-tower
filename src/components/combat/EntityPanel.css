@@ -73,9 +73,17 @@
 }
 
 .entity-panel.player .entity-avatar {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     font-size: 2.5rem;
+}
+
+/* Emoji fallback (no sprite, no portrait): give it an intentional frame */
+.entity-panel.player .entity-avatar:not(.has-sprite):not(.has-portrait) {
+    background: radial-gradient(circle at 35% 30%, #2c2b4a, var(--color-bg-surface) 75%);
+    border: 2px solid var(--color-accent-violet);
+    border-radius: 50%;
+    box-shadow: 0 0 14px rgba(185, 103, 255, 0.35), 0 6px 14px rgba(0, 0, 0, 0.6);
 }
 
 /* Circular portrait fallback (when no sprite) */
@@ -164,7 +172,7 @@
 
 /* --- Enemy: card-style threat panel --- */
 .entity-panel.enemy {
-    width: 90px;
+    width: 96px;
     background: rgba(26, 26, 46, 0.9);
     border: 1px solid var(--color-border);
     border-radius: 10px;
@@ -262,8 +270,8 @@
 
 /* --- Shared avatar styles --- */
 .entity-avatar {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     background: transparent;
     display: flex;
     align-items: center;
@@ -346,6 +354,19 @@
 .entity-avatar-container {
     position: relative;
     display: inline-block;
+}
+
+/* Grounding shadow so entities sit on the stage instead of floating */
+.entity-avatar-container::before {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 78%;
+    height: 12px;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent 70%);
+    pointer-events: none;
 }
 
 .floating-text {
@@ -589,16 +610,21 @@
 
 @media (min-width: 769px) {
     .entity-panel.player .entity-avatar {
-        width: 70px;
-        height: 70px;
-        font-size: 3.5rem;
+        width: 104px;
+        height: 104px;
+        font-size: 4rem;
     }
 
     .entity-panel.player .entity-avatar.has-sprite {
-        width: 140px;
-        height: 220px;
+        width: 150px;
+        height: 235px;
         border-width: 3px;
         border-radius: 10px;
+    }
+
+    .entity-panel.player .entity-avatar.has-portrait:not(.has-sprite) {
+        width: 110px;
+        height: 110px;
     }
 
     .player-info-bar .player-name {
@@ -606,7 +632,7 @@
     }
 
     .player-info-bar .hp-bar-container.player-hp {
-        width: 140px;
+        width: 150px;
     }
 
     .player-block-inline {
@@ -618,7 +644,7 @@
     }
 
     .entity-panel.enemy {
-        width: 140px;
+        width: 164px;
         padding: 0.5rem 0.4rem 0.6rem;
         gap: 0.25rem;
         border-radius: 12px;
@@ -633,9 +659,14 @@
     }
 
     .entity-avatar {
-        width: 80px;
-        height: 80px;
+        width: 104px;
+        height: 104px;
         font-size: 3.2rem;
+    }
+
+    .entity-avatar-container::before {
+        bottom: -12px;
+        height: 16px;
     }
 
     .floating-text {

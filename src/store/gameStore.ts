@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { Card, Enemy, Player, GameAction, FloatingText, ActiveAnimation, AnimationType, ScreenShake, Effect, StatusEffect, UgcPhase, GeneratedCharacter, GeneratedCard, GenerateCharacterResponse } from '../core/models';
 import { RNG } from '../core/rng';
-import { createCardInstance, CARD_DATABASE } from '../data/cards';
+import { createCardInstance, upgradeCard, CARD_DATABASE } from '../data/cards';
 import { STATUS_REGISTRY } from '../data/statusEffects';
 import { ENCOUNTER_POOLS } from '../data/encounters';
-import { createEnemyInstance, enemies, ELITE_TEMPLATE_IDS } from '../data/enemies';
+import { createEnemyInstance, enemies, ELITE_TEMPLATE_IDS, BOSS_TEMPLATE_IDS } from '../data/enemies';
 import { CHARACTERS } from '../data/characters';
 import { EVENTS, GameEvent } from '../data/events';
 
@@ -35,6 +35,8 @@ interface GameState {
     rng: RNG | null;
     floor: number;
     currentNodeId: string | null;
+    isBossFloor: boolean;
+    isRunComplete: boolean;
 
     // --- Combat State ---
     inCombat: boolean;
@@ -170,13 +172,13 @@ export function resolveEffects(
         if (effect.type === 'Damage' && effect.amount != null && effect.target === 'AllEnemies' && targets.length > 1) {
             if (sourceId) {
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
-                actions.push({ type: 'DELAY', payload: { ms: 300 } });
+                actions.push({ type: 'DELAY', payload: { ms: 250 } });
             }
             targets.forEach(targetId => {
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount! } });
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
             });
-            actions.push({ type: 'DELAY', payload: { ms: 400 } });
+            actions.push({ type: 'DELAY', payload: { ms: 320 } });
             return;
         }
 
@@ -185,11 +187,11 @@ export function resolveEffects(
             if (effect.type === 'Damage' && effect.amount != null) {
                 if (sourceId) {
                     actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
-                    actions.push({ type: 'DELAY', payload: { ms: 300 } });
+                    actions.push({ type: 'DELAY', payload: { ms: 250 } });
                 }
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount } });
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
-                actions.push({ type: 'DELAY', payload: { ms: 400 } });
+                actions.push({ type: 'DELAY', payload: { ms: 320 } });
             } else if (effect.type === 'Block' && effect.amount != null) {
                 actions.push({ type: 'GAIN_BLOCK', payload: { sourceId, targetId, amount: effect.amount } });
             } else if (effect.type === 'ApplyStatus' && effect.amount != null && effect.statusId) {
@@ -216,18 +218,25 @@ export function resolveEffects(
 // Basic starters never show up as loot — rewards should feel like an upgrade
 const REWARD_EXCLUDED_IDS = new Set(['neon_jab', 'dodge_roll']);
 
-// Shared by every kill path (attacks, burn ticks, thorns retaliation)
+// Shared by every kill path (attacks, burn ticks, thorns retaliation).
+// Reward tiers: normal fights pay 10-20 gold, elites 50-80, bosses 90-130.
+// Elite and boss loot comes pre-upgraded (+).
 function buildVictoryState(state: GameState): Partial<GameState> {
     const rng = state.rng;
-    // Elite encounters award bonus gold (50-80) vs normal (10-20)
+    const hasBoss = state.enemies.some(e => BOSS_TEMPLATE_IDS.has(e.templateId));
     const hasElite = state.enemies.some(e => ELITE_TEMPLATE_IDS.has(e.templateId));
-    const goldReward = hasElite
-        ? (rng ? rng.nextInt(50, 81) : 65)
-        : (rng ? rng.nextInt(10, 21) : 15);
+    const goldReward = hasBoss
+        ? (rng ? rng.nextInt(90, 131) : 110)
+        : hasElite
+            ? (rng ? rng.nextInt(50, 81) : 65)
+            : (rng ? rng.nextInt(10, 21) : 15);
 
     const pool = Object.keys(CARD_DATABASE).filter(id => !REWARD_EXCLUDED_IDS.has(id));
     const shuffledPool = rng ? rng.shuffle(pool) : pool;
-    const cardRewards = shuffledPool.slice(0, 3).map(id => createCardInstance(id, rng ?? undefined));
+    let cardRewards = shuffledPool.slice(0, 3).map(id => createCardInstance(id, rng ?? undefined));
+    if (hasBoss || hasElite) {
+        cardRewards = cardRewards.map(upgradeCard);
+    }
 
     return {
         combatResult: 'victory',
@@ -255,7 +264,7 @@ const defaultDragState: DragState = {
 const SAVE_KEY = 'stt_run';
 
 const PERSISTED_KEYS = [
-    'seed', 'floor', 'currentNodeId',
+    'seed', 'floor', 'currentNodeId', 'isBossFloor', 'isRunComplete',
     'player', 'masterDeck', 'drawPile', 'hand', 'discardPile', 'exhaustPile',
     'inCombat', 'enemies', 'isPlayerTurn', 'isGameOver',
     'combatResult', 'goldReward', 'cardRewards',
@@ -299,6 +308,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     rng: null,
     floor: 0,
     currentNodeId: null,
+    isBossFloor: false,
+    isRunComplete: false,
 
     isGameOver: false,
     inCombat: false,
@@ -364,6 +375,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             player: {
                 id: 'player',
                 name: charDef.name,
@@ -430,7 +443,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                 playingCards: [],
                 hand: [],
                 player: freshPlayer,
-                actionQueue: [{ type: 'START_TURN' }]
+                // Intents first so enemies telegraph from turn 1 —
+                // CALCULATE_INTENTS chains into START_TURN itself
+                actionQueue: [{ type: 'CALCULATE_INTENTS' }]
             };
         });
 
@@ -445,7 +460,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         // Update floor and current node first
         set({
             floor: state.floor + 1,
-            currentNodeId: node.id
+            currentNodeId: node.id,
+            isBossFloor: node.type === 'Boss'
         });
 
         if (['Combat', 'Elite', 'Boss'].includes(node.type)) {
@@ -555,6 +571,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             player: {
                 id: 'player',
                 name: generatedCharacter.name,
@@ -624,34 +642,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     restUpgrade: (cardInstanceId: string) => {
         set((current) => {
-            const newDeck = current.masterDeck.map(card => {
-                if (card.instanceId !== cardInstanceId || card.upgraded) return card;
-                const upgradedCard = { ...card, upgraded: true };
-                // Upgrade first Damage effect: +3
-                const dmgIdx = upgradedCard.effects.findIndex(e => e.type === 'Damage' && e.amount != null);
-                if (dmgIdx !== -1) {
-                    const newEffects = [...upgradedCard.effects];
-                    newEffects[dmgIdx] = { ...newEffects[dmgIdx], amount: (newEffects[dmgIdx].amount || 0) + 3 };
-                    upgradedCard.effects = newEffects;
-                    upgradedCard.name = card.name + '+';
-                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
-                    return upgradedCard;
-                }
-                // Upgrade first Block effect: +3
-                const blkIdx = upgradedCard.effects.findIndex(e => e.type === 'Block' && e.amount != null);
-                if (blkIdx !== -1) {
-                    const newEffects = [...upgradedCard.effects];
-                    newEffects[blkIdx] = { ...newEffects[blkIdx], amount: (newEffects[blkIdx].amount || 0) + 3 };
-                    upgradedCard.effects = newEffects;
-                    upgradedCard.name = card.name + '+';
-                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
-                    return upgradedCard;
-                }
-                // Fallback: reduce cost by 1 (min 0)
-                upgradedCard.cost = Math.max(0, upgradedCard.cost - 1);
-                upgradedCard.name = card.name + '+';
-                return upgradedCard;
-            });
+            const newDeck = current.masterDeck.map(card =>
+                card.instanceId === cardInstanceId ? upgradeCard(card) : card
+            );
             return { masterDeck: newDeck, nodeEvent: null };
         });
     },
@@ -842,6 +835,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng: null,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             inCombat: false,
             isGameOver: false,
             isPlayerTurn: false,
@@ -879,6 +874,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     // Victory: leave without taking a card (rewards are optional). Defeat: game over.
+    // Winning the boss floor completes the run.
     continueCombatResult: () => {
         const state = get();
         if (state.combatResult === 'victory') {
@@ -888,7 +884,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 enemies: [],
                 player: { ...state.player, gold: state.player.gold + state.goldReward },
                 goldReward: 0,
-                cardRewards: []
+                cardRewards: [],
+                isRunComplete: state.isBossFloor
             });
         } else if (state.combatResult === 'defeat') {
             clearRun();
@@ -912,7 +909,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             masterDeck: [...state.masterDeck, card],
             player: { ...state.player, gold: state.player.gold + state.goldReward },
             goldReward: 0,
-            cardRewards: []
+            cardRewards: [],
+            isRunComplete: state.isBossFloor
         });
     },
 
@@ -1235,7 +1233,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                     }
                 }
 
-                delay = 400;
+                delay = 350;
                 break;
             }
             case 'DRAW_CARD': {
@@ -1294,7 +1292,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                         const intentActions = resolveEffects(enemy.intent.effects, enemy.id, 'player', allEnemyIds, freshState.rng);
                         enemyActions = enemyActions.concat(intentActions);
 
-                        enemyActions.push({ type: 'DELAY', payload: { ms: 600 } });
+                        enemyActions.push({ type: 'DELAY', payload: { ms: 400 } });
                     }
                 });
 
@@ -1407,7 +1405,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             case 'ANNOUNCE_INTENT': {
                 const { targetId, text } = action.payload;
                 get().addFloatingText({ targetId, value: text, type: 'status' });
-                delay = 1200;
+                delay = 650;
                 break;
             }
             case 'DELAY': {

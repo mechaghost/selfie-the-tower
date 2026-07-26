@@ -48,8 +48,14 @@ export function CombatResultOverlay() {
 
                 {hasRewards && (
                     <div className="reward-section">
-                        <h2 className="reward-heading">Loot the remains</h2>
-                        <p className="reward-hint">Tap a card to add it to your deck.</p>
+                        <h2 className={`reward-heading ${cardRewards.every(c => c.upgraded) ? 'prime' : ''}`}>
+                            {cardRewards.every(c => c.upgraded) ? 'Prime loot' : 'Loot the remains'}
+                        </h2>
+                        <p className="reward-hint">
+                            {cardRewards.every(c => c.upgraded)
+                                ? 'Pre-sharpened. Tap a card to add it to your deck.'
+                                : 'Tap a card to add it to your deck.'}
+                        </p>
                         <div className="reward-card-row">
                             {cardRewards.map((card, i) => (
                                 <div

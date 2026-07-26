@@ -337,13 +337,14 @@
     .entities-container {
         flex-direction: row;
         padding: 0 2rem;
-        gap: 3rem;
+        gap: 5rem;
         overflow: hidden;
     }
 
     .enemy-zone {
-        gap: 1rem 1.5rem;
-        padding: 1rem 1.5rem;
+        gap: 1rem 1.75rem;
+        padding: 1.25rem 1.75rem;
+        border-radius: 16px;
     }
 
     .turn-phase-banner {

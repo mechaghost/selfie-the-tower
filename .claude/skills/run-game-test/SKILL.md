@@ -313,7 +313,7 @@ Log: `Mystery: {event.title} — chose "{choice.label}" → {outcome}`
 
 After the loop ends:
 
-**Victory**: The boss fight is on floor 9. After `continueCombatResult()`, `isGameOver` stays `false` — the game just returns to the map with no more nodes. This is expected. The victory condition is: boss combat result was `'victory'` and floor is 9.
+**Victory**: The boss fight is on floor 9. After claiming the reward (or `continueCombatResult()`), the store sets `isRunComplete: true` and the app shows the SPIRE CLEARED screen. The victory condition is: `store.getState().isRunComplete === true`.
 
 **Defeat**: `isGameOver` is set to `true` after `continueCombatResult()` on a defeat. The "YOU DIED" screen shows the floor reached.
 

@@ -119,6 +119,12 @@
     margin: 0 0 0.2rem;
 }
 
+/* Elite/boss loot comes pre-upgraded */
+.reward-heading.prime {
+    color: var(--color-accent-violet);
+    text-shadow: 0 0 12px rgba(185, 103, 255, 0.55);
+}
+
 .reward-hint {
     font-size: 0.65rem;
     color: var(--color-text-secondary);
