@@ -30,12 +30,12 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
         cards: [
             { name: 'Flare', imageId: 'neon_neon_strike', type: 'Attack', cost: 1, description: 'Deal 6 damage.', target: 'Enemy', effects: [{ type: 'Damage', amount: 6, target: 'Target' }] },
             { name: 'Scorch', imageId: 'neon_flame_tag', type: 'Attack', cost: 1, description: 'Deal 6 damage.', target: 'Enemy', effects: [{ type: 'Damage', amount: 6, target: 'Target' }] },
-            { name: 'Molotov', imageId: 'neon_molotov_toss', type: 'Attack', cost: 2, description: 'Deal 12 damage.', target: 'Enemy', effects: [{ type: 'Damage', amount: 12, target: 'Target' }] },
+            { name: 'Molotov', imageId: 'neon_molotov_toss', type: 'Attack', cost: 2, description: 'Deal 8 damage. Apply 3 Burn.', target: 'Enemy', effects: [{ type: 'Damage', amount: 8, target: 'Target' }, { type: 'ApplyStatus', amount: 3, statusId: 'burn', target: 'Target' }] },
             { name: 'Wildfire', imageId: 'neon_wildfire', type: 'Attack', cost: 1, description: 'Deal 4 damage to ALL enemies.', target: 'AllEnemies', effects: [{ type: 'Damage', amount: 4, target: 'AllEnemies' }] },
             { name: 'Shimmer', imageId: 'neon_heat_shimmer', type: 'Skill', cost: 1, description: 'Gain 5 Block.', target: 'Self', effects: [{ type: 'Block', amount: 5, target: 'Self' }] },
             { name: 'Firewall', imageId: 'neon_firewall', type: 'Skill', cost: 1, description: 'Gain 5 Block.', target: 'Self', effects: [{ type: 'Block', amount: 5, target: 'Self' }] },
             { name: 'Barrier', imageId: 'neon_blaze_barrier', type: 'Skill', cost: 2, description: 'Gain 12 Block.', target: 'Self', effects: [{ type: 'Block', amount: 12, target: 'Self' }] },
-            { name: 'Ignite', imageId: 'neon_flash_burn', type: 'Skill', cost: 1, description: 'Apply 2 Vulnerable.', target: 'Enemy', effects: [{ type: 'ApplyStatus', amount: 2, statusId: 'vulnerable', target: 'Target' }] },
+            { name: 'Ignite', imageId: 'neon_flash_burn', type: 'Skill', cost: 1, description: 'Apply 4 Burn.', target: 'Enemy', effects: [{ type: 'ApplyStatus', amount: 4, statusId: 'burn', target: 'Target' }] },
             { name: 'Kindle', imageId: 'neon_inner_fire', type: 'Power', cost: 1, description: 'Gain 2 Strength.', target: 'Self', effects: [{ type: 'ApplyStatus', amount: 2, statusId: 'strength', target: 'Self' }] },
             { name: 'Burst', imageId: 'neon_sign_burst', type: 'Attack', cost: 2, description: 'Deal 8 damage to ALL enemies. Apply 1 Vulnerable.', target: 'AllEnemies', effects: [{ type: 'Damage', amount: 8, target: 'AllEnemies' }, { type: 'ApplyStatus', amount: 1, statusId: 'vulnerable', target: 'AllEnemies' }] },
         ]
@@ -78,7 +78,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
             { name: 'Arc', imageId: 'volt_arc_flash', type: 'Attack', cost: 1, description: 'Deal 5 damage. Draw 1 card.', target: 'Enemy', effects: [{ type: 'Damage', amount: 5, target: 'Target' }, { type: 'Draw', amount: 1, target: 'Self' }] },
             { name: 'Thunder', imageId: 'volt_thunderclap', type: 'Attack', cost: 2, description: 'Deal 11 damage.', target: 'Enemy', effects: [{ type: 'Damage', amount: 11, target: 'Target' }] },
             { name: 'Chain', imageId: 'volt_chain_lightning', type: 'Attack', cost: 1, description: 'Deal 4 damage to ALL enemies.', target: 'AllEnemies', effects: [{ type: 'Damage', amount: 4, target: 'AllEnemies' }] },
-            { name: 'Static', imageId: 'volt_static_shield', type: 'Skill', cost: 1, description: 'Gain 5 Block.', target: 'Self', effects: [{ type: 'Block', amount: 5, target: 'Self' }] },
+            { name: 'Static', imageId: 'volt_static_shield', type: 'Skill', cost: 1, description: 'Gain 4 Block. Gain 2 Spikes.', target: 'Self', effects: [{ type: 'Block', amount: 4, target: 'Self' }, { type: 'ApplyStatus', amount: 2, statusId: 'thorns', target: 'Self' }] },
             { name: 'Freq', imageId: 'volt_frequency_wall', type: 'Skill', cost: 1, description: 'Gain 5 Block.', target: 'Self', effects: [{ type: 'Block', amount: 5, target: 'Self' }] },
             { name: 'Surge', imageId: 'volt_power_surge', type: 'Skill', cost: 2, description: 'Gain 11 Block. Draw 1 card.', target: 'Self', effects: [{ type: 'Block', amount: 11, target: 'Self' }, { type: 'Draw', amount: 1, target: 'Self' }] },
             { name: 'Overload', imageId: 'volt_overcharge', type: 'Skill', cost: 0, description: 'Draw 2 cards.', target: 'Self', effects: [{ type: 'Draw', amount: 2, target: 'Self' }], exhausts: true },
@@ -106,7 +106,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
             { name: 'Ironwood', imageId: 'concrete_ironwood', type: 'Skill', cost: 2, description: 'Gain 16 Block.', target: 'Self', effects: [{ type: 'Block', amount: 16, target: 'Self' }] },
             { name: 'Entangle', imageId: 'concrete_entangle', type: 'Skill', cost: 1, description: 'Apply 2 Weak. Gain 4 Block.', target: 'Enemy', effects: [{ type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }, { type: 'Block', amount: 4, target: 'Self' }] },
             { name: 'Fortify', imageId: 'concrete_fortify', type: 'Power', cost: 1, description: 'Gain 3 Dexterity.', target: 'Self', effects: [{ type: 'ApplyStatus', amount: 3, statusId: 'dexterity', target: 'Self' }] },
-            { name: 'Regen', imageId: 'concrete_regenerate', type: 'Skill', cost: 1, description: 'Heal 6 HP. Gain 4 Block.', target: 'Self', effects: [{ type: 'Heal', amount: 6, target: 'Self' }, { type: 'Block', amount: 4, target: 'Self' }], exhausts: true },
+            { name: 'Regen', imageId: 'concrete_regenerate', type: 'Skill', cost: 1, description: 'Gain 4 Regen. Gain 3 Block. Exhaust.', target: 'Self', effects: [{ type: 'ApplyStatus', amount: 4, statusId: 'regen', target: 'Self' }, { type: 'Block', amount: 3, target: 'Self' }], exhausts: true },
         ]
     },
 

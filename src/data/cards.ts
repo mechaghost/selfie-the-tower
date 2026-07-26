@@ -342,6 +342,51 @@ export const CARD_DATABASE: Record<string, Card> = {
         ],
         imageId: 'colorless_ballad'
     },
+
+    // --- Status-mechanic cards (Burn / Spikes / Regen) ---
+
+    torch_it: {
+        id: 'torch_it',
+        instanceId: '',
+        name: 'Torch It',
+        type: 'Attack',
+        cost: 1,
+        description: 'Deal 4 damage. Apply 3 Burn.',
+        target: 'Enemy',
+        effects: [
+            { type: 'Damage', amount: 4, target: 'Target' },
+            { type: 'ApplyStatus', amount: 3, statusId: 'burn', target: 'Target' }
+        ],
+        imageId: 'colorless_torch_it'
+    },
+    spiked_jacket: {
+        id: 'spiked_jacket',
+        instanceId: '',
+        name: 'Spiked Jacket',
+        type: 'Skill',
+        cost: 1,
+        description: 'Gain 4 Block. Gain 2 Spikes.',
+        target: 'Self',
+        effects: [
+            { type: 'Block', amount: 4, target: 'Self' },
+            { type: 'ApplyStatus', amount: 2, statusId: 'thorns', target: 'Self' }
+        ],
+        imageId: 'colorless_spiked_jacket'
+    },
+    second_wind: {
+        id: 'second_wind',
+        instanceId: '',
+        name: 'Second Wind',
+        type: 'Skill',
+        cost: 1,
+        description: 'Gain 4 Regen. Exhaust.',
+        target: 'Self',
+        exhausts: true,
+        effects: [
+            { type: 'ApplyStatus', amount: 4, statusId: 'regen', target: 'Self' }
+        ],
+        imageId: 'colorless_second_wind'
+    },
 };
 
 export const createCardInstance = (cardId: string, rng?: RNG): Card => {

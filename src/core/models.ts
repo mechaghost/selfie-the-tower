@@ -28,6 +28,9 @@ export interface StatusDefinition {
     damageGivenMultiplier?: number;
     flatDamageGivenPerStack?: number;
     flatBlockGivenPerStack?: number;
+    hpLossPerTurn?: number;          // Burn: HP lost per stack at start of owner's turn (ignores block)
+    retaliateDamagePerStack?: number; // Spikes: damage dealt back per stack when attacked
+    healPerTurn?: number;            // Regen: HP healed per stack at start of owner's turn
 }
 
 export interface StatusEffect {
@@ -102,6 +105,7 @@ export type GameActionType =
     | 'GAIN_BLOCK'
     | 'APPLY_STATUS'
     | 'HEAL_ENTITY'
+    | 'STATUS_TICK'
     | 'END_TURN'
     | 'START_TURN'
     | 'CALCULATE_INTENTS'
@@ -118,14 +122,21 @@ export interface FloatingText {
     id: string; // Unique for React key
     targetId: string; // The entity ID to attach to
     value: number | string;
-    type: 'damage' | 'block' | 'heal' | 'status';
+    type: 'damage' | 'block' | 'heal' | 'status' | 'burn' | 'blocked';
 }
+
+export type AnimationType = 'lunge' | 'stagger' | 'hit' | 'burn-tick';
 
 export interface ActiveAnimation {
     id: string;
     targetId: string;
-    type: 'lunge' | 'stagger';
+    type: AnimationType;
     destinationId?: string;
+}
+
+export interface ScreenShake {
+    id: string; // Nonce so consecutive shakes re-trigger the CSS animation
+    intensity: 'light' | 'heavy';
 }
 
 export interface Character {

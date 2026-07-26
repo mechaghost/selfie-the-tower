@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { Enemy } from '../../core/models';
 import { TopBar } from '../ui/TopBar';
@@ -10,19 +10,34 @@ import './CombatView.css';
 
 export function CombatView() {
     const {
-        player, enemies, endTurn, energy, isPlayerTurn, combatResult
+        player, enemies, endTurn, energy, maxEnergy, isPlayerTurn, combatResult, screenShake
     } = useGameStore((state) => ({
         player: state.player,
         enemies: state.enemies,
         endTurn: state.endTurn,
         energy: state.player.energy,
+        maxEnergy: state.player.maxEnergy,
         isPlayerTurn: state.isPlayerTurn,
-        combatResult: state.combatResult
+        combatResult: state.combatResult,
+        screenShake: state.screenShake
     }));
 
     const isDisabled = !isPlayerTurn || combatResult !== null;
 
     const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
+
+    // Flash "YOUR TURN" when control comes back to the player
+    const [showTurnFlash, setShowTurnFlash] = useState(false);
+    const prevTurnRef = useRef(isPlayerTurn);
+    useEffect(() => {
+        const wasPlayerTurn = prevTurnRef.current;
+        prevTurnRef.current = isPlayerTurn;
+        if (isPlayerTurn && !wasPlayerTurn && !combatResult) {
+            setShowTurnFlash(true);
+            const t = setTimeout(() => setShowTurnFlash(false), 1100);
+            return () => clearTimeout(t);
+        }
+    }, [isPlayerTurn, combatResult]);
 
     const handleStageClick = useCallback(() => {
         setInspectedEnemyId(null);
@@ -38,7 +53,10 @@ export function CombatView() {
     );
 
     return (
-        <div className="combat-stage" onClick={handleStageClick}>
+        <div
+            className={`combat-stage ${screenShake ? `shake-${screenShake.intensity}` : ''}`}
+            onClick={handleStageClick}
+        >
             {/* Background particle layer */}
             <div className="combat-particles" />
 
@@ -85,11 +103,17 @@ export function CombatView() {
                     ENEMY TURN
                 </div>
             )}
+            {showTurnFlash && isPlayerTurn && !combatResult && (
+                <div className="turn-phase-banner player-turn">
+                    YOUR TURN
+                </div>
+            )}
 
             <div className="table-controls">
                 <div className="controls-left">
-                    <div className="energy-orb">
-                        {energy}
+                    <div className={`energy-orb ${energy === 0 ? 'empty' : ''} ${energy === maxEnergy && isPlayerTurn ? 'full' : ''}`}>
+                        <span className="energy-current">{energy}</span>
+                        <span className="energy-max">/{maxEnergy}</span>
                     </div>
                 </div>
 
