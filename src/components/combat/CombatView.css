@@ -14,6 +14,40 @@
     position: relative;
 }
 
+/* Screen shake when the player takes a hit */
+.combat-stage.shake-light {
+    animation: stageShakeLight 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.combat-stage.shake-heavy {
+    animation: stageShakeHeavy 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes stageShakeLight {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-4px, 2px); }
+    40% { transform: translate(4px, -2px); }
+    60% { transform: translate(-3px, -1px); }
+    80% { transform: translate(2px, 1px); }
+}
+
+@keyframes stageShakeHeavy {
+    0%, 100% { transform: translate(0, 0); }
+    15% { transform: translate(-10px, 4px) rotate(-0.4deg); }
+    30% { transform: translate(9px, -3px) rotate(0.3deg); }
+    45% { transform: translate(-7px, 3px); }
+    60% { transform: translate(6px, -2px); }
+    75% { transform: translate(-4px, 2px); }
+    90% { transform: translate(2px, -1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .combat-stage.shake-light,
+    .combat-stage.shake-heavy {
+        animation: none;
+    }
+}
+
 /* Background particle layer */
 .combat-particles {
     position: absolute;
@@ -90,6 +124,14 @@
     box-shadow: 0 0 12px rgba(255, 56, 96, 0.2);
 }
 
+.turn-phase-banner.player-turn {
+    background: rgba(57, 255, 20, 0.12);
+    border: 1px solid rgba(57, 255, 20, 0.4);
+    color: var(--color-accent-green);
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+    animation: phaseBannerIn 0.25s ease-out, phaseBannerOut 0.3s ease-in 0.75s forwards;
+}
+
 @keyframes phaseBannerIn {
     0% {
         opacity: 0;
@@ -98,6 +140,13 @@
     100% {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes phaseBannerOut {
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
     }
 }
 
@@ -129,9 +178,9 @@
     background: radial-gradient(circle at 35% 35%, #ff6ec7, #b967ff 50%, #7c3aed 100%);
     border: 2px solid #ffb3e6;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 900;
     font-family: var(--font-family-display);
     color: white;
@@ -139,6 +188,35 @@
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 1px 1px 2px rgba(0, 0, 0, 0.8);
     position: relative;
     overflow: hidden;
+    padding-top: 10px;
+    box-sizing: border-box;
+    transition: filter 0.3s ease;
+}
+
+.energy-orb .energy-max {
+    font-size: 0.55rem;
+    opacity: 0.8;
+}
+
+/* Full tank: slow pulse invites you to spend it */
+.energy-orb.full {
+    animation: orbPulse 2s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+    0%, 100% {
+        box-shadow: 0 0 16px rgba(185, 103, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(185, 103, 255, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+        transform: scale(1.06);
+    }
+}
+
+/* Empty: dims until the next turn */
+.energy-orb.empty {
+    filter: grayscale(0.7) brightness(0.6);
 }
 
 .energy-orb::before {
@@ -259,13 +337,14 @@
     .entities-container {
         flex-direction: row;
         padding: 0 2rem;
-        gap: 3rem;
+        gap: 5rem;
         overflow: hidden;
     }
 
     .enemy-zone {
-        gap: 1rem 1.5rem;
-        padding: 1rem 1.5rem;
+        gap: 1rem 1.75rem;
+        padding: 1.25rem 1.75rem;
+        border-radius: 16px;
     }
 
     .turn-phase-banner {
@@ -281,8 +360,13 @@
     .energy-orb {
         width: 60px;
         height: 60px;
-        font-size: 2rem;
+        font-size: 1.6rem;
         border-width: 3px;
+        padding-top: 12px;
+    }
+
+    .energy-orb .energy-max {
+        font-size: 0.75rem;
     }
 
     .end-turn-button {

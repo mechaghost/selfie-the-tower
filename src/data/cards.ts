@@ -342,6 +342,51 @@ export const CARD_DATABASE: Record<string, Card> = {
         ],
         imageId: 'colorless_ballad'
     },
+
+    // --- Status-mechanic cards (Burn / Spikes / Regen) ---
+
+    torch_it: {
+        id: 'torch_it',
+        instanceId: '',
+        name: 'Torch It',
+        type: 'Attack',
+        cost: 1,
+        description: 'Deal 4 damage. Apply 3 Burn.',
+        target: 'Enemy',
+        effects: [
+            { type: 'Damage', amount: 4, target: 'Target' },
+            { type: 'ApplyStatus', amount: 3, statusId: 'burn', target: 'Target' }
+        ],
+        imageId: 'colorless_torch_it'
+    },
+    spiked_jacket: {
+        id: 'spiked_jacket',
+        instanceId: '',
+        name: 'Spiked Jacket',
+        type: 'Skill',
+        cost: 1,
+        description: 'Gain 4 Block. Gain 2 Spikes.',
+        target: 'Self',
+        effects: [
+            { type: 'Block', amount: 4, target: 'Self' },
+            { type: 'ApplyStatus', amount: 2, statusId: 'thorns', target: 'Self' }
+        ],
+        imageId: 'colorless_spiked_jacket'
+    },
+    second_wind: {
+        id: 'second_wind',
+        instanceId: '',
+        name: 'Second Wind',
+        type: 'Skill',
+        cost: 1,
+        description: 'Gain 4 Regen. Exhaust.',
+        target: 'Self',
+        exhausts: true,
+        effects: [
+            { type: 'ApplyStatus', amount: 4, statusId: 'regen', target: 'Self' }
+        ],
+        imageId: 'colorless_second_wind'
+    },
 };
 
 export const createCardInstance = (cardId: string, rng?: RNG): Card => {
@@ -354,4 +399,38 @@ export const createCardInstance = (cardId: string, rng?: RNG): Card => {
         ...template,
         instanceId: `${cardId}_${unique}`
     };
+};
+
+/**
+ * Upgrade a card in place-style: +3 to its first Damage effect, else +3 to
+ * its first Block effect, else cost -1. Used by rest-site forging and
+ * elite/boss loot. Returns the card unchanged if already upgraded.
+ */
+export const upgradeCard = (card: Card): Card => {
+    if (card.upgraded) return card;
+    const upgraded = { ...card, upgraded: true };
+
+    const dmgIdx = upgraded.effects.findIndex(e => e.type === 'Damage' && e.amount != null);
+    if (dmgIdx !== -1) {
+        const newEffects = [...upgraded.effects];
+        newEffects[dmgIdx] = { ...newEffects[dmgIdx], amount: (newEffects[dmgIdx].amount || 0) + 3 };
+        upgraded.effects = newEffects;
+        upgraded.name = card.name + '+';
+        upgraded.description = upgraded.description.replace(/\d+/, (m) => String(Number(m) + 3));
+        return upgraded;
+    }
+
+    const blkIdx = upgraded.effects.findIndex(e => e.type === 'Block' && e.amount != null);
+    if (blkIdx !== -1) {
+        const newEffects = [...upgraded.effects];
+        newEffects[blkIdx] = { ...newEffects[blkIdx], amount: (newEffects[blkIdx].amount || 0) + 3 };
+        upgraded.effects = newEffects;
+        upgraded.name = card.name + '+';
+        upgraded.description = upgraded.description.replace(/\d+/, (m) => String(Number(m) + 3));
+        return upgraded;
+    }
+
+    upgraded.cost = Math.max(0, upgraded.cost - 1);
+    upgraded.name = card.name + '+';
+    return upgraded;
 };

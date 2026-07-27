@@ -1,20 +1,24 @@
 import { useGameStore } from '../../store/gameStore';
 import { Trophy, Skull } from 'lucide-react';
+import { CardItem } from '../ui/CardItem';
 import './CombatResultOverlay.css';
 
 export function CombatResultOverlay() {
-    const { combatResult, goldReward, floor, seed, initializeRun, continueCombatResult } = useGameStore((state) => ({
+    const { combatResult, goldReward, cardRewards, floor, seed, initializeRun, continueCombatResult, claimCardReward } = useGameStore((state) => ({
         combatResult: state.combatResult,
         goldReward: state.goldReward,
+        cardRewards: state.cardRewards,
         floor: state.floor,
         seed: state.seed,
         initializeRun: state.initializeRun,
-        continueCombatResult: state.continueCombatResult
+        continueCombatResult: state.continueCombatResult,
+        claimCardReward: state.claimCardReward
     }));
 
     if (!combatResult) return null;
 
     const isVictory = combatResult === 'victory';
+    const hasRewards = isVictory && cardRewards.length > 0;
 
     const handleNewRun = () => {
         const newSeed = Math.random().toString(36).substring(7);
@@ -25,7 +29,7 @@ export function CombatResultOverlay() {
         <div className="combat-result-backdrop">
             <div className={`combat-result-card ${combatResult}`}>
                 {isVictory ? (
-                    <Trophy size={64} className="combat-result-icon victory" />
+                    <Trophy size={48} className="combat-result-icon victory" />
                 ) : (
                     <Skull size={64} className="combat-result-icon defeat" />
                 )}
@@ -42,13 +46,38 @@ export function CombatResultOverlay() {
                     )}
                 </p>
 
+                {hasRewards && (
+                    <div className="reward-section">
+                        <h2 className={`reward-heading ${cardRewards.every(c => c.upgraded) ? 'prime' : ''}`}>
+                            {cardRewards.every(c => c.upgraded) ? 'Prime loot' : 'Loot the remains'}
+                        </h2>
+                        <p className="reward-hint">
+                            {cardRewards.every(c => c.upgraded)
+                                ? 'Pre-sharpened. Tap a card to add it to your deck.'
+                                : 'Tap a card to add it to your deck.'}
+                        </p>
+                        <div className="reward-card-row">
+                            {cardRewards.map((card, i) => (
+                                <div
+                                    key={card.instanceId}
+                                    className="reward-card-slot"
+                                    style={{ animationDelay: `${0.15 + i * 0.12}s` }}
+                                    onClick={() => claimCardReward(card.instanceId)}
+                                >
+                                    <CardItem card={card} canPlay={true} isDraggable={false} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="combat-result-actions">
                     {isVictory ? (
                         <button
-                            className="combat-result-btn primary victory"
+                            className={`combat-result-btn ${hasRewards ? 'secondary' : 'primary victory'}`}
                             onClick={continueCombatResult}
                         >
-                            Continue
+                            {hasRewards ? 'Skip — keep it lean' : 'Continue'}
                         </button>
                     ) : (
                         <>

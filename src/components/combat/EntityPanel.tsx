@@ -1,5 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect } from 'react';
-import { Entity, Enemy } from '../../core/models';
+import { Entity, Enemy, FloatingText } from '../../core/models';
 import { Shield, Swords, ShieldPlus, Zap } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { STATUS_REGISTRY } from '../../data/statusEffects';
@@ -10,8 +10,22 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
     vulnerable: 'Takes 50% more damage',
     weak: 'Deals 25% less damage',
     strength: '+1 damage per stack',
-    dexterity: '+1 block per stack'
+    dexterity: '+1 block per stack',
+    burn: 'Loses HP each turn (ignores block), then cools by 1',
+    thorns: 'Attackers take damage back per stack',
+    regen: 'Heals HP each turn, then fades by 1'
 };
+
+function floatingTextLabel(ft: FloatingText): string | number {
+    if (ft.type === 'damage' || ft.type === 'burn') return `-${ft.value}`;
+    if (ft.type === 'status' || ft.type === 'blocked') return ft.value;
+    return `+${ft.value}`;
+}
+
+function floatingTextClass(ft: FloatingText): string {
+    const big = ft.type === 'damage' && typeof ft.value === 'number' && ft.value >= 10;
+    return `floating-text ${ft.type}${big ? ' big' : ''}`;
+}
 
 export function describeIntent(intent: Enemy['intent']): string {
     if (!intent) return 'Waiting...';
@@ -84,7 +98,7 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
     }, [updateBounds]);
 
     let isTargeted = false;
-    if (!isPlayer && dragState.isActive && dragState.targetType === 'Enemy') {
+    if (!isPlayer && entity.hp > 0 && dragState.isActive && dragState.targetType === 'Enemy') {
         const bounds = entityBounds[entity.id];
         if (bounds) {
             const centerX = bounds.left + bounds.width / 2;
@@ -138,6 +152,7 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
                     <div className="hp-bar-container player-hp">
                         <div className="hp-text">{entity.hp}/{entity.maxHp}</div>
                         <div className="hp-bar-bg">
+                            <div className="hp-bar-ghost" style={{ width: `${hpPct}%` }} />
                             <div className="hp-bar-fill" style={{ width: `${hpPct}%` }} />
                         </div>
                     </div>
@@ -175,9 +190,12 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
                                 : '🛡️'
                         }
                     </div>
+                    {activeAnimations.filter(a => a.type === 'hit').map(a => (
+                        <div key={a.id} className="hit-burst" />
+                    ))}
                     {floatingTexts.map(ft => (
-                        <div key={ft.id} className={`floating-text ${ft.type}`}>
-                            {ft.type === 'damage' ? `-${ft.value}` : ft.type === 'status' ? ft.value : `+${ft.value}`}
+                        <div key={ft.id} className={floatingTextClass(ft)}>
+                            {floatingTextLabel(ft)}
                         </div>
                     ))}
                 </div>
@@ -187,7 +205,8 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
 
     // --- Enemy: card-style threat panel ---
     const enemy = entity as Enemy;
-    const intent = enemy.intent;
+    const isDead = entity.hp <= 0;
+    const intent = isDead ? null : enemy.intent;
 
     let threatClass = '';
     if (intent) {
@@ -198,8 +217,8 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
 
     return (
         <div
-            className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''}`}
-            onClick={(e) => { e.stopPropagation(); onInspect?.(entity.id); }}
+            className={`entity-panel enemy ${threatClass} ${isTargeted ? 'targeted-panel' : ''} ${isDead ? 'is-dead' : ''}`}
+            onClick={(e) => { e.stopPropagation(); if (!isDead) onInspect?.(entity.id); }}
         >
             {/* Tap-to-inspect highlight */}
             {/* Intent row at top of card */}
@@ -253,7 +272,7 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
                     ref={avatarRef}
                     className={`entity-avatar ${isTargeted ? 'targeted' : ''} ${animClasses}`}
                     style={lungeStyle}
-                    data-entity-id={entity.id}
+                    data-entity-id={isDead ? undefined : entity.id}
                 >
                     <img
                         src={`/assets/enemies/${enemy.templateId}.webp`}
@@ -262,9 +281,12 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; e.currentTarget.parentElement!.textContent = '👹'; }}
                     />
                 </div>
+                {activeAnimations.filter(a => a.type === 'hit').map(a => (
+                    <div key={a.id} className="hit-burst" />
+                ))}
                 {floatingTexts.map(ft => (
-                    <div key={ft.id} className={`floating-text ${ft.type}`}>
-                        {ft.type === 'damage' ? `-${ft.value}` : ft.type === 'status' ? ft.value : `+${ft.value}`}
+                    <div key={ft.id} className={floatingTextClass(ft)}>
+                        {floatingTextLabel(ft)}
                     </div>
                 ))}
             </div>
@@ -272,15 +294,19 @@ export function EntityPanel({ entity, isPlayer, onInspect }: EntityPanelProps) {
             <div className="entity-info">
                 <div className="entity-name">{entity.name}</div>
 
-                {entity.block > 0 && (
+                {entity.block > 0 && !isDead && (
                     <div className="entity-block">
                         <Shield size={14} /> <span>{entity.block}</span>
                     </div>
                 )}
 
                 <div className="hp-bar-container">
-                    <div className="hp-text">{entity.hp}/{entity.maxHp}</div>
+                    <div className="hp-text">{isDead ? 'DOWN' : `${entity.hp}/${entity.maxHp}`}</div>
                     <div className="hp-bar-bg">
+                        <div
+                            className="hp-bar-ghost"
+                            style={{ width: `${hpPercentage}%` }}
+                        />
                         <div
                             className="hp-bar-fill"
                             style={{ width: `${hpPercentage}%` }}

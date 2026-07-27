@@ -452,7 +452,7 @@ export const enemies: Record<string, EnemyDefinition> = {
                 intent: {
                     type: 'Debuff',
                     effects: [
-                        { type: 'ApplyStatus', amount: 2, statusId: 'weak', target: 'Target' }
+                        { type: 'ApplyStatus', amount: 3, statusId: 'burn', target: 'Target' }
                     ]
                 }
             },
@@ -476,9 +476,12 @@ export const enemies: Record<string, EnemyDefinition> = {
                 condition: 'Turn1',
                 chance: 100,
                 intent: {
-                    type: 'Defend',
-                    block: 12,
-                    effects: [{ type: 'Block', amount: 12, target: 'Self' }]
+                    type: 'Buff',
+                    block: 10,
+                    effects: [
+                        { type: 'Block', amount: 10, target: 'Self' },
+                        { type: 'ApplyStatus', amount: 2, statusId: 'thorns', target: 'Self' }
+                    ]
                 }
             },
             {
@@ -991,6 +994,13 @@ export const ELITE_TEMPLATE_IDS = new Set([
     'circuit_breaker',
     'neon_yakuza',
     'chrome_bouncer',
+]);
+
+/** Set of all boss templateIds for reward scaling */
+export const BOSS_TEMPLATE_IDS = new Set([
+    'the_billboard',
+    'subway_wyrm',
+    'dj_phantom',
 ]);
 
 export function createEnemyInstance(templateId: string, id: string, rng: RNG | null): Enemy {

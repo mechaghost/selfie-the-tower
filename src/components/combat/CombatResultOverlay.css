@@ -7,9 +7,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    /* Above table controls (150) and the enemy tooltip (200) */
+    z-index: 300;
     animation: backdrop-fade 0.3s ease-out forwards;
     padding: 1rem;
+    overflow-y: auto;
 }
 
 @keyframes backdrop-fade {
@@ -98,6 +100,71 @@
     color: var(--color-accent-amber);
 }
 
+/* === Card rewards (victory loot) === */
+
+.reward-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.reward-heading {
+    font-family: var(--font-family-display);
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--color-accent-amber);
+    text-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
+    margin: 0 0 0.2rem;
+}
+
+/* Elite/boss loot comes pre-upgraded */
+.reward-heading.prime {
+    color: var(--color-accent-violet);
+    text-shadow: 0 0 12px rgba(185, 103, 255, 0.55);
+}
+
+.reward-hint {
+    font-size: 0.65rem;
+    color: var(--color-text-secondary);
+    margin: 0 0 0.85rem;
+}
+
+.reward-card-row {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    /* Compact cards with a gentle hover inside the modal */
+    --card-width: 92px;
+    --card-height: 134px;
+    --card-hover-lift: -6px;
+    --card-hover-scale: 1.05;
+}
+
+.reward-card-slot {
+    animation: rewardCardIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.reward-card-slot .card {
+    cursor: pointer;
+}
+
+.reward-card-slot:hover .card {
+    border-color: #fff;
+}
+
+@keyframes rewardCardIn {
+    0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.6) rotate(-5deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+    }
+}
+
 .combat-result-actions {
     display: flex;
     gap: 0.75rem;
@@ -149,7 +216,7 @@
 
 @media (min-width: 769px) {
     .combat-result-card {
-        padding: 3rem;
+        padding: 2.5rem 3rem;
     }
 
     .combat-result-icon {
@@ -157,13 +224,27 @@
     }
 
     .combat-result-title {
-        font-size: 3.5rem;
+        font-size: 3rem;
         letter-spacing: 4px;
     }
 
     .combat-result-stats {
-        font-size: 1.3rem;
-        margin: 1.25rem 0 2rem 0;
+        font-size: 1.1rem;
+        margin: 0.75rem 0 1.5rem 0;
+    }
+
+    .reward-heading {
+        font-size: 1.5rem;
+    }
+
+    .reward-hint {
+        font-size: 0.8rem;
+    }
+
+    .reward-card-row {
+        gap: 1rem;
+        --card-width: 130px;
+        --card-height: 186px;
     }
 
     .combat-result-actions {

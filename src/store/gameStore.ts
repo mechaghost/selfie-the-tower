@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { Card, Enemy, Player, GameAction, FloatingText, ActiveAnimation, Effect, StatusEffect, UgcPhase, GeneratedCharacter, GeneratedCard, GenerateCharacterResponse } from '../core/models';
+import { Card, Enemy, Player, GameAction, FloatingText, ActiveAnimation, AnimationType, ScreenShake, Effect, StatusEffect, UgcPhase, GeneratedCharacter, GeneratedCard, GenerateCharacterResponse } from '../core/models';
 import { RNG } from '../core/rng';
-import { createCardInstance, CARD_DATABASE } from '../data/cards';
+import { createCardInstance, upgradeCard, CARD_DATABASE } from '../data/cards';
 import { STATUS_REGISTRY } from '../data/statusEffects';
 import { ENCOUNTER_POOLS } from '../data/encounters';
-import { createEnemyInstance, enemies, ELITE_TEMPLATE_IDS } from '../data/enemies';
+import { createEnemyInstance, enemies, ELITE_TEMPLATE_IDS, BOSS_TEMPLATE_IDS } from '../data/enemies';
 import { CHARACTERS } from '../data/characters';
 import { EVENTS, GameEvent } from '../data/events';
 
@@ -35,6 +35,8 @@ interface GameState {
     rng: RNG | null;
     floor: number;
     currentNodeId: string | null;
+    isBossFloor: boolean;
+    isRunComplete: boolean;
 
     // --- Combat State ---
     inCombat: boolean;
@@ -42,6 +44,7 @@ interface GameState {
     isPlayerTurn: boolean;
     combatResult: null | 'victory' | 'defeat';
     goldReward: number;
+    cardRewards: Card[];
     player: Player;
     enemies: Enemy[];
 
@@ -57,6 +60,7 @@ interface GameState {
     isResolving: boolean;
     floatingTexts: FloatingText[];
     activeAnimations: ActiveAnimation[];
+    screenShake: ScreenShake | null;
 
     // --- Drag & Drop UI ---
     dragState: DragState;
@@ -83,6 +87,7 @@ interface GameState {
     startCombat: (enemies: Enemy[]) => void;
     advanceFloor: (node: import('../core/mapModels').MapNode) => void;
     continueCombatResult: () => void;
+    claimCardReward: (cardInstanceId: string) => void;
     restHeal: () => void;
     restUpgrade: (cardInstanceId: string) => void;
     enterShop: () => void;
@@ -108,7 +113,8 @@ interface GameState {
     endTurn: () => void;
 
     addFloatingText: (text: Omit<FloatingText, 'id'>) => void;
-    playAnimation: (targetId: string, type: 'lunge' | 'stagger') => void;
+    playAnimation: (targetId: string, type: AnimationType) => void;
+    triggerShake: (intensity: ScreenShake['intensity']) => void;
     setDragState: (state: Partial<DragState>) => void;
     resetDragState: () => void;
     setEntityBounds: (id: string, bounds: DOMRect) => void;
@@ -166,13 +172,13 @@ export function resolveEffects(
         if (effect.type === 'Damage' && effect.amount != null && effect.target === 'AllEnemies' && targets.length > 1) {
             if (sourceId) {
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
-                actions.push({ type: 'DELAY', payload: { ms: 300 } });
+                actions.push({ type: 'DELAY', payload: { ms: 250 } });
             }
             targets.forEach(targetId => {
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount! } });
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
             });
-            actions.push({ type: 'DELAY', payload: { ms: 400 } });
+            actions.push({ type: 'DELAY', payload: { ms: 320 } });
             return;
         }
 
@@ -181,11 +187,11 @@ export function resolveEffects(
             if (effect.type === 'Damage' && effect.amount != null) {
                 if (sourceId) {
                     actions.push({ type: 'PLAY_ANIMATION', payload: { targetId: sourceId, animation: 'lunge' } });
-                    actions.push({ type: 'DELAY', payload: { ms: 300 } });
+                    actions.push({ type: 'DELAY', payload: { ms: 250 } });
                 }
                 actions.push({ type: 'DAMAGE_ENTITY', payload: { sourceId, targetId, amount: effect.amount } });
                 actions.push({ type: 'PLAY_ANIMATION', payload: { targetId, animation: 'stagger' } });
-                actions.push({ type: 'DELAY', payload: { ms: 400 } });
+                actions.push({ type: 'DELAY', payload: { ms: 320 } });
             } else if (effect.type === 'Block' && effect.amount != null) {
                 actions.push({ type: 'GAIN_BLOCK', payload: { sourceId, targetId, amount: effect.amount } });
             } else if (effect.type === 'ApplyStatus' && effect.amount != null && effect.statusId) {
@@ -209,6 +215,38 @@ export function resolveEffects(
     return actions;
 }
 
+// Basic starters never show up as loot — rewards should feel like an upgrade
+const REWARD_EXCLUDED_IDS = new Set(['neon_jab', 'dodge_roll']);
+
+// Shared by every kill path (attacks, burn ticks, thorns retaliation).
+// Reward tiers: normal fights pay 10-20 gold, elites 50-80, bosses 90-130.
+// Elite and boss loot comes pre-upgraded (+).
+function buildVictoryState(state: GameState): Partial<GameState> {
+    const rng = state.rng;
+    const hasBoss = state.enemies.some(e => BOSS_TEMPLATE_IDS.has(e.templateId));
+    const hasElite = state.enemies.some(e => ELITE_TEMPLATE_IDS.has(e.templateId));
+    const goldReward = hasBoss
+        ? (rng ? rng.nextInt(90, 131) : 110)
+        : hasElite
+            ? (rng ? rng.nextInt(50, 81) : 65)
+            : (rng ? rng.nextInt(10, 21) : 15);
+
+    const pool = Object.keys(CARD_DATABASE).filter(id => !REWARD_EXCLUDED_IDS.has(id));
+    const shuffledPool = rng ? rng.shuffle(pool) : pool;
+    let cardRewards = shuffledPool.slice(0, 3).map(id => createCardInstance(id, rng ?? undefined));
+    if (hasBoss || hasElite) {
+        cardRewards = cardRewards.map(upgradeCard);
+    }
+
+    return {
+        combatResult: 'victory',
+        goldReward,
+        cardRewards,
+        actionQueue: [],
+        isResolving: false
+    };
+}
+
 const defaultDragState: DragState = {
     isActive: false,
     cardId: null,
@@ -226,9 +264,10 @@ const defaultDragState: DragState = {
 const SAVE_KEY = 'stt_run';
 
 const PERSISTED_KEYS = [
-    'seed', 'floor', 'currentNodeId',
+    'seed', 'floor', 'currentNodeId', 'isBossFloor', 'isRunComplete',
     'player', 'masterDeck', 'drawPile', 'hand', 'discardPile', 'exhaustPile',
     'inCombat', 'enemies', 'isPlayerTurn', 'isGameOver',
+    'combatResult', 'goldReward', 'cardRewards',
     'generatedCharacter', 'generatedCards',
     'nodeEvent', 'shopCards', 'shopPrices', 'cardRemovalCost', 'cardRemovalsUsed',
 ] as const;
@@ -269,12 +308,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     rng: null,
     floor: 0,
     currentNodeId: null,
+    isBossFloor: false,
+    isRunComplete: false,
 
     isGameOver: false,
     inCombat: false,
     isPlayerTurn: false,
     combatResult: null,
     goldReward: 0,
+    cardRewards: [],
     player: {
         id: 'player',
         name: '',
@@ -299,6 +341,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     isResolving: false,
     floatingTexts: [],
     activeAnimations: [],
+    screenShake: null,
 
     dragState: { ...defaultDragState },
     entityBounds: {},
@@ -332,6 +375,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             player: {
                 id: 'player',
                 name: charDef.name,
@@ -349,6 +394,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             isPlayerTurn: false,
             combatResult: null,
             goldReward: 0,
+            cardRewards: [],
             nodeEvent: null,
             shopCards: [],
             shopPrices: {},
@@ -367,6 +413,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             enemies: [],
             floatingTexts: [],
             activeAnimations: [],
+            screenShake: null,
             entityBounds: {},
             dragState: { ...defaultDragState }
         });
@@ -388,6 +435,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 inCombat: true,
                 combatResult: null,
                 goldReward: 0,
+                cardRewards: [],
                 enemies: combatEnemies,
                 drawPile: shuffledDraw,
                 discardPile: [],
@@ -395,7 +443,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                 playingCards: [],
                 hand: [],
                 player: freshPlayer,
-                actionQueue: [{ type: 'START_TURN' }]
+                // Intents first so enemies telegraph from turn 1 —
+                // CALCULATE_INTENTS chains into START_TURN itself
+                actionQueue: [{ type: 'CALCULATE_INTENTS' }]
             };
         });
 
@@ -410,7 +460,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         // Update floor and current node first
         set({
             floor: state.floor + 1,
-            currentNodeId: node.id
+            currentNodeId: node.id,
+            isBossFloor: node.type === 'Boss'
         });
 
         if (['Combat', 'Elite', 'Boss'].includes(node.type)) {
@@ -520,6 +571,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             player: {
                 id: 'player',
                 name: generatedCharacter.name,
@@ -543,6 +596,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             isPlayerTurn: false,
             combatResult: null,
             goldReward: 0,
+            cardRewards: [],
             actionQueue: [],
             isResolving: false,
             hand: [],
@@ -553,6 +607,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             enemies: [],
             floatingTexts: [],
             activeAnimations: [],
+            screenShake: null,
             entityBounds: {},
             dragState: { ...defaultDragState },
             nodeEvent: null,
@@ -587,34 +642,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     restUpgrade: (cardInstanceId: string) => {
         set((current) => {
-            const newDeck = current.masterDeck.map(card => {
-                if (card.instanceId !== cardInstanceId || card.upgraded) return card;
-                const upgradedCard = { ...card, upgraded: true };
-                // Upgrade first Damage effect: +3
-                const dmgIdx = upgradedCard.effects.findIndex(e => e.type === 'Damage' && e.amount != null);
-                if (dmgIdx !== -1) {
-                    const newEffects = [...upgradedCard.effects];
-                    newEffects[dmgIdx] = { ...newEffects[dmgIdx], amount: (newEffects[dmgIdx].amount || 0) + 3 };
-                    upgradedCard.effects = newEffects;
-                    upgradedCard.name = card.name + '+';
-                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
-                    return upgradedCard;
-                }
-                // Upgrade first Block effect: +3
-                const blkIdx = upgradedCard.effects.findIndex(e => e.type === 'Block' && e.amount != null);
-                if (blkIdx !== -1) {
-                    const newEffects = [...upgradedCard.effects];
-                    newEffects[blkIdx] = { ...newEffects[blkIdx], amount: (newEffects[blkIdx].amount || 0) + 3 };
-                    upgradedCard.effects = newEffects;
-                    upgradedCard.name = card.name + '+';
-                    upgradedCard.description = upgradedCard.description.replace(/\d+/, (m) => String(Number(m) + 3));
-                    return upgradedCard;
-                }
-                // Fallback: reduce cost by 1 (min 0)
-                upgradedCard.cost = Math.max(0, upgradedCard.cost - 1);
-                upgradedCard.name = card.name + '+';
-                return upgradedCard;
-            });
+            const newDeck = current.masterDeck.map(card =>
+                card.instanceId === cardInstanceId ? upgradeCard(card) : card
+            );
             return { masterDeck: newDeck, nodeEvent: null };
         });
     },
@@ -805,11 +835,14 @@ export const useGameStore = create<GameState>((set, get) => ({
             rng: null,
             floor: 0,
             currentNodeId: null,
+            isBossFloor: false,
+            isRunComplete: false,
             inCombat: false,
             isGameOver: false,
             isPlayerTurn: false,
             combatResult: null,
             goldReward: 0,
+            cardRewards: [],
             player: { id: 'player', name: '', hp: 0, maxHp: 0, block: 0, statuses: [], energy: 0, maxEnergy: 0, gold: 0 },
             enemies: [],
             masterDeck: [],
@@ -822,6 +855,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             isResolving: false,
             floatingTexts: [],
             activeAnimations: [],
+            screenShake: null,
             dragState: { ...defaultDragState },
             entityBounds: {},
             nodeEvent: null,
@@ -839,6 +873,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
     },
 
+    // Victory: leave without taking a card (rewards are optional). Defeat: game over.
+    // Winning the boss floor completes the run.
     continueCombatResult: () => {
         const state = get();
         if (state.combatResult === 'victory') {
@@ -847,7 +883,9 @@ export const useGameStore = create<GameState>((set, get) => ({
                 combatResult: null,
                 enemies: [],
                 player: { ...state.player, gold: state.player.gold + state.goldReward },
-                goldReward: 0
+                goldReward: 0,
+                cardRewards: [],
+                isRunComplete: state.isBossFloor
             });
         } else if (state.combatResult === 'defeat') {
             clearRun();
@@ -857,6 +895,23 @@ export const useGameStore = create<GameState>((set, get) => ({
                 isGameOver: true
             });
         }
+    },
+
+    claimCardReward: (cardInstanceId: string) => {
+        const state = get();
+        if (state.combatResult !== 'victory') return;
+        const card = state.cardRewards.find(c => c.instanceId === cardInstanceId);
+        if (!card) return;
+        set({
+            inCombat: false,
+            combatResult: null,
+            enemies: [],
+            masterDeck: [...state.masterDeck, card],
+            player: { ...state.player, gold: state.player.gold + state.goldReward },
+            goldReward: 0,
+            cardRewards: [],
+            isRunComplete: state.isBossFloor
+        });
     },
 
     addFloatingText: (text) => {
@@ -880,6 +935,14 @@ export const useGameStore = create<GameState>((set, get) => ({
             set(state => ({
                 activeAnimations: state.activeAnimations.filter(a => a.id !== id)
             }));
+        }, 500);
+    },
+
+    triggerShake: (intensity) => {
+        const id = Math.random().toString(36).substr(2, 9);
+        set({ screenShake: { id, intensity } });
+        trackedTimeout(() => {
+            set(state => state.screenShake?.id === id ? { screenShake: null } : {});
         }, 500);
     },
 
@@ -908,6 +971,13 @@ export const useGameStore = create<GameState>((set, get) => ({
                 if (!isPlayer) {
                     const targetEnemy = freshState.enemies.find(e => e.id === targetId);
                     if (!targetEnemy || targetEnemy.hp <= 0) break;
+                }
+
+                // Dead men throw no punches: an enemy killed mid-phase (burn,
+                // thorns) still has its queued attacks — drop them
+                if (sourceId && sourceId !== 'player') {
+                    const sourceEnemy = freshState.enemies.find(e => e.id === sourceId);
+                    if (!sourceEnemy || sourceEnemy.hp <= 0) break;
                 }
 
                 let target = isPlayer ? freshState.player : freshState.enemies.find(e => e.id === targetId);
@@ -949,12 +1019,23 @@ export const useGameStore = create<GameState>((set, get) => ({
                         newBlock = 0;
                     }
 
-                    get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
+                    const hpLost = target.hp - newHp;
+                    const fullyBlocked = finalDamage > 0 && hpLost === 0;
+                    // Spikes retaliation is snapshotted before state writes
+                    const thornsStacks = target.statuses.find(s => s.id === 'thorns')?.amount ?? 0;
+
+                    if (fullyBlocked) {
+                        get().addFloatingText({ targetId, value: 'BLOCKED', type: 'blocked' });
+                    } else {
+                        get().addFloatingText({ targetId, value: finalDamage, type: 'damage' });
+                    }
+                    if (hpLost > 0) get().playAnimation(targetId, 'hit');
 
                     if (isPlayer) {
                         // H-4: Re-fetch current player state before set
                         const currentPlayer = get().player;
                         set({ player: { ...currentPlayer, hp: newHp, block: newBlock } });
+                        if (hpLost > 0) get().triggerShake(hpLost >= 10 ? 'heavy' : 'light');
 
                         if (newHp <= 0) {
                             cancelAllTimeouts();
@@ -972,19 +1053,49 @@ export const useGameStore = create<GameState>((set, get) => ({
 
                         if (updatedEnemies.every(e => e.hp <= 0)) {
                             cancelAllTimeouts();
-                            const rng = get().rng;
-                            // Elite encounters award bonus gold (50-80) vs normal (10-20)
-                            const hasElite = updatedEnemies.some(e => ELITE_TEMPLATE_IDS.has(e.templateId));
-                            const goldReward = hasElite
-                                ? (rng ? rng.nextInt(50, 81) : 65)
-                                : (rng ? rng.nextInt(10, 21) : 15);
-                            set({
-                                combatResult: 'victory',
-                                goldReward,
-                                actionQueue: [],
-                                isResolving: false
-                            });
+                            set(buildVictoryState(get()));
                             return;
+                        }
+                    }
+
+                    // Spikes: the attacker takes stack damage back (blockable,
+                    // unmodified). Skipped if the blow already won the fight.
+                    if (thornsStacks > 0 && source && sourceId && sourceId !== targetId) {
+                        const isSourcePlayer = sourceId === 'player';
+                        const liveSource = isSourcePlayer ? get().player : get().enemies.find(e => e.id === sourceId);
+                        if (liveSource && liveSource.hp > 0) {
+                            let retBlock = liveSource.block - thornsStacks;
+                            let retHp = liveSource.hp;
+                            if (retBlock < 0) {
+                                retHp = Math.max(0, liveSource.hp + retBlock);
+                                retBlock = 0;
+                            }
+                            const retHpLost = liveSource.hp - retHp;
+
+                            get().addFloatingText({ targetId: sourceId, value: thornsStacks, type: 'damage' });
+                            if (retHpLost > 0) get().playAnimation(sourceId, 'hit');
+
+                            if (isSourcePlayer) {
+                                set({ player: { ...get().player, hp: retHp, block: retBlock } });
+                                if (retHpLost > 0) get().triggerShake('light');
+                                if (retHp <= 0) {
+                                    cancelAllTimeouts();
+                                    set({
+                                        combatResult: 'defeat',
+                                        actionQueue: [],
+                                        isResolving: false
+                                    });
+                                    return;
+                                }
+                            } else {
+                                const afterRet = get().enemies.map(e => e.id === sourceId ? { ...e, hp: retHp, block: retBlock } : e);
+                                set({ enemies: afterRet });
+                                if (afterRet.every(e => e.hp <= 0)) {
+                                    cancelAllTimeouts();
+                                    set(buildVictoryState(get()));
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
@@ -1071,6 +1182,60 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
                 break;
             }
+            // Burn sears, Regen knits — both tick at the start of the owner's
+            // turn, then shed one stack (self-managed, not the decay pass)
+            case 'STATUS_TICK': {
+                const { targetId } = action.payload;
+                const freshState = get();
+                const isPlayer = targetId === 'player';
+                const target = isPlayer ? freshState.player : freshState.enemies.find(e => e.id === targetId);
+                if (!target || target.hp <= 0) break;
+
+                const burnStacks = target.statuses.find(s => s.id === 'burn')?.amount ?? 0;
+                const regenStacks = target.statuses.find(s => s.id === 'regen')?.amount ?? 0;
+                if (burnStacks <= 0 && regenStacks <= 0) break;
+
+                let newHp = target.hp;
+                if (burnStacks > 0) {
+                    // Burn ignores block — it's already under your skin
+                    newHp = Math.max(0, newHp - burnStacks);
+                    get().addFloatingText({ targetId, value: burnStacks, type: 'burn' });
+                    get().playAnimation(targetId, 'burn-tick');
+                }
+                if (regenStacks > 0 && newHp > 0) {
+                    newHp = Math.min(target.maxHp, newHp + regenStacks);
+                    get().addFloatingText({ targetId, value: regenStacks, type: 'heal' });
+                }
+
+                const newStatuses = target.statuses
+                    .map(s => (s.id === 'burn' || s.id === 'regen') ? { ...s, amount: s.amount - 1 } : s)
+                    .filter(s => s.amount > 0);
+
+                if (isPlayer) {
+                    set({ player: { ...get().player, hp: newHp, statuses: newStatuses } });
+                    if (burnStacks > 0) get().triggerShake('light');
+                    if (newHp <= 0) {
+                        cancelAllTimeouts();
+                        set({
+                            combatResult: 'defeat',
+                            actionQueue: [],
+                            isResolving: false
+                        });
+                        return;
+                    }
+                } else {
+                    const updatedEnemies = get().enemies.map(e => e.id === targetId ? { ...e, hp: newHp, statuses: newStatuses } : e);
+                    set({ enemies: updatedEnemies });
+                    if (updatedEnemies.every(e => e.hp <= 0)) {
+                        cancelAllTimeouts();
+                        set(buildVictoryState(get()));
+                        return;
+                    }
+                }
+
+                delay = 350;
+                break;
+            }
             case 'DRAW_CARD': {
                 const drawAmount = action.payload?.amount ?? 1;
                 get().drawCards(drawAmount);
@@ -1105,6 +1270,14 @@ export const useGameStore = create<GameState>((set, get) => ({
                 // M-6: Track turn phase
                 set({ isPlayerTurn: false });
 
+                // Burning/regenerating enemies tick before anyone swings
+                freshState.enemies.forEach(enemy => {
+                    if (enemy.hp <= 0) return;
+                    if (enemy.statuses.some(s => (s.id === 'burn' || s.id === 'regen') && s.amount > 0)) {
+                        enemyActions.push({ type: 'STATUS_TICK', payload: { targetId: enemy.id } });
+                    }
+                });
+
                 // Fix #10: Only execute intents for living enemies
                 freshState.enemies.forEach(enemy => {
                     if (enemy.hp <= 0) return;
@@ -1119,7 +1292,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                         const intentActions = resolveEffects(enemy.intent.effects, enemy.id, 'player', allEnemyIds, freshState.rng);
                         enemyActions = enemyActions.concat(intentActions);
 
-                        enemyActions.push({ type: 'DELAY', payload: { ms: 600 } });
+                        enemyActions.push({ type: 'DELAY', payload: { ms: 400 } });
                     }
                 });
 
@@ -1199,7 +1372,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
                 set((current) => ({
                     enemies: updatedEnemies,
-                    actionQueue: [{ type: 'START_TURN' }, ...current.actionQueue.slice(1)],
+                    actionQueue: [
+                        { type: 'START_TURN' },
+                        { type: 'STATUS_TICK', payload: { targetId: 'player' } },
+                        ...current.actionQueue.slice(1)
+                    ],
                     isResolving: false
                 }));
                 trackedTimeout(() => get().resolveQueue(), 0);
@@ -1228,7 +1405,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             case 'ANNOUNCE_INTENT': {
                 const { targetId, text } = action.payload;
                 get().addFloatingText({ targetId, value: text, type: 'status' });
-                delay = 1200;
+                delay = 650;
                 break;
             }
             case 'DELAY': {
@@ -1277,6 +1454,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
             const card = state.hand[cardIndex];
             if (state.player.energy < card.cost) return state;
+
+            // Don't waste energy swinging at a corpse
+            if (targetId) {
+                const targetEnemy = state.enemies.find(e => e.id === targetId);
+                if (!targetEnemy || targetEnemy.hp <= 0) return state;
+            }
 
             let newHand = [...state.hand];
             newHand.splice(cardIndex, 1);

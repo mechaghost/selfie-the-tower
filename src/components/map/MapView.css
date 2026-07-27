@@ -41,7 +41,7 @@
 
 .map-view-container {
     position: absolute;
-    top: 50px;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
@@ -53,7 +53,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
+    padding: calc(var(--topbar-height) + 0.75rem) 1rem 1rem;
+}
+
+/* TopBar is rendered inside this flex column — pin it to the top edge
+   so it spans full width like in combat */
+.map-view-container > .topbar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-height);
 }
 
 /* Scanline overlay */
@@ -169,6 +179,26 @@
     z-index: 1;
 }
 
+.map-edge {
+    stroke: rgba(255, 255, 255, 0.18);
+    stroke-width: 2;
+    stroke-dasharray: 4 4;
+}
+
+/* Edges you can walk right now — neon and marching */
+.map-edge.walkable {
+    stroke: var(--color-text-highlight);
+    stroke-width: 3;
+    stroke-dasharray: 6 5;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 4px rgba(255, 110, 199, 0.6));
+    animation: edgeMarch 0.8s linear infinite;
+}
+
+@keyframes edgeMarch {
+    to { stroke-dashoffset: -11; }
+}
+
 .map-floor {
     position: absolute;
     width: 100%;
@@ -184,7 +214,7 @@
     transition: transform 0.2s, filter 0.2s;
 }
 
-.map-node:not(.available):not(.completed) {
+.map-node:not(.available):not(.completed):not(.current) {
     filter: brightness(0.5);
     cursor: not-allowed;
 }
@@ -192,6 +222,33 @@
 .map-node.completed {
     filter: grayscale(1);
     opacity: 0.5;
+}
+
+/* Where you're standing */
+.map-node.current {
+    cursor: default;
+}
+
+.map-node.current .node-circle {
+    border-color: var(--color-text-highlight);
+    box-shadow: 0 0 14px rgba(255, 110, 199, 0.55), 0 4px 6px rgba(0, 0, 0, 0.6);
+}
+
+.node-you-marker {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-family-display);
+    font-size: 0.55rem;
+    letter-spacing: 1.5px;
+    color: var(--color-text-highlight);
+    background: rgba(13, 13, 26, 0.9);
+    border: 1px solid rgba(255, 110, 199, 0.5);
+    border-radius: 8px;
+    padding: 1px 6px;
+    white-space: nowrap;
+    animation: hintPulse 2s ease-in-out infinite;
 }
 
 .map-node.available .node-circle {
@@ -213,6 +270,18 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* The boss looms larger */
+.map-node.type-boss .node-circle {
+    width: 52px;
+    height: 52px;
+    border-color: rgba(255, 56, 96, 0.6);
+    box-shadow: 0 0 18px rgba(255, 56, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.map-node.type-boss:not(.available):not(.completed):not(.current) {
+    filter: brightness(0.75);
 }
 
 .node-icon.combat { color: var(--color-text-secondary); }
@@ -264,13 +333,22 @@
 
 @media (min-width: 769px) {
     .map-view-container {
-        top: 60px;
-        padding: 2rem;
+        padding: calc(var(--topbar-height) + 1rem) 2rem 2rem;
     }
 
     .node-circle {
         width: 44px;
         height: 44px;
+    }
+
+    .map-node.type-boss .node-circle {
+        width: 64px;
+        height: 64px;
+    }
+
+    .node-you-marker {
+        font-size: 0.65rem;
+        bottom: -20px;
     }
 
     .node-icon.unknown {

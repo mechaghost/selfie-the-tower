@@ -5,6 +5,7 @@ import { RestSiteView } from './components/map/RestSiteView';
 import { ShopView } from './components/map/ShopView';
 import { MysteryEventView } from './components/map/MysteryEventView';
 import { GameOverView } from './components/ui/GameOverView';
+import { RunVictoryView } from './components/ui/RunVictoryView';
 import { SelfieCaptureScreen } from './components/ugc/SelfieCaptureScreen';
 import { CharacterRevealScreen } from './components/ugc/CharacterRevealScreen';
 import { Camera, Swords, ChevronDown } from 'lucide-react';
@@ -26,13 +27,14 @@ const CARDS = [
 
 
 function App() {
-    const { inCombat, seed, isGameOver, ugcPhase, nodeEvent, startSelfieCapture } = useGameStore();
+    const { inCombat, seed, isGameOver, isRunComplete, ugcPhase, nodeEvent, startSelfieCapture } = useGameStore();
 
     if (import.meta.env.DEV) {
         (window as any).__gameStore = useGameStore; // eslint-disable-line
     }
 
     if (inCombat) return <CombatView />;
+    if (isRunComplete) return <RunVictoryView />;
     if (isGameOver) return <GameOverView />;
     if (nodeEvent === 'rest') return <RestSiteView />;
     if (nodeEvent === 'shop') return <ShopView />;

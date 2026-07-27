@@ -1,0 +1,273 @@
+/* === Run complete: SPIRE CLEARED === */
+
+.run-victory-container {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(57, 255, 20, 0.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 80%, rgba(185, 103, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 75%, rgba(255, 179, 71, 0.05) 0%, transparent 50%),
+        #0d0d1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 50;
+}
+
+.run-victory-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 4px
+    );
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.run-victory-glow {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(57, 255, 20, 0.12), transparent 65%);
+    animation: rvGlowPulse 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes rvGlowPulse {
+    0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.12); }
+}
+
+/* Neon confetti shards raining down */
+.rv-confetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.rv-shard {
+    position: absolute;
+    top: -30px;
+    left: calc(4% + var(--i) * 6.8%);
+    width: 8px;
+    height: 16px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: rvShardFall 3.4s linear infinite;
+    animation-delay: calc(var(--i) * 0.37s);
+}
+
+.rv-shard-0 { background: #39ff14; }
+.rv-shard-1 { background: #ff6ec7; width: 10px; height: 10px; border-radius: 50%; }
+.rv-shard-2 { background: #00d4ff; }
+.rv-shard-3 { background: #ffb347; width: 12px; height: 12px; }
+.rv-shard-4 { background: #b967ff; }
+
+@keyframes rvShardFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+    }
+    8% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateY(110vh) rotate(560deg);
+        opacity: 0.75;
+    }
+}
+
+.run-victory-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1.25rem;
+    z-index: 1;
+    animation: rvContentIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rvContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.run-victory-crown {
+    color: var(--color-accent-amber);
+    filter: drop-shadow(0 0 14px rgba(255, 179, 71, 0.6));
+    animation: rvCrownBob 2.4s ease-in-out infinite;
+    margin-bottom: 0.5rem;
+}
+
+@keyframes rvCrownBob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+}
+
+.run-victory-portrait {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--color-accent-green);
+    box-shadow: 0 0 24px rgba(57, 255, 20, 0.4), 0 8px 24px rgba(0, 0, 0, 0.6);
+    margin-bottom: 0.75rem;
+}
+
+.run-victory-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.run-victory-title {
+    font-family: var(--font-family-display);
+    font-size: 3rem;
+    line-height: 1;
+    margin: 0 0 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--color-text-primary);
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.run-victory-title .rv-cleared {
+    color: var(--color-accent-green);
+    text-shadow: 0 0 20px rgba(57, 255, 20, 0.5), 0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.run-victory-sub {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0 0 1.75rem;
+    max-width: 340px;
+}
+
+.run-victory-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.rv-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    background: rgba(26, 26, 46, 0.8);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    min-width: 72px;
+}
+
+.rv-stat-value {
+    font-family: var(--font-family-display);
+    font-size: 1.5rem;
+    color: var(--color-accent-green);
+}
+
+.rv-stat-value.amber { color: var(--color-accent-amber); }
+.rv-stat-value.violet { color: var(--color-accent-violet); }
+.rv-stat-value.red { color: var(--color-text-highlight); }
+
+.rv-stat-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--color-text-secondary);
+}
+
+.run-victory-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.rv-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-family-display);
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+}
+
+.rv-btn.primary {
+    background: var(--color-accent-green);
+    color: #0d0d1a;
+    border: none;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.35), 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.rv-btn.primary:hover {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+}
+
+.rv-btn.secondary {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.rv-btn.secondary:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-text-secondary);
+    transform: translateY(-2px);
+}
+
+/* === Desktop overrides === */
+
+@media (min-width: 769px) {
+    .run-victory-title {
+        font-size: 4.5rem;
+        letter-spacing: 6px;
+    }
+
+    .run-victory-sub {
+        font-size: 1rem;
+        max-width: 460px;
+    }
+
+    .run-victory-portrait {
+        width: 120px;
+        height: 120px;
+    }
+
+    .rv-stat {
+        padding: 0.75rem 1.4rem;
+        min-width: 92px;
+    }
+
+    .rv-stat-value {
+        font-size: 2rem;
+    }
+
+    .rv-stat-label {
+        font-size: 0.7rem;
+    }
+}

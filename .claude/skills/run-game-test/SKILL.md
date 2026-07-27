@@ -164,6 +164,9 @@ Inject the combat AI. Set `window.__TEST_THROW = true` if this is **defeat mode 
             if (e.type === 'ApplyStatus' && e.statusId === 'vulnerable') score += 8;
             if (e.type === 'ApplyStatus' && e.statusId === 'weak') score += 6;
             if (e.type === 'ApplyStatus' && (e.statusId === 'strength' || e.statusId === 'dexterity')) score += 10;
+            if (e.type === 'ApplyStatus' && e.statusId === 'burn') score += (e.amount || 0) * 2;
+            if (e.type === 'ApplyStatus' && e.statusId === 'thorns') score += 6;
+            if (e.type === 'ApplyStatus' && e.statusId === 'regen') score += (e.amount || 0) * (hpPct < 0.5 ? 4 : 1);
             if (e.type === 'Draw') score += (e.amount || 0) * 3;
             if (e.type === 'Heal') score += (e.amount || 0) * (hpPct < 0.5 ? 4 : 1);
         }
@@ -241,16 +244,22 @@ When `combatResult` is set (or `isGameOver` is true):
     const result = s.combatResult;
     const hp = s.player.hp + '/' + s.player.maxHp;
     const gold = s.player.gold;
+    let loot = null;
 
-    if (s.combatResult) {
+    if (s.combatResult === 'victory' && s.cardRewards.length > 0) {
+        // Victory offers a pick-1-of-3 card reward. Take the first card
+        // (or call continueCombatResult() instead to skip the loot).
+        loot = s.cardRewards[0].name;
+        store.getState().claimCardReward(s.cardRewards[0].instanceId);
+    } else if (s.combatResult) {
         store.getState().continueCombatResult();
     }
 
-    return { result, hp, gold, isGameOver: store.getState().isGameOver };
+    return { result, hp, gold, loot, isGameOver: store.getState().isGameOver };
 })();
 ```
 
-Log: `Combat {result} — HP: {hp}, Gold: {gold}`
+Log: `Combat {result} — HP: {hp}, Gold: {gold}, Loot: {loot}`
 
 If `isGameOver` is true, stop the loop (defeat scenario complete).
 
@@ -304,7 +313,7 @@ Log: `Mystery: {event.title} — chose "{choice.label}" → {outcome}`
 
 After the loop ends:
 
-**Victory**: The boss fight is on floor 9. After `continueCombatResult()`, `isGameOver` stays `false` — the game just returns to the map with no more nodes. This is expected. The victory condition is: boss combat result was `'victory'` and floor is 9.
+**Victory**: The boss fight is on floor 9. After claiming the reward (or `continueCombatResult()`), the store sets `isRunComplete: true` and the app shows the SPIRE CLEARED screen. The victory condition is: `store.getState().isRunComplete === true`.
 
 **Defeat**: `isGameOver` is set to `true` after `continueCombatResult()` on a defeat. The "YOU DIED" screen shows the floor reached.
 
