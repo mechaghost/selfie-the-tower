@@ -78,7 +78,7 @@ function App() {
                 <div className="landing-enemies">
                     {ENEMIES.map((enemy, i) => (
                         <div className="landing-enemy-card" key={enemy} style={{ animationDelay: `${i * 0.15}s` }}>
-                            <img src={`/assets/enemies/${enemy}.png`} alt="" loading="lazy" />
+                            <img src={`/assets/enemies/${enemy}.webp`} alt="" loading="lazy" />
                         </div>
                     ))}
                 </div>
@@ -97,7 +97,7 @@ function App() {
                                     borderColor: card.color,
                                 } as React.CSSProperties}
                             >
-                                <img src={`/assets/cards/${card.id}.png`} alt="" loading="lazy" />
+                                <img src={`/assets/cards/${card.id}.webp`} alt="" loading="lazy" />
                             </div>
                         ))}
                     </div>

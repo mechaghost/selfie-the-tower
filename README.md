@@ -6,7 +6,7 @@ A neon-soaked roguelike deckbuilder where your selfie becomes your street legend
 
 **[Play Now](https://selfie-the-tower-production.up.railway.app)**
 
-![Selfie the Spire](public/assets/hero-bg.png)
+![Selfie the Spire](public/assets/hero-bg.webp)
 
 ## What Is This
 
@@ -36,6 +36,7 @@ Then you fight. Energy-based card combat, branching map paths, shops, mystery ev
 | State | Zustand |
 | Backend | Hono (Node.js) |
 | Image Gen | Google Gemini API |
+| Asset Gen | [Nano Banana Plus](https://github.com/mechaghost/nano-banana-plus) (local, dev only) |
 | Image Processing | Sharp |
 | Hosting | Railway |
 | Fonts | Space Mono, Bebas Neue |
@@ -46,6 +47,7 @@ Then you fight. Energy-based card combat, branching map paths, shops, mystery ev
 
 - Node.js 18+
 - A [Google Gemini API key](https://aistudio.google.com/apikey) (optional — falls back to mock generation without one)
+- [Nano Banana Plus](https://github.com/mechaghost/nano-banana-plus) running locally (only needed if you want to regenerate game icons via `scripts/generate_icons.py`)
 
 ### Setup
 

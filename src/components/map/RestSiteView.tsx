@@ -118,7 +118,7 @@ export function RestSiteView() {
                                         {(card.imageUrl || card.imageId) && (
                                             <div className="rest-card-art-wrap">
                                                 <img
-                                                    src={card.imageUrl || `/assets/cards/${card.imageId}.png`}
+                                                    src={card.imageUrl || `/assets/cards/${card.imageId}.webp`}
                                                     alt={card.name}
                                                     className="rest-card-art"
                                                 />
