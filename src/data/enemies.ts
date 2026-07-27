@@ -833,7 +833,7 @@ export const enemies: Record<string, EnemyDefinition> = {
     'the_billboard': {
         id: 'the_billboard',
         name: 'Billboard',
-        maxHpRange: [130, 145],
+        maxHpRange: [115, 130],
         aiPatterns: [
             {
                 condition: 'Turn1',
@@ -841,7 +841,7 @@ export const enemies: Record<string, EnemyDefinition> = {
                 intent: {
                     type: 'Buff',
                     effects: [
-                        { type: 'ApplyStatus', amount: 4, statusId: 'strength', target: 'Self' }
+                        { type: 'ApplyStatus', amount: 2, statusId: 'strength', target: 'Self' }
                     ]
                 }
             },
@@ -849,8 +849,8 @@ export const enemies: Record<string, EnemyDefinition> = {
                 chance: 40,
                 intent: {
                     type: 'Attack',
-                    damage: 20,
-                    effects: [{ type: 'Damage', amount: 20, target: 'Target' }]
+                    damage: 17,
+                    effects: [{ type: 'Damage', amount: 17, target: 'Target' }]
                 }
             },
             {
@@ -889,12 +889,12 @@ export const enemies: Record<string, EnemyDefinition> = {
                 chance: 100,
                 intent: {
                     type: 'Attack',
-                    damage: 8,
+                    damage: 5,
                     hits: 3,
                     effects: [
-                        { type: 'Damage', amount: 8, target: 'Target' },
-                        { type: 'Damage', amount: 8, target: 'Target' },
-                        { type: 'Damage', amount: 8, target: 'Target' }
+                        { type: 'Damage', amount: 5, target: 'Target' },
+                        { type: 'Damage', amount: 5, target: 'Target' },
+                        { type: 'Damage', amount: 5, target: 'Target' }
                     ]
                 }
             },
@@ -902,8 +902,8 @@ export const enemies: Record<string, EnemyDefinition> = {
                 chance: 35,
                 intent: {
                     type: 'Attack',
-                    damage: 22,
-                    effects: [{ type: 'Damage', amount: 22, target: 'Target' }]
+                    damage: 19,
+                    effects: [{ type: 'Damage', amount: 19, target: 'Target' }]
                 }
             },
             {
@@ -924,7 +924,7 @@ export const enemies: Record<string, EnemyDefinition> = {
                     block: 10,
                     effects: [
                         { type: 'Block', amount: 10, target: 'Self' },
-                        { type: 'ApplyStatus', amount: 3, statusId: 'strength', target: 'Self' }
+                        { type: 'ApplyStatus', amount: 2, statusId: 'strength', target: 'Self' }
                     ]
                 }
             }
@@ -974,9 +974,9 @@ export const enemies: Record<string, EnemyDefinition> = {
                 chance: 30,
                 intent: {
                     type: 'AttackDebuff',
-                    damage: 15,
+                    damage: 13,
                     effects: [
-                        { type: 'Damage', amount: 15, target: 'Target' },
+                        { type: 'Damage', amount: 13, target: 'Target' },
                         { type: 'ApplyStatus', amount: 1, statusId: 'weak', target: 'Target' },
                         { type: 'ApplyStatus', amount: 1, statusId: 'vulnerable', target: 'Target' }
                     ]
