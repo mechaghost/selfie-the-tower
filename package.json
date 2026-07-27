@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build && cd server && npm install",
     "start": "cd server && npm start",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node tests/e2e.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",
@@ -19,6 +20,7 @@
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
+    "playwright-core": "^1.62.0",
     "typescript": "^5.2.2",
     "vite": "^7.3.1"
   }
