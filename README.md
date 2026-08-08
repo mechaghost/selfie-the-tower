@@ -4,7 +4,7 @@
 
 A neon-soaked roguelike deckbuilder where your selfie becomes your street legend. Snap a photo, let the 80's Magic do its thing, and battle your way up a procedurally generated tower with a custom hero and hand-painted cards.
 
-**[Play Now](https://selfie-the-tower-production.up.railway.app)**
+**[Play Now](https://selfie-the-spire-production.up.railway.app)**
 
 ![Selfie the Spire](public/assets/hero-bg.webp)
 
