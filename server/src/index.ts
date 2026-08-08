@@ -10,6 +10,24 @@ import { characterRoute } from './routes/character.js';
 
 const app = new Hono();
 
+// ── Cross-origin embedding for public static assets ──
+// secureHeaders() defaults Cross-Origin-Resource-Policy to same-origin, which
+// makes browsers refuse to paint our files inside pages on other domains. Sites
+// that link here scrape the right og:image URL but still render a broken image,
+// because the block happens at display time, not fetch time. These assets are
+// public, so opt them into cross-origin embedding; HTML and /api keep the
+// stricter default.
+//
+// Registered before secureHeaders() so this runs last on the way out and wins.
+const EMBEDDABLE_ASSET = /\.(?:avif|gif|ico|jpe?g|png|svg|webmanifest|webp)$/i;
+
+app.use('*', async (c, next) => {
+    await next();
+    if (EMBEDDABLE_ASSET.test(c.req.path)) {
+        c.res.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+});
+
 // ── Security headers ──
 app.use('*', secureHeaders());
 
