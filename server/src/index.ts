@@ -1,7 +1,9 @@
 import 'dotenv/config';
+import { readFileSync } from 'node:fs';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { characterRoute } from './routes/character.js';
@@ -105,9 +107,36 @@ app.route('/api', characterRoute);
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
+// ── index.html with request-derived absolute URLs ──
+// The og:/twitter: preview tags need absolute URLs, but the deployed domain
+// isn't known at build time. Template the real origin in at serve time so
+// link previews are correct on any domain (Railway default, custom, etc.).
+const FALLBACK_ORIGIN = 'https://selfie-the-spire-production.up.railway.app';
+let indexTemplate: string | null = null;
+
+function serveIndex(c: Context) {
+    try {
+        if (indexTemplate === null) {
+            // Same base as serveStatic's root: paths resolve from server/
+            indexTemplate = readFileSync('../dist/index.html', 'utf8');
+        }
+        const proto = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
+        const host = c.req.header('host');
+        const html = host
+            ? indexTemplate.replaceAll(FALLBACK_ORIGIN, `${proto}://${host}`)
+            : indexTemplate;
+        return c.html(html);
+    } catch {
+        // dist not built (dev mode) — vite serves the client itself
+        return c.notFound();
+    }
+}
+
 // Serve the built client in production
+app.get('/', serveIndex);
+app.get('/index.html', serveIndex);
 app.use('/*', serveStatic({ root: '../dist' }));
-app.use('/*', serveStatic({ root: '../dist', path: '/index.html' }));
+app.get('/*', serveIndex);
 
 const port = parseInt(process.env.PORT || '3001', 10);
 
