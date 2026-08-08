@@ -14,6 +14,16 @@ Take a selfie. The game reads your vibe, assigns you an archetype, and generates
 
 Then you fight. Energy-based card combat, branching map paths, shops, mystery events, elite encounters, and rest sites. Standard Slay the Spire formula, neon-punk flavor.
 
+## Screenshots
+
+| Combat | The Spire |
+|--------|-----------|
+| ![Combat — statuses, intents, and a fanned hand](public/assets/screenshots/combat.webp) | ![Branching map with highlighted paths](public/assets/screenshots/map.webp) |
+
+| Victory Loot | Run Complete |
+|--------------|--------------|
+| ![Pick 1 of 3 card rewards after every win](public/assets/screenshots/loot.webp) | ![SPIRE CLEARED run-victory screen](public/assets/screenshots/spire-cleared.webp) |
+
 ## Features
 
 - **Selfie-to-hero pipeline** — face capture, archetype assignment, portrait + card art generation
